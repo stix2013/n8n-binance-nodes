@@ -1,0 +1,15 @@
+{
+  "height": 300,
+  "theme": "dark",
+  "interval": "1h",
+  "studies": [
+    {
+      "name": "VWAP",
+      "override": {
+        "VWAP.linewidth": 1,
+        "VWAP.plottype": "line",
+        "VWAP.color": "rgb(33,150,243)"
+      }
+    }
+  ]
+}

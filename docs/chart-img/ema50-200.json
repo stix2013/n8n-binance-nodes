@@ -1,0 +1,22 @@
+{
+  "height": 300,
+  "theme": "dark",
+  "studies": [
+    {
+      "name": "Moving Average Double",
+      "input": {
+        "firstPeriods": 50,
+        "secondPeriods": 200,
+        "method": "Simple"
+      },
+      "override": {
+        "Plot 1.linewidth": 1,
+        "Plot 1.plottype": "line",
+        "Plot 1.color": "rgb(255,109,0)",
+        "Plot 2.linewidth": 1,
+        "Plot 2.plottype": "line",
+        "Plot 2.color": "rgb(33,150,243)"
+      }
+    }
+  ]
+}

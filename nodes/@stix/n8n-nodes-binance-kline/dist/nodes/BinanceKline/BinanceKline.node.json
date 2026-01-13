@@ -1,0 +1,21 @@
+{
+    "node": "@stix/n8n-nodes-binance-kline",
+    "nodeVersion": "1.0",
+    "codexVersion": "1.0",
+    "categories": [
+        "Development",
+        "Miscellaneous"
+    ],
+    "resources": {
+        "credentialDocumentation": [
+            {
+                "url": "https://github.com/org/repo?tab=readme-ov-file#credentials"
+            }
+        ],
+        "primaryDocumentation": [
+            {
+                "url": "https://github.com/org/repo?tab=readme-ov-file"
+            }
+        ]
+    }
+}
