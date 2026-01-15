@@ -1,4 +1,4 @@
-FROM n8nio/runners:2.3.2-amd64
+FROM n8nio/runners:2.4.2-amd64
 USER root
 
 RUN cd /opt/runners/task-runner-javascript && \
