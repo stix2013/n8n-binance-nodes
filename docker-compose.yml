@@ -1,6 +1,6 @@
 services:
   n8n:
-    image: n8nio/n8n:2.3.2-amd64
+    image: n8nio/n8n:2.4.2-amd64
     container_name: n8n-main
     restart: always
     dns:
@@ -68,7 +68,7 @@ services:
       start_period: 3600s
   # n8n Tasks Runners
   task-runners:
-    image: n8nio-runners:2.3.2-local
+    image: n8nio-runners:2.4.2-local
     build:
       context: ./dockers
       dockerfile: Dockerfile
@@ -99,10 +99,11 @@ services:
     depends_on:
       - n8n
   postgres:
-    build:
-      context: ./dockers
-      dockerfile: Dockerfile.postgres
-    image: postgres:16-alpine-pgvector
+#    build:
+#      context: ./dockers
+#      dockerfile: Dockerfile.postgres
+#    image: postgres:16-alpine-pgvector
+    image: postgres:16-alpine
     restart: unless-stopped
     container_name: postgres-db
     ports:
