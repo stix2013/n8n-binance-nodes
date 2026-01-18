@@ -9,7 +9,7 @@ A Docker-based n8n workflow automation environment with custom community nodes f
   - **ChartCrypto:** Generate crypto trading charts with technical indicators
 
 - **Infrastructure:**
-  - n8n 2.4.2 with external task runners
+  - n8n 2.4.4 with external task runners
   - PostgreSQL 16 database
   - FastAPI service for custom endpoints
   - Python 3.13 task runner environment
@@ -52,7 +52,7 @@ n8n-binance-nodes/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/stix2013/n8n-nodes-binance-kline.git
+git clone https://github.com/stix2013/n8n-binance-nodes.git
 cd n8n-binance-nodes
 ```
 
