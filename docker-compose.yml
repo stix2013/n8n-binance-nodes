@@ -137,6 +137,7 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ./api:/app
+      - ./.env:/app/.env:ro
 volumes:
   n8n_data:
     external: true

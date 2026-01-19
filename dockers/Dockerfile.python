@@ -11,6 +11,10 @@ WORKDIR /app
 ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
 RUN uv sync --frozen --no-cache
 
+# Load environment variables from .env file
+RUN pip install python-dotenv
+
 # Run the application.
+WORKDIR /app/src
 ENV PATH="/opt/venv/bin:$PATH"
 CMD ["fastapi", "run", "main.py", "--port", "8000", "--host", "0.0.0.0"]
