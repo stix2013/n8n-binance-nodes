@@ -1,5 +1,10 @@
 .env
 node_modules
 __pycache__
-.coverage
-api/htmlcov
+
+# API coverage reports
+api/.coverage
+api/htmlcov/
+api/.coverage
+api/.pytest_cache/
+>>>>>>> origin/main
