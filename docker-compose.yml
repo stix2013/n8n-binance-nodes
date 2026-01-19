@@ -98,6 +98,12 @@ services:
       - ./config/n8n-task-runners.json:/etc/n8n-task-runners.json
     depends_on:
       - n8n
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://n8n-main:5679/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
   postgres:
 #    build:
 #      context: ./dockers
@@ -138,6 +144,12 @@ services:
     volumes:
       - ./api:/app
       - ./.env:/app/.env:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 volumes:
   n8n_data:
     external: true
