@@ -28,10 +28,17 @@ n8n-binance-nodes/
 │   └── @stix/
 │       ├── n8n-nodes-binance-kline/    # Binance API integration node
 │       └── n8n-nodes-chart-crypto/     # Crypto charting node
+├── api/                                # FastAPI service (Python 3.13)
+│   ├── src/
+│   │   ├── main.py                     # FastAPI entry point
+│   │   ├── routes/                     # API route handlers
+│   │   └── utils/                      # Utility functions
+│   ├── tests/                          # Unit tests
+│   └── pyproject.toml                  # Python dependencies
 ├── dockers/
-│   ├── api/                            # FastAPI service
-│   ├── task-runner-python/             # Python task runner
-│   └── Dockerfile                      # Custom Docker images
+│   ├── Dockerfile.python               # Python/FastAPI container image
+│   ├── Dockerfile                      # Task runner image
+│   └── Dockerfile.postgres             # PostgreSQL image
 ├── config/
 │   └── n8n-task-runners.json           # Task runner configuration
 ├── docs/
@@ -75,7 +82,7 @@ docker-compose up -d
 | Service | Port | Description |
 |---------|------|-------------|
 | n8n | 5678 | Main workflow automation platform |
-| FastAPI | 8000 | API service for custom endpoints |
+| FastAPI | 8000 | API service for Binance price data and custom endpoints |
 | PostgreSQL | 5432 | Database backend |
 
 ## Custom Nodes
@@ -147,8 +154,16 @@ Allowed modules: `numpy,pandas,feedparser,requests,bs4,textblob,vaderSentiment,t
 
 FastAPI service available at `http://localhost:8000`
 
+**Endpoints:**
 - `GET /` - Root endpoint
 - `GET /health` - Health check
+- `GET /api/binance/price` - Fetch cryptocurrency prices from Binance
+
+**Configuration:**
+- Python 3.13 with `uv` package manager
+- Reads environment variables from `.env` file
+- Supports multiple time intervals (1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M)
+- Date range filtering with YYYYMMDD format
 
 ## Version History
 
