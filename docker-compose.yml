@@ -125,8 +125,8 @@ services:
   api:
     image: api-python3.13:0.1.0
     build:
-      context: ./dockers
-      dockerfile: Dockerfile.python
+      context: .
+      dockerfile: dockers/Dockerfile.python
     container_name: api
     restart: always
     networks:
@@ -136,7 +136,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
-      - ./dockers/api:/app
+      - ./api:/app
 volumes:
   n8n_data:
     external: true
