@@ -1,17 +1,20 @@
 """Binance API routes."""
 
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 import httpx
 import os
-from typing import Optional
-from datetime import datetime
 import logging
+from datetime import datetime
 
 # Import utilities with fallback for both relative and absolute imports
 try:
     from ..utils.date_utils import convert_date_format, timestamp_to_iso
+    from ..models.api_models import PriceResponse, ErrorResponse, IntervalEnum
+    from ..models.settings import settings
 except ImportError:
     from utils.date_utils import convert_date_format, timestamp_to_iso
+    from models.api_models import PriceResponse, ErrorResponse, IntervalEnum
+    from models.settings import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/binance", tags=["binance"])
@@ -27,33 +30,63 @@ async def get_binance_api_key() -> str:
     return api_key
 
 
-@router.get("/price")
+@router.get(
+    "/price",
+    response_model=PriceResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
+)
 async def get_binance_price(
-    symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
-    interval: str = Query(
-        "1h",
-        description="Kline interval (1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M)",
+    symbol: str = Query(
+        ...,
+        min_length=1,
+        max_length=20,
+        description="Trading pair symbol (e.g., BTCUSDT)",
     ),
-    limit: int = Query(50, ge=1, le=1000, description="Number of records to return"),
-    startdate: Optional[str] = Query(None, description="Start date in YYYYMMDD format"),
-    enddate: Optional[str] = Query(None, description="End date in YYYYMMDD format"),
+    interval: IntervalEnum = Query(
+        default=IntervalEnum.ONE_HOUR, description="Kline interval"
+    ),
+    limit: int = Query(
+        default=50, ge=1, le=1000, description="Number of records to return"
+    ),
+    startdate: str = Query(None, description="Start date in YYYYMMDD format"),
+    enddate: str = Query(None, description="End date in YYYYMMDD format"),
     api_key: str = Depends(get_binance_api_key),
 ):
     """
     Get historical price data from Binance API
-
-    - **symbol**: Trading pair symbol (required) - e.g., BTCUSDT, ETHUSDT
-    - **interval**: Kline interval (1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M)
-    - **limit**: Number of records to return (1-1000, default: 50)
-    - **startdate**: Start date in YYYYMMDD format (optional)
-    - **enddate**: End date in YYYYMMDD format (optional)
     """
+
+    # Validate input parameters
+    if not symbol.isalnum():
+        raise HTTPException(
+            status_code=422, detail="Symbol must contain only alphanumeric characters"
+        )
+
+    # Convert symbol to uppercase
+    symbol = symbol.upper()
+
+    # Validate date format if provided
+    for date_field, date_value in [("startdate", startdate), ("enddate", enddate)]:
+        if date_value:
+            if len(date_value) != 8 or not date_value.isdigit():
+                raise HTTPException(
+                    status_code=422, detail=f"{date_field} must be in YYYYMMDD format"
+                )
+            try:
+                datetime.strptime(date_value, "%Y%m%d")
+            except ValueError:
+                raise HTTPException(status_code=422, detail=f"Invalid {date_field}")
 
     # Build Binance API URL
     url = "https://api.binance.com/api/v3/klines"
 
     # Prepare query parameters
-    params = {"symbol": symbol.upper(), "interval": interval, "limit": limit}
+    params = {"symbol": symbol, "interval": interval.value, "limit": limit}
 
     # Add date range if provided
     try:
@@ -99,11 +132,11 @@ async def get_binance_price(
                         }
                     )
 
-                return {
-                    "symbol": symbol.upper(),
-                    "data": transformed_data,
-                    "count": len(transformed_data),
-                }
+                return PriceResponse(
+                    symbol=symbol,
+                    data=transformed_data,
+                    count=len(transformed_data),
+                )
             else:
                 error_detail = f"Binance API error: {response.status_code}"
                 try:

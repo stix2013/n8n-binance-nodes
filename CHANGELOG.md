@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Pydantic Type Checking**: Implemented comprehensive runtime type validation for API requests and responses
+  - Added Pydantic models: PriceRequest, PriceResponse, PriceDataPoint, ErrorResponse, HealthResponse, RootResponse
+  - Implemented custom validation rules for trading symbols, date formats (YYYYMMDD), and numeric ranges
+  - Added IntervalEnum for safe Binance kline interval handling
+  - Enhanced error handling with HTTP 422 status codes for validation failures
+  - Created comprehensive test suite covering 24 validation scenarios
+  - Updated API to use Pydantic v2 best practices with field validators and ConfigDict
+  - Added demo script showcasing validation features and benefits
 - Docker container can read `.env` file from project root
 - API container accessible from host terminal on port 8000
 

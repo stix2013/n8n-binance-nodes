@@ -29,13 +29,15 @@ class TestBinanceAPI:
         """Test the root endpoint"""
         response = client.get("/")
         assert response.status_code == 200
-        assert response.json() == {"message": "Hello from FastAPI!"}
+        data = response.json()
+        assert data["message"] == "Hello from FastAPI with Pydantic type checking!"
 
     def test_health_endpoint(self):
         """Test the health check endpoint"""
         response = client.get("/health")
         assert response.status_code == 200
-        assert response.json() == {"status": "healthy"}
+        data = response.json()
+        assert data["status"] == "healthy"
 
     @patch.dict(os.environ, {"BINANCE_API_KEY": "test_key"}, clear=False)
     def test_binance_price_success(self):
@@ -210,8 +212,7 @@ class TestBinanceAPI:
                 "/api/binance/price?symbol=BTCUSDT&startdate=2024-01-01"
             )
 
-            assert response.status_code == 400
-            assert "Date format must be YYYYMMDD" in response.json()["detail"]
+            assert response.status_code == 422  # FastAPI validation error
 
     def test_binance_price_invalid_limit_range(self):
         """Test Binance price fetch with invalid limit range"""
@@ -273,6 +274,171 @@ class TestBinanceAPI:
             mock_client.get.assert_called_once()
             call_args = mock_client.get.call_args
             assert call_args[1]["params"]["symbol"] == "BTCUSDT"
+
+    def test_binance_price_invalid_interval(self):
+        """Test Binance price fetch with invalid interval"""
+        with patch.dict(os.environ, {"BINANCE_API_KEY": "test_key"}, clear=False):
+            response = client.get("/api/binance/price?symbol=BTCUSDT&interval=invalid")
+
+            assert response.status_code == 422  # FastAPI validation error
+
+    def test_binance_price_symbol_with_special_chars(self):
+        """Test Binance price fetch with invalid symbol containing special characters"""
+        with patch.dict(os.environ, {"BINANCE_API_KEY": "test_key"}, clear=False):
+            response = client.get("/api/binance/price?symbol=BTC-USDT")
+
+            assert response.status_code == 422  # FastAPI validation error
+
+    def test_binance_price_invalid_date_value(self):
+        """Test Binance price fetch with invalid date value"""
+        with patch.dict(os.environ, {"BINANCE_API_KEY": "test_key"}, clear=False):
+            response = client.get(
+                "/api/binance/price?symbol=BTCUSDT&startdate=20241301"
+            )
+
+            assert response.status_code == 422  # FastAPI validation error
+
+
+class TestPydanticModels:
+    """Test suite for Pydantic models"""
+
+    def test_price_request_valid(self):
+        """Test PriceRequest model with valid data"""
+        from models.api_models import PriceRequest, IntervalEnum
+
+        # Test valid data
+        request = PriceRequest(
+            symbol="BTCUSDT", interval=IntervalEnum.ONE_HOUR, limit=100
+        )
+
+        assert request.symbol == "BTCUSDT"
+        assert request.interval == IntervalEnum.ONE_HOUR
+        assert request.limit == 100
+
+    def test_price_request_symbol_validation(self):
+        """Test PriceRequest symbol validation"""
+        from models.api_models import PriceRequest
+
+        # Test valid symbol
+        request = PriceRequest(symbol="BTCUSDT")
+        assert request.symbol == "BTCUSDT"
+
+        # Test lowercase symbol (should be converted to uppercase)
+        request = PriceRequest(symbol="btcusdt")
+        assert request.symbol == "BTCUSDT"
+
+        # Test invalid symbol with special characters
+        try:
+            PriceRequest(symbol="BTC-USDT")
+            assert False, "Should have raised ValidationError"
+        except Exception:
+            pass
+
+    def test_price_request_date_validation(self):
+        """Test PriceRequest date format validation"""
+        from models.api_models import PriceRequest
+
+        # Test valid date
+        request = PriceRequest(symbol="BTCUSDT", startdate="20240101")
+        assert request.startdate == "20240101"
+
+        # Test invalid date format (not 8 digits)
+        try:
+            PriceRequest(symbol="BTCUSDT", startdate="2024-01-01")
+            assert False, "Should have raised ValidationError"
+        except Exception:
+            pass
+
+        # Test invalid date value
+        try:
+            PriceRequest(symbol="BTCUSDT", startdate="20241301")
+            assert False, "Should have raised ValidationError"
+        except Exception:
+            pass
+
+    def test_price_request_limit_validation(self):
+        """Test PriceRequest limit validation"""
+        from models.api_models import PriceRequest
+
+        # Test valid limits
+        request = PriceRequest(symbol="BTCUSDT", limit=1)
+        assert request.limit == 1
+
+        request = PriceRequest(symbol="BTCUSDT", limit=1000)
+        assert request.limit == 1000
+
+        # Test invalid limits
+        try:
+            PriceRequest(symbol="BTCUSDT", limit=0)
+            assert False, "Should have raised ValidationError"
+        except Exception:
+            pass
+
+        try:
+            PriceRequest(symbol="BTCUSDT", limit=1001)
+            assert False, "Should have raised ValidationError"
+        except Exception:
+            pass
+
+    def test_price_data_point_model(self):
+        """Test PriceDataPoint model"""
+        from models.api_models import PriceDataPoint
+        from datetime import datetime
+
+        # Test valid data point
+        data_point = PriceDataPoint(
+            open_time=datetime(2024, 1, 1),
+            open_price=50000.0,
+            high_price=51000.0,
+            low_price=49000.0,
+            close_price=50500.0,
+            volume=1000.0,
+            close_time=datetime(2024, 1, 1, 1),
+            quote_asset_volume=50000000.0,
+            number_of_trades=100,
+            taker_buy_base_asset_volume=500.0,
+            taker_buy_quote_asset_volume=25000000.0,
+            ignore="ignore_value",
+        )
+
+        assert data_point.open_price == 50000.0
+        assert data_point.volume == 1000.0
+        assert data_point.number_of_trades == 100
+
+    def test_interval_enum(self):
+        """Test IntervalEnum values"""
+        from models.api_models import IntervalEnum
+
+        assert IntervalEnum.ONE_MINUTE.value == "1m"
+        assert IntervalEnum.ONE_HOUR.value == "1h"
+        assert IntervalEnum.ONE_DAY.value == "1d"
+        assert IntervalEnum.ONE_MONTH.value == "1M"
+
+    def test_price_response_model(self):
+        """Test PriceResponse model"""
+        from models.api_models import PriceResponse, PriceDataPoint
+        from datetime import datetime
+
+        data_point = PriceDataPoint(
+            open_time=datetime(2024, 1, 1),
+            open_price=50000.0,
+            high_price=51000.0,
+            low_price=49000.0,
+            close_price=50500.0,
+            volume=1000.0,
+            close_time=datetime(2024, 1, 1, 1),
+            quote_asset_volume=50000000.0,
+            number_of_trades=100,
+            taker_buy_base_asset_volume=500.0,
+            taker_buy_quote_asset_volume=25000000.0,
+            ignore="ignore_value",
+        )
+
+        response = PriceResponse(symbol="BTCUSDT", data=[data_point], count=1)
+
+        assert response.symbol == "BTCUSDT"
+        assert len(response.data) == 1
+        assert response.count == 1
 
 
 class TestDateConversion:

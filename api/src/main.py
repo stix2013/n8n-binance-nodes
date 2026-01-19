@@ -9,18 +9,27 @@ import os
 # Add the src directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Import Pydantic models and settings
+try:
+    from .models.api_models import RootResponse, HealthResponse, ErrorResponse
+    from .models.settings import settings
+except ImportError:
+    from models.api_models import RootResponse, HealthResponse, ErrorResponse
+    from models.settings import settings
+
 # Load environment variables
 load_dotenv()
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up logging based on settings
+logging.basicConfig(level=getattr(logging, settings.log_level.upper()))
 logger = logging.getLogger(__name__)
 
-# Create FastAPI app
+# Create FastAPI app with settings
 app = FastAPI(
     title="n8n Binance API",
-    description="API for fetching cryptocurrency prices from Binance",
+    description="API for fetching cryptocurrency prices from Binance with Pydantic type validation",
     version="1.0.0",
+    debug=settings.api_debug,
 )
 
 # Import and include routers
@@ -35,13 +44,15 @@ except ImportError:
 app.include_router(binance.router)
 
 
-@app.get("/")
+@app.get("/", response_model=RootResponse)
 def read_root():
     """Root endpoint."""
-    return {"message": "Hello from FastAPI!"}
+    return RootResponse(message="Hello from FastAPI with Pydantic type checking!")
 
 
-@app.get("/health")
+@app.get(
+    "/health", response_model=HealthResponse, responses={500: {"model": ErrorResponse}}
+)
 def health_check():
     """Health check endpoint."""
-    return {"status": "healthy"}
+    return HealthResponse(status="healthy")
