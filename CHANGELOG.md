@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Docker container can read `.env` file from project root
+- API container accessible from host terminal on port 8000
+
+### Fixed
+- Fixed FastAPI startup error by setting correct working directory (`/app/src`) in Dockerfile
+- Added `python-dotenv` package for environment variable loading
+
+### Changed
+- Updated `docker-compose.yml` to mount `.env` file to api container
+- Updated `dockers/Dockerfile.python` with proper WORKDIR and dotenv support
+
+### Added
 - New Binance API endpoint `/api/binance/price` for fetching cryptocurrency prices
 - Support for multiple time intervals (1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M)
 - Date range filtering with YYYYMMDD format
