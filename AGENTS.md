@@ -1202,3 +1202,6 @@ docker-compose logs --since=1h api | grep -E "(duration|latency|time)" | head -2
 - **v0.3.0**: Technical indicators (RSI, MACD) with comprehensive API
 - **v0.2.0**: Pydantic type checking and health checks
 - **v0.1.0**: Initial FastAPI implementation with Binance price endpoint
+
+## Related Documentation
+- **API Improvements**: See [`api/TODO.md`](api/TODO.md) for detailed API improvement tracking, completed tasks, and future enhancements

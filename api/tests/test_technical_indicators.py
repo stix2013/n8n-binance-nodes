@@ -334,16 +334,16 @@ class TestTechnicalIndicatorsAPI:
         with patch.dict(
             os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
         ):
-            with patch("routes.indicators.httpx.AsyncClient") as mock_client_class:
+            with patch("routes.indicators.get_http_client") as mock_get_client:
                 mock_client = AsyncMock()
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = mock_response_data
                 mock_client.get.return_value = mock_response
-                mock_client_class.return_value.__aenter__.return_value = mock_client
+                mock_get_client.return_value = mock_client
 
                 response = client.get(
-                    "/api/indicators/analysis?symbol=BTCUSDT&interval=1h&limit=50"
+                    "/v1/indicators/analysis?symbol=BTCUSDT&interval=1h&limit=50"
                 )
 
                 assert response.status_code == 200
@@ -373,9 +373,7 @@ class TestTechnicalIndicatorsAPI:
         with patch.dict(
             os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
         ):
-            response = client.get(
-                "/api/indicators/analysis?symbol=BTC-USDT&interval=1h"
-            )
+            response = client.get("/v1/indicators/analysis?symbol=BTC-USDT&interval=1h")
 
             assert response.status_code == 422
             assert (
@@ -410,16 +408,16 @@ class TestTechnicalIndicatorsAPI:
         with patch.dict(
             os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
         ):
-            with patch("routes.indicators.httpx.AsyncClient") as mock_client_class:
+            with patch("routes.indicators.get_http_client") as mock_get_client:
                 mock_client = AsyncMock()
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = mock_response_data
                 mock_client.get.return_value = mock_response
-                mock_client_class.return_value.__aenter__.return_value = mock_client
+                mock_get_client.return_value = mock_client
 
                 response = client.get(
-                    "/api/indicators/analysis?symbol=BTCUSDT&interval=1h&limit=5"
+                    "/v1/indicators/analysis?symbol=BTCUSDT&interval=1h&limit=5"
                 )
 
                 assert (
@@ -453,15 +451,15 @@ class TestTechnicalIndicatorsAPI:
         with patch.dict(
             os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
         ):
-            with patch("routes.indicators.httpx.AsyncClient") as mock_client_class:
+            with patch("routes.indicators.get_http_client") as mock_get_client:
                 mock_client = AsyncMock()
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = mock_response_data
                 mock_client.get.return_value = mock_response
-                mock_client_class.return_value.__aenter__.return_value = mock_client
+                mock_get_client.return_value = mock_client
 
-                response = client.get("/api/indicators/rsi?symbol=BTCUSDT&interval=1h")
+                response = client.get("/v1/indicators/rsi?symbol=BTCUSDT&interval=1h")
 
                 assert response.status_code == 200
                 data = response.json()
@@ -499,15 +497,15 @@ class TestTechnicalIndicatorsAPI:
         with patch.dict(
             os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
         ):
-            with patch("routes.indicators.httpx.AsyncClient") as mock_client_class:
+            with patch("routes.indicators.get_http_client") as mock_get_client:
                 mock_client = AsyncMock()
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = mock_response_data
                 mock_client.get.return_value = mock_response
-                mock_client_class.return_value.__aenter__.return_value = mock_client
+                mock_get_client.return_value = mock_client
 
-                response = client.get("/api/indicators/macd?symbol=BTCUSDT&interval=1h")
+                response = client.get("/v1/indicators/macd?symbol=BTCUSDT&interval=1h")
 
                 assert response.status_code == 200
                 data = response.json()
@@ -524,7 +522,7 @@ class TestTechnicalIndicatorsAPI:
         with patch.dict(
             os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
         ):
-            response = client.get("/api/indicators/invalid?symbol=BTCUSDT&interval=1h")
+            response = client.get("/v1/indicators/invalid?symbol=BTCUSDT&interval=1h")
 
             assert response.status_code == 400  # Route-level validation error
             assert "Supported indicators: 'rsi', 'macd'" in response.json()["detail"]
@@ -532,10 +530,10 @@ class TestTechnicalIndicatorsAPI:
     def test_technical_analysis_missing_api_key(self):
         """Test technical analysis without API key."""
         with patch.dict(os.environ, {}, clear=True):
-            response = client.get("/api/indicators/analysis?symbol=BTCUSDT&interval=1h")
+            response = client.get("/v1/indicators/analysis?symbol=BTCUSDT&interval=1h")
 
             assert response.status_code == 500
-            assert "BINANCE_API_KEY not found" in response.json()["detail"]
+            assert "BINANCE_API_KEY" in response.json()["detail"]
 
     def test_technical_analysis_macd_period_validation(self):
         """Test MACD period validation in analysis endpoint."""
@@ -543,7 +541,7 @@ class TestTechnicalIndicatorsAPI:
             os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
         ):
             response = client.get(
-                "/api/indicators/analysis?symbol=BTCUSDT&interval=1h&macd_slow=10&macd_fast=15"
+                "/v1/indicators/analysis?symbol=BTCUSDT&interval=1h&macd_slow=10&macd_fast=15"
             )
 
             assert response.status_code == 422
