@@ -1,7 +1,7 @@
 """Pydantic models for technical indicators API."""
 
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Literal
+from typing import Optional, Literal
 from datetime import datetime
 from enum import Enum
 
