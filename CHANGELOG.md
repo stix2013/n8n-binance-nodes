@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-01-20
+
+### Fixed
+- **Docker Environment Variables**: Fixed API container to read from single .env file at project root
+  - Updated `api/src/main.py` to load dotenv from `/app/.env` instead of relative path
+  - Updated `api/src/models/settings.py` to use absolute path for env_file
+  - Removed duplicate `api/.env` file - now uses single source at project root
+  - Added `extra="allow"` to Pydantic Settings to handle shared environment variables across services
+- **Binance API Connectivity**: Fixed network connectivity issues by adding proper DNS entries
+  - Added DNS host mapping for `api.binance.com:108.156.104.23` to API service
+  - Fixed duplicate DNS entries between task-runners and API services
+  - Ensured consistent Binance API connectivity across all containers
+- **Container Configuration**: Resolved Docker compose configuration conflicts
+  - Removed redundant DNS entries to prevent Docker limitation conflicts
+  - Updated API image version from 0.3.0 to 0.3.1
+
+### Changed
+- Updated docker-compose.yml API image tag to 0.3.1
+- Improved Settings documentation with clear comments for shared .env configuration
+- Enhanced container networking with single authoritative DNS entry per hostname
+
 ## [0.3.0] - 2026-01-20
 
 ### Added

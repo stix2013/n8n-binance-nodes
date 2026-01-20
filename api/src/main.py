@@ -18,7 +18,7 @@ except ImportError:
     from models.settings import settings
 
 # Load environment variables
-load_dotenv()
+load_dotenv("/app/.env")
 
 # Set up logging based on settings
 logging.basicConfig(level=getattr(logging, settings.log_level.upper()))
