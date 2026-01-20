@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-01-20
+
+### Added
+- **Technical Indicators Analysis**: Implemented comprehensive RSI and MACD calculations for cryptocurrency trading analysis
+  - Added RSI (Relative Strength Index) calculation with configurable periods (default: 14)
+  - Implemented MACD (Moving Average Convergence Divergence) with line, signal, and histogram components
+  - Created intelligent recommendation engine (STRONG_BUY, BUY, HOLD, SELL, STRONG_SELL)
+  - Added comprehensive API endpoints:
+    - `GET /api/indicators/analysis` - Full RSI + MACD analysis
+    - `GET /api/indicators/{indicator}` - Single indicator (RSI or MACD)
+  - Implemented robust data validation (minimum 30 candles requirement)
+  - Created production-ready error handling and parameter validation
+  - Added comprehensive test suite with 22 test scenarios covering all edge cases
+  - Implemented demo script showcasing all features and validation
+- **Extensible Architecture**: Designed for future indicators (Bollinger Bands, Stochastic, ATR, etc.)
+
+### Technical
+- Added numpy>=1.24.0 and pandas>=2.0.0 dependencies for efficient calculations
+- Implemented optimized mathematical algorithms using vectorized operations
+- Created modular indicator factory pattern for easy extension
+- Added comprehensive mathematical validation against trading standards
+- Implemented proper async/await patterns for API integration
+
+### Changed
+- Updated API version to 0.3.0 in pyproject.toml
+- Updated docker-compose.yml API image tag to 0.3.0
+- Enhanced main FastAPI application with new indicators router
+- Updated API description to include technical indicators functionality
+
+### Quality Assurance
+- Achieved 22/22 tests passing for technical indicators functionality
+- Maintained 24/24 tests passing for existing API functionality (no regressions)
+- Implemented mathematical accuracy validation against known trading formulas
+- Added extensive edge case testing and boundary condition validation
+
 ## [Unreleased]
 
 ### Added

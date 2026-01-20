@@ -27,21 +27,22 @@ logger = logging.getLogger(__name__)
 # Create FastAPI app with settings
 app = FastAPI(
     title="n8n Binance API",
-    description="API for fetching cryptocurrency prices from Binance with Pydantic type validation",
-    version="1.0.0",
+    description="API for fetching cryptocurrency prices from Binance with Pydantic type validation and technical indicators",
+    version="1.1.0",
     debug=settings.api_debug,
 )
 
 # Import and include routers
 try:
     # Try relative import first
-    from .routes import binance
+    from .routes import binance, indicators
 except ImportError:
     # Fall back to absolute import for direct execution
-    from routes import binance
+    from routes import binance, indicators
 
 # Include routers
 app.include_router(binance.router)
+app.include_router(indicators.router)
 
 
 @app.get("/", response_model=RootResponse)
