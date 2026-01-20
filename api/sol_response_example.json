@@ -1,0 +1,20 @@
+{
+  "symbol": "SOLUSDT",
+  "current_price": 98.45,
+  "rsi": {
+    "value": 72.3,
+    "signal": "OVERBOUGHT"
+  },
+  "macd": {
+    "macd_line": 1.2345,
+    "signal_line": 0.9876,
+    "histogram": 0.2469
+  },
+  "macd_interpretation": {
+    "signal_type": "BULLISH",
+    "crossover": "ABOVE"
+  },
+  "overall_recommendation": "HOLD",
+  "analysis_timestamp": "2024-01-20T15:30:00Z",
+  "candles_analyzed": 100
+}

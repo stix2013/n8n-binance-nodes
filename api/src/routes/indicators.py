@@ -1,7 +1,7 @@
 """Technical indicators API routes."""
 
 from fastapi import APIRouter, HTTPException, Query, Depends
-from typing import List
+from typing import List, Tuple
 import httpx
 import os
 import logging
@@ -66,7 +66,7 @@ async def get_binance_api_key() -> str:
 
 async def get_price_data(
     symbol: str, interval: str, limit: int, api_key: str
-) -> List[float]:
+) -> Tuple[List[float], int]:
     """
     Fetch price data from Binance API and extract closing prices.
 
@@ -77,7 +77,7 @@ async def get_price_data(
         api_key: Binance API key
 
     Returns:
-        List of closing prices
+        Tuple of (closing_prices, last_timestamp)
 
     Raises:
         HTTPException: If unable to fetch data from Binance
@@ -100,12 +100,15 @@ async def get_price_data(
             if response.status_code == 200:
                 data = response.json()
 
-                # Extract closing prices
+                # Extract closing prices and timestamps
                 closing_prices = []
+                last_timestamp = None
                 for kline in data:
                     closing_prices.append(float(kline[4]))  # Close price is at index 4
+                    if last_timestamp is None:
+                        last_timestamp = int(kline[0])  # Open time is at index 0
 
-                return closing_prices
+                return closing_prices, last_timestamp
             else:
                 error_detail = f"Binance API error: {response.status_code}"
                 try:
@@ -186,7 +189,9 @@ async def get_technical_analysis(
 
     try:
         # Fetch price data from Binance
-        closing_prices = await get_price_data(symbol, interval, limit, api_key)
+        closing_prices, last_timestamp = await get_price_data(
+            symbol, interval, limit, api_key
+        )
 
         # Validate price data
         TechnicalIndicators.validate_price_data(closing_prices, min_candles=30)
@@ -224,8 +229,38 @@ async def get_technical_analysis(
                 signal_type=macd_signal_type, crossover=macd_crossover
             ),
             overall_recommendation=overall_recommendation,
-            analysis_timestamp=timestamp_to_iso(int(closing_prices[-1]))
-            if closing_prices
+            analysis_timestamp=timestamp_to_iso(last_timestamp)
+            if last_timestamp
+            else None,
+            candles_analyzed=len(closing_prices),
+        )
+        macd_signal_type, macd_crossover = TechnicalIndicators.generate_macd_signal(
+            macd_data
+        )
+
+        # Generate overall recommendation
+        overall_recommendation = TechnicalIndicators.generate_overall_recommendation(
+            rsi_signal, macd_signal_type, macd_crossover
+        )
+
+        # Create response
+        current_price = closing_prices[-1]
+
+        return TechnicalAnalysisResponse(
+            symbol=symbol.upper(),
+            current_price=current_price,
+            rsi=RSIResult(value=rsi_value, signal=rsi_signal),
+            macd=MACDResult(
+                macd_line=macd_data["macd_line"],
+                signal_line=macd_data["signal_line"],
+                histogram=macd_data["histogram"],
+            ),
+            macd_interpretation=MACDSignal(
+                signal_type=macd_signal_type, crossover=macd_crossover
+            ),
+            overall_recommendation=overall_recommendation,
+            analysis_timestamp=timestamp_to_iso(last_timestamp)
+            if last_timestamp
             else None,
             candles_analyzed=len(closing_prices),
         )
@@ -284,7 +319,9 @@ async def get_single_indicator(
 
     try:
         # Fetch price data from Binance
-        closing_prices = await get_price_data(symbol, interval, limit, api_key)
+        closing_prices, last_timestamp = await get_price_data(
+            symbol, interval, limit, api_key
+        )
 
         # Validate price data
         TechnicalIndicators.validate_price_data(closing_prices, min_candles=30)
@@ -305,9 +342,7 @@ async def get_single_indicator(
             indicator=IndicatorType(indicator_name),  # Return enum value
             value=value,
             signal=signal,
-            timestamp=timestamp_to_iso(int(closing_prices[-1]))
-            if closing_prices
-            else None,
+            timestamp=timestamp_to_iso(last_timestamp) if last_timestamp else None,
         )
 
     except ValueError as e:
