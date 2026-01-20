@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-01-20
+
+### Fixed
+- **API Code Quality**: Resolved comprehensive linting issues across the codebase
+  - Fixed 13 unused imports across multiple files (src/models/indicators.py, src/routes/binance.py, src/routes/indicators.py, src/utils/indicators.py)
+  - Replaced 2 bare `except` clauses with specific exception types (ValueError, httpx.HTTPStatusError) for safer error handling
+  - Removed unused imports: typing.List, typing.Dict, pandas, datetime.datetime, models.settings.settings
+  - Auto-fixed all fixable issues using `ruff check --fix` command
+  - Formatted all source code with `ruff format` for consistent style
+
+### Quality Assurance
+- Verified all 46 tests still pass after linting fixes
+- Maintained 100% test coverage with no regressions introduced
+- Ensured all imports are properly utilized and exception handling is explicit
+
+### Technical
+- Updated API version from 0.3.1 to 0.3.2 in pyproject.toml
+- Updated docker-compose.yml API image tag to 0.3.2
+- Enhanced code readability and maintainability through consistent formatting and proper error handling
+
 ## [0.3.1] - 2026-01-20
 
 ### Fixed

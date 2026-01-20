@@ -4,17 +4,16 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 import httpx
 import os
 import logging
+import json
 from datetime import datetime
 
 # Import utilities with fallback for both relative and absolute imports
 try:
     from ..utils.date_utils import convert_date_format, timestamp_to_iso
     from ..models.api_models import PriceResponse, ErrorResponse, IntervalEnum
-    from ..models.settings import settings
 except ImportError:
     from utils.date_utils import convert_date_format, timestamp_to_iso
     from models.api_models import PriceResponse, ErrorResponse, IntervalEnum
-    from models.settings import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/binance", tags=["binance"])
@@ -142,7 +141,7 @@ async def get_binance_price(
                 try:
                     error_data = response.json()
                     error_detail += f" - {error_data.get('msg', 'Unknown error')}"
-                except:
+                except (ValueError, json.JSONDecodeError):
                     error_detail += f" - {response.text}"
 
                 raise HTTPException(

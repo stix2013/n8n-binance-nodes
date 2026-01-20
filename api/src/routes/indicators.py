@@ -8,47 +8,29 @@ import logging
 
 # Import utilities with fallback for both relative and absolute imports
 try:
-    from ..utils.date_utils import convert_date_format, timestamp_to_iso
+    from ..utils.date_utils import timestamp_to_iso
     from ..utils.indicators import TechnicalIndicators
-    from ..models.api_models import (
-        PriceRequest,
-        PriceResponse,
-        ErrorResponse,
-        IntervalEnum,
-    )
     from ..models.indicators import (
-        TechnicalAnalysisRequest,
         TechnicalAnalysisResponse,
         RSIResult,
         MACDResult,
         MACDSignal,
-        SingleIndicatorRequest,
         SingleIndicatorResponse,
         IndicatorType,
         ErrorResponse as IndicatorsErrorResponse,
     )
-    from ..models.settings import settings
 except ImportError:
-    from utils.date_utils import convert_date_format, timestamp_to_iso
+    from utils.date_utils import timestamp_to_iso
     from utils.indicators import TechnicalIndicators
-    from models.api_models import (
-        PriceRequest,
-        PriceResponse,
-        ErrorResponse,
-        IntervalEnum,
-    )
     from models.indicators import (
-        TechnicalAnalysisRequest,
         TechnicalAnalysisResponse,
         RSIResult,
         MACDResult,
         MACDSignal,
-        SingleIndicatorRequest,
         SingleIndicatorResponse,
         IndicatorType,
         ErrorResponse as IndicatorsErrorResponse,
     )
-    from models.settings import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/indicators", tags=["technical-indicators"])
@@ -114,7 +96,7 @@ async def get_price_data(
                 try:
                     error_data = response.json()
                     error_detail += f" - {error_data.get('msg', 'Unknown error')}"
-                except:
+                except (ValueError, httpx.HTTPStatusError):
                     error_detail += f" - {response.text}"
 
                 raise HTTPException(
