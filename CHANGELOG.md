@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-01-21
+
+### Added
+- **API Version Setting**: Added centralized `api_version` field to Settings model for single source of truth
+  - Replaced hardcoded "v1" with `settings.api_version` across main.py and routes
+  - Consistent API versioning across all endpoints
+- **Rate Limiting Middleware**: Implemented in-memory rate limiting per IP address
+  - Configurable via `RATE_LIMIT_PER_MINUTE` setting (default: 1200 req/min)
+  - Returns 429 status code when limit exceeded
+- **Request ID Tracking**: Added unique request ID for distributed tracing
+  - Generates UUID for each request or uses X-Request-ID header if provided
+  - Included in all logs and response headers (X-Request-ID)
+- **Custom Exception Handlers**: Added specific handlers for rate limit and validation errors
+  - `rate_limit_exception_handler` for 429 responses
+  - `value_error_exception_handler` for 400 validation errors
+
+### Refactored
+- **Shared Binance Utilities**: Extracted common code to `api/src/utils/binance.py`
+  - Consolidated `get_api_key()`, `get_http_client()`, `fetch_binance_data()` functions
+  - Removed duplicate code (~100 lines) from routes/binance.py and routes/indicators.py
+  - Fixed unreachable code (duplicate return statements)
+- **Test Mocking Patterns**: Updated tests to use `utils.binance.settings` and `utils.binance.get_http_client` patches
+  - Fixed mock data format (strings instead of bytes)
+  - All 22 technical indicators tests pass
+
+### Changed
+- Updated `api_version` from hardcoded to configurable via environment
+- Enhanced logging with request IDs for better debugging
+- Improved middleware order (request_id -> rate_limit -> request_logging -> error_handling)
+
+### Fixed
+- Removed duplicate `return` statements in HTTP client dependencies
+- Fixed User-Agent header to use `settings.api_version` instead of `api_host` default
+
 ## [0.3.2] - 2026-01-20
 
 ### Fixed
