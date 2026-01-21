@@ -56,17 +56,17 @@
 ## Remaining Tasks & Future Improvements
 
 ### High Priority
-- [ ] Fix remaining test failures (6 tests failing due to mocking pattern changes)
-- [ ] Update test mocking to use FastAPI dependency override pattern consistently
+- [x] Fix remaining test failures (6 tests failing due to mocking pattern changes)
+- [x] Update test mocking to use FastAPI dependency override pattern consistently
 - [ ] Add integration tests for the new lifespan context
-- [ ] Add version constant to settings for single source of truth
+- [x] Add version constant to settings for single source of truth
 
 ### Medium Priority
 - [ ] Add rate limiting middleware (currently configured but not implemented)
 - [ ] Add request ID tracking for debugging
 - [ ] Implement caching layer for frequently requested data
 - [ ] Add API response compression
-- [ ] Refactor shared Binance API logic to common module to avoid duplication
+- [x] Refactor shared Binance API logic to common module to avoid duplication
 
 ### Low Priority
 - [ ] Add OpenAPI schema customization
@@ -102,11 +102,11 @@
 ## Code Quality
 
 ### Refactoring Opportunities
-- [ ] Extract common Binance API logic to shared module
+- [x] Extract common Binance API logic to shared module
 - [ ] Create base router class with common functionality
 - [ ] Extract validation utilities to separate module
 - [ ] Add type stubs for better IDE support
-- [ ] Define API version constant in settings for single source of truth
+- [x] Define API version constant in settings for single source of truth
 
 ### Documentation
 - [ ] Add docstrings to all public functions

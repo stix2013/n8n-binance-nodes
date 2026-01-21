@@ -309,7 +309,6 @@ class TestTechnicalIndicatorsAPI:
 
     def test_technical_analysis_endpoint_success(self):
         """Test successful technical analysis API call."""
-        # Mock response data from Binance API with varying closing prices
         mock_response_data = []
         base_price = 45000.0
         for i in range(50):
@@ -317,10 +316,10 @@ class TestTechnicalIndicatorsAPI:
             mock_response_data.append(
                 [
                     1704067200000 + (i * 60000),  # Open time
-                    f"{close_price + 100:.2f}".encode(),  # Open price (string)
-                    f"{close_price + 200:.2f}".encode(),  # High price (string)
-                    f"{close_price - 100:.2f}".encode(),  # Low price (string)
-                    f"{close_price:.2f}".encode(),  # Close price (string) - varying
+                    str(close_price + 100),  # Open price (string)
+                    str(close_price + 200),  # High price (string)
+                    str(close_price - 100),  # Low price (string)
+                    str(close_price),  # Close price (string) - varying
                     "1000.00000000",  # Volume
                     1704067260000 + (i * 60000),  # Close time
                     "45500000.00000000",  # Quote asset volume
@@ -331,10 +330,20 @@ class TestTechnicalIndicatorsAPI:
                 ]
             )
 
-        with patch.dict(
-            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
-        ):
-            with patch("routes.indicators.get_http_client") as mock_get_client:
+        with patch("utils.binance.settings") as mock_settings:
+            mock_settings.binance_api_key = self.mock_api_key
+            mock_settings.binance_base_url = "https://api.binance.com"
+            mock_settings.request_timeout = 30.0
+            mock_settings.http_client_max_keepalive_connections = 5
+            mock_settings.http_client_max_connections = 10
+            mock_settings.api_version = "v1"
+            mock_settings.min_candles_for_analysis = 30
+            mock_settings.default_rsi_period = 14
+            mock_settings.default_macd_fast = 12
+            mock_settings.default_macd_slow = 26
+            mock_settings.default_macd_signal = 9
+
+            with patch("utils.binance.get_http_client") as mock_get_client:
                 mock_client = AsyncMock()
                 mock_response = MagicMock()
                 mock_response.status_code = 200
@@ -370,9 +379,16 @@ class TestTechnicalIndicatorsAPI:
 
     def test_technical_analysis_invalid_symbol(self):
         """Test technical analysis with invalid symbol."""
-        with patch.dict(
-            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
-        ):
+        with patch("utils.binance.settings") as mock_settings:
+            mock_settings.binance_api_key = self.mock_api_key
+            mock_settings.binance_base_url = "https://api.binance.com"
+            mock_settings.api_version = "v1"
+            mock_settings.default_rsi_period = 14
+            mock_settings.min_candles_for_analysis = 30
+            mock_settings.request_timeout = 30.0
+            mock_settings.http_client_max_keepalive_connections = 5
+            mock_settings.http_client_max_connections = 10
+
             response = client.get("/v1/indicators/analysis?symbol=BTC-USDT&interval=1h")
 
             assert response.status_code == 422
@@ -383,7 +399,6 @@ class TestTechnicalIndicatorsAPI:
 
     def test_technical_analysis_insufficient_data(self):
         """Test technical analysis with insufficient data."""
-        # Mock response with only 5 data points (need 30) with varying prices
         mock_response_data = []
         base_price = 45000.0
         for i in range(5):
@@ -391,10 +406,10 @@ class TestTechnicalIndicatorsAPI:
             mock_response_data.append(
                 [
                     1704067200000 + (i * 60000),
-                    f"{close_price + 100:.2f}".encode(),
-                    f"{close_price + 200:.2f}".encode(),
-                    f"{close_price - 100:.2f}".encode(),
-                    f"{close_price:.2f}".encode(),
+                    str(close_price + 100),
+                    str(close_price + 200),
+                    str(close_price - 100),
+                    str(close_price),
                     "1000.00000000",
                     1704067260000 + (i * 60000),
                     "45500000.00000000",
@@ -405,10 +420,16 @@ class TestTechnicalIndicatorsAPI:
                 ]
             )
 
-        with patch.dict(
-            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
-        ):
-            with patch("routes.indicators.get_http_client") as mock_get_client:
+        with patch("utils.binance.settings") as mock_settings:
+            mock_settings.binance_api_key = self.mock_api_key
+            mock_settings.binance_base_url = "https://api.binance.com"
+            mock_settings.request_timeout = 30.0
+            mock_settings.http_client_max_keepalive_connections = 5
+            mock_settings.http_client_max_connections = 10
+            mock_settings.api_version = "v1"
+            mock_settings.min_candles_for_analysis = 30
+
+            with patch("utils.binance.get_http_client") as mock_get_client:
                 mock_client = AsyncMock()
                 mock_response = MagicMock()
                 mock_response.status_code = 200
@@ -434,10 +455,10 @@ class TestTechnicalIndicatorsAPI:
             mock_response_data.append(
                 [
                     1704067200000 + (i * 60000),
-                    f"{close_price + 100:.2f}".encode(),
-                    f"{close_price + 200:.2f}".encode(),
-                    f"{close_price - 100:.2f}".encode(),
-                    f"{close_price:.2f}".encode(),
+                    str(close_price + 100),
+                    str(close_price + 200),
+                    str(close_price - 100),
+                    str(close_price),
                     "1000.00000000",
                     1704067260000 + (i * 60000),
                     "45500000.00000000",
@@ -448,10 +469,17 @@ class TestTechnicalIndicatorsAPI:
                 ]
             )
 
-        with patch.dict(
-            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
-        ):
-            with patch("routes.indicators.get_http_client") as mock_get_client:
+        with patch("utils.binance.settings") as mock_settings:
+            mock_settings.binance_api_key = self.mock_api_key
+            mock_settings.binance_base_url = "https://api.binance.com"
+            mock_settings.request_timeout = 30.0
+            mock_settings.http_client_max_keepalive_connections = 5
+            mock_settings.http_client_max_connections = 10
+            mock_settings.api_version = "v1"
+            mock_settings.min_candles_for_analysis = 30
+            mock_settings.default_rsi_period = 14
+
+            with patch("utils.binance.get_http_client") as mock_get_client:
                 mock_client = AsyncMock()
                 mock_response = MagicMock()
                 mock_response.status_code = 200
@@ -480,10 +508,10 @@ class TestTechnicalIndicatorsAPI:
             mock_response_data.append(
                 [
                     1704067200000 + (i * 60000),
-                    f"{close_price + 100:.2f}".encode(),
-                    f"{close_price + 200:.2f}".encode(),
-                    f"{close_price - 100:.2f}".encode(),
-                    f"{close_price:.2f}".encode(),
+                    str(close_price + 100),
+                    str(close_price + 200),
+                    str(close_price - 100),
+                    str(close_price),
                     "1000.00000000",
                     1704067260000 + (i * 60000),
                     "45500000.00000000",
@@ -494,10 +522,17 @@ class TestTechnicalIndicatorsAPI:
                 ]
             )
 
-        with patch.dict(
-            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
-        ):
-            with patch("routes.indicators.get_http_client") as mock_get_client:
+        with patch("utils.binance.settings") as mock_settings:
+            mock_settings.binance_api_key = self.mock_api_key
+            mock_settings.binance_base_url = "https://api.binance.com"
+            mock_settings.request_timeout = 30.0
+            mock_settings.http_client_max_keepalive_connections = 5
+            mock_settings.http_client_max_connections = 10
+            mock_settings.api_version = "v1"
+            mock_settings.min_candles_for_analysis = 30
+            mock_settings.default_macd_fast = 12
+
+            with patch("utils.binance.get_http_client") as mock_get_client:
                 mock_client = AsyncMock()
                 mock_response = MagicMock()
                 mock_response.status_code = 200
@@ -519,9 +554,13 @@ class TestTechnicalIndicatorsAPI:
 
     def test_single_indicator_invalid_name(self):
         """Test single indicator with invalid indicator name."""
-        with patch.dict(
-            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
-        ):
+        with patch("utils.binance.settings") as mock_settings:
+            mock_settings.binance_api_key = self.mock_api_key
+            mock_settings.api_version = "v1"
+            mock_settings.request_timeout = 30.0
+            mock_settings.http_client_max_keepalive_connections = 5
+            mock_settings.http_client_max_connections = 10
+
             response = client.get("/v1/indicators/invalid?symbol=BTCUSDT&interval=1h")
 
             assert response.status_code == 400  # Route-level validation error
@@ -529,7 +568,10 @@ class TestTechnicalIndicatorsAPI:
 
     def test_technical_analysis_missing_api_key(self):
         """Test technical analysis without API key."""
-        with patch.dict(os.environ, {}, clear=True):
+        with patch("utils.binance.settings") as mock_settings:
+            mock_settings.binance_api_key = None
+            mock_settings.api_version = "v1"
+
             response = client.get("/v1/indicators/analysis?symbol=BTCUSDT&interval=1h")
 
             assert response.status_code == 500
@@ -537,11 +579,15 @@ class TestTechnicalIndicatorsAPI:
 
     def test_technical_analysis_macd_period_validation(self):
         """Test MACD period validation in analysis endpoint."""
-        with patch.dict(
-            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
-        ):
+        with patch("utils.binance.settings") as mock_settings:
+            mock_settings.binance_api_key = self.mock_api_key
+            mock_settings.api_version = "v1"
+            mock_settings.request_timeout = 30.0
+            mock_settings.http_client_max_keepalive_connections = 5
+            mock_settings.http_client_max_connections = 10
+
             response = client.get(
-                "/v1/indicators/analysis?symbol=BTCUSDT&interval=1h&macd_slow=10&macd_fast=15"
+                "/v1/indicators/analysis?symbol=BTCUSDT&interval=1h&macd_slow=30&macd_fast=35"
             )
 
             assert response.status_code == 422

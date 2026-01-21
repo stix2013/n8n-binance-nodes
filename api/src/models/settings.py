@@ -157,5 +157,11 @@ class Settings(BaseSettings):
         description="Minimum candles required for technical analysis",
     )
 
+    api_version: str = Field(
+        default="v1",
+        alias="API_VERSION",
+        description="API version prefix for routes",
+    )
+
 
 settings = Settings()

@@ -31,19 +31,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-API_VERSION = "v1"
 API_TITLE = "n8n Binance API"
 
 
 @asynccontextmanager
 async def lifespan_context(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan context for startup and shutdown."""
-    logger.info(f"Starting {API_TITLE} {API_VERSION}")
+    logger.info(f"Starting {API_TITLE} {settings.api_version}")
     logger.info(f"Debug mode: {settings.api_debug}")
     logger.info(f"Log level: {settings.log_level}")
     logger.info(f"Rate limit: {settings.rate_limit_per_minute} requests/minute")
     yield
-    logger.info(f"Shutting down {API_TITLE} {API_VERSION}")
+    logger.info(f"Shutting down {API_TITLE} {settings.api_version}")
 
 
 app = FastAPI(
@@ -54,7 +53,7 @@ app = FastAPI(
 - **Price Data**: Get historical kline/candlestick data from Binance
 - **Technical Indicators**: RSI and MACD analysis with trading recommendations
 - **Type Safety**: Full Pydantic v2 validation
-- **API Versioning**: {API_VERSION} prefix for all endpoints
+- **API Versioning**: {settings.api_version} prefix for all endpoints
 
 ## Rate Limiting
 - {settings.rate_limit_per_minute} requests per minute per IP
@@ -63,7 +62,7 @@ app = FastAPI(
 - Debug: {settings.api_debug}
 - Log Level: {settings.log_level}
 """,
-    version=API_VERSION,
+    version=settings.api_version,
     debug=settings.api_debug,
     lifespan=lifespan_context,
     docs_url="/api/docs",
@@ -77,8 +76,8 @@ try:
 except ImportError:
     from routes import binance, indicators
 
-app.include_router(binance.router, prefix=f"/{API_VERSION}")
-app.include_router(indicators.router, prefix=f"/{API_VERSION}")
+app.include_router(binance.router, prefix=f"/{settings.api_version}")
+app.include_router(indicators.router, prefix=f"/{settings.api_version}")
 
 
 @app.middleware("http")
@@ -130,7 +129,7 @@ async def error_handling_middleware(request: Request, call_next):
 @app.get("/", response_model=RootResponse, tags=["Health"])
 def read_root() -> RootResponse:
     """Root endpoint - API health check."""
-    return RootResponse(message=f"Hello from {API_TITLE} {API_VERSION}!")
+    return RootResponse(message=f"Hello from {API_TITLE} {settings.api_version}!")
 
 
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
@@ -139,7 +138,9 @@ def health_check() -> HealthResponse:
     return HealthResponse(status="healthy")
 
 
-@app.get(f"/{API_VERSION}/health", response_model=HealthResponse, tags=["Health"])
+@app.get(
+    f"/{settings.api_version}/health", response_model=HealthResponse, tags=["Health"]
+)
 def health_check_v1() -> HealthResponse:
     """Versioned health check endpoint."""
     return HealthResponse(status="healthy")

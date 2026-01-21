@@ -9,6 +9,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 try:
     from ..utils.date_utils import timestamp_to_iso
     from ..utils.indicators import TechnicalIndicators
+    from ..utils.binance import (
+        get_api_key as shared_get_api_key,
+        get_http_client as shared_get_http_client,
+        fetch_binance_data as shared_fetch_binance_data,
+        extract_closing_prices,
+    )
     from ..models.indicators import (
         TechnicalAnalysisResponse,
         RSIResult,
@@ -22,6 +28,12 @@ try:
 except ImportError:
     from utils.date_utils import timestamp_to_iso
     from utils.indicators import TechnicalIndicators
+    from utils.binance import (
+        get_api_key as shared_get_api_key,
+        get_http_client as shared_get_http_client,
+        fetch_binance_data as shared_fetch_binance_data,
+        extract_closing_prices,
+    )
     from models.indicators import (
         TechnicalAnalysisResponse,
         RSIResult,
@@ -36,42 +48,8 @@ except ImportError:
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/indicators", tags=["Technical Indicators"])
 
-BINANCE_API_URL = f"{settings.binance_base_url}/api/v3/klines"
-
-
-async def get_api_key() -> str:
-    """Dependency to get Binance API key from environment."""
-    api_key = settings.binance_api_key
-    if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="BINANCE_API_KEY not configured",
-        )
-    return api_key
-
-
-async def get_http_client() -> httpx.AsyncClient:
-    """Dependency to get HTTP client with proper configuration."""
-    limits = httpx.Limits(
-        max_keepalive_connections=settings.http_client_max_keepalive_connections,
-        max_connections=settings.http_client_max_connections,
-    )
-    timeout = httpx.Timeout(settings.request_timeout)
-
-    return httpx.AsyncClient(
-        limits=limits,
-        timeout=timeout,
-        headers={"User-Agent": "n8n-binance-api/v1"},
-    )
-    timeout = httpx.Timeout(settings.request_timeout)
-
-    return httpx.AsyncClient(
-        limits=limits,
-        timeout=timeout,
-        headers={
-            "User-Agent": f"n8n-binance-api/{settings.__fields__['api_host'].default}"
-        },
-    )
+get_api_key = shared_get_api_key
+get_http_client = shared_get_http_client
 
 
 async def fetch_closing_prices(
@@ -81,51 +59,12 @@ async def fetch_closing_prices(
     limit: int,
 ) -> Tuple[list[float], int | None]:
     """Fetch closing prices from Binance API."""
-    params = {
-        "symbol": symbol.upper(),
-        "interval": interval,
-        "limit": limit,
-    }
+    klines = await shared_fetch_binance_data(client, symbol, interval, limit)
 
-    headers = {"X-MBX-APIKEY": settings.binance_api_key}
+    closing_prices = extract_closing_prices(klines)
+    last_timestamp = int(klines[-1][0]) if klines else None
 
-    try:
-        response = await client.get(BINANCE_API_URL, params=params, headers=headers)
-
-        if response.status_code == status.HTTP_200_OK:
-            data = response.json()
-
-            closing_prices = []
-            last_timestamp = None
-            for kline in data:
-                closing_prices.append(float(kline[4]))
-                if last_timestamp is None:
-                    last_timestamp = int(kline[0])
-
-            return closing_prices, last_timestamp
-
-        error_detail = f"Binance API error: {response.status_code}"
-        try:
-            error_data = response.json()
-            error_detail += f" - {error_data.get('msg', 'Unknown error')}"
-        except Exception:
-            error_detail += f" - {response.text}"
-
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=error_detail,
-        )
-
-    except httpx.TimeoutException:
-        raise HTTPException(
-            status_code=status.HTTP_408_REQUEST_TIMEOUT,
-            detail="Request timeout - Binance API took too long to respond",
-        )
-    except httpx.RequestError as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Failed to connect to Binance API: {str(e)}",
-        )
+    return closing_prices, last_timestamp
 
 
 SymbolQuery = Annotated[

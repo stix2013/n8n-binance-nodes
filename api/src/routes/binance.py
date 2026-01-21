@@ -9,6 +9,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 try:
     from ..utils.date_utils import convert_date_format, timestamp_to_iso
+    from ..utils.binance import (
+        get_api_key as shared_get_api_key,
+        get_http_client as shared_get_http_client,
+        fetch_binance_data as shared_fetch_binance_data,
+        transform_kline_data as shared_transform_kline_data,
+    )
     from ..models.api_models import (
         PriceResponse,
         ErrorResponse,
@@ -17,51 +23,27 @@ try:
     from ..models.settings import settings
 except ImportError:
     from utils.date_utils import convert_date_format, timestamp_to_iso
-    from models.api_models import PriceResponse, ErrorResponse, IntervalEnum
+    from utils.binance import (
+        get_api_key as shared_get_api_key,
+        get_http_client as shared_get_http_client,
+        fetch_binance_data as shared_fetch_binance_data,
+        transform_kline_data as shared_transform_kline_data,
+    )
+    from models.api_models import (
+        PriceResponse,
+        ErrorResponse,
+        IntervalEnum,
+    )
     from models.settings import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/binance", tags=["Price Data"])
 
-BINANCE_API_URL = f"{settings.binance_base_url}/api/v3/klines"
+get_api_key = shared_get_api_key
+get_http_client = shared_get_http_client
 
 
-async def get_api_key() -> str:
-    """Dependency to get Binance API key from environment."""
-    api_key = settings.binance_api_key
-    if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="BINANCE_API_KEY not configured",
-        )
-    return api_key
-
-
-async def get_http_client() -> httpx.AsyncClient:
-    """Dependency to get HTTP client with proper configuration."""
-    limits = httpx.Limits(
-        max_keepalive_connections=settings.http_client_max_keepalive_connections,
-        max_connections=settings.http_client_max_connections,
-    )
-    timeout = httpx.Timeout(settings.request_timeout)
-
-    return httpx.AsyncClient(
-        limits=limits,
-        timeout=timeout,
-        headers={"User-Agent": "n8n-binance-api/v1"},
-    )
-    timeout = httpx.Timeout(settings.request_timeout)
-
-    return httpx.AsyncClient(
-        limits=limits,
-        timeout=timeout,
-        headers={
-            "User-Agent": f"n8n-binance-api/{settings.__fields__['api_host'].default}"
-        },
-    )
-
-
-async def fetch_binance_data(
+async def fetch_binance_price_data(
     client: httpx.AsyncClient,
     symbol: str,
     interval: IntervalEnum,
@@ -69,48 +51,10 @@ async def fetch_binance_data(
     start_timestamp: int | None = None,
     end_timestamp: int | None = None,
 ) -> list:
-    """Fetch kline data from Binance API."""
-    params = {
-        "symbol": symbol.upper(),
-        "interval": interval.value,
-        "limit": limit,
-    }
-
-    if start_timestamp:
-        params["startTime"] = start_timestamp
-    if end_timestamp:
-        params["endTime"] = end_timestamp
-
-    headers = {"X-MBX-APIKEY": settings.binance_api_key}
-
-    try:
-        response = await client.get(BINANCE_API_URL, params=params, headers=headers)
-
-        if response.status_code == status.HTTP_200_OK:
-            return response.json()
-
-        error_detail = f"Binance API error: {response.status_code}"
-        try:
-            error_data = response.json()
-            error_detail += f" - {error_data.get('msg', 'Unknown error')}"
-        except Exception:
-            error_detail += f" - {response.text}"
-
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=error_detail,
-        )
-
-    except httpx.TimeoutException:
-        raise HTTPException(
-            status_code=status.HTTP_408_REQUEST_TIMEOUT,
-            detail="Request timeout - Binance API took too long to respond",
-        )
-    except httpx.RequestError as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Failed to connect to Binance API: {str(e)}",
-        )
+    """Fetch kline data from Binance API for price endpoint."""
+    return await shared_fetch_binance_data(
+        client, symbol, interval.value, limit, start_timestamp, end_timestamp
+    )
 
 
 def transform_kline_data(klines: list) -> list[dict]:
@@ -214,7 +158,7 @@ async def get_binance_price(
             )
 
     try:
-        klines = await fetch_binance_data(
+        klines = await fetch_binance_price_data(
             client, symbol, interval, limit, start_timestamp, end_timestamp
         )
 
