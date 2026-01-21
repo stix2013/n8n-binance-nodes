@@ -128,13 +128,24 @@ npm run lint
 
 Key variables in `.env`:
 
+### n8n Configuration
 - `N8N_HOST`: n8n host address
 - `N8N_PORT`: n8n port (default: 5678)
 - `N8N_BASIC_AUTH_USER`: Admin username
 - `N8N_BASIC_AUTH_PASSWORD`: Admin password
 - `N8N_RUNNERS_AUTH_TOKEN`: Task runner authentication
+
+### API Configuration
+- `API_LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR; default: INFO)
+- `ENVIRONMENT`: Environment name (development, production)
+- `API_HOST`: API bind address (default: 0.0.0.0)
+- `API_PORT`: API port (default: 8000)
+
+### Database
 - `POSTGRES_DB`: PostgreSQL database name
 - `POSTGRES_PASSWORD`: PostgreSQL password
+
+### Other
 - `TZ`: Timezone (default: Asia/Jakarta)
 
 ## Development
@@ -160,10 +171,33 @@ FastAPI service available at `http://localhost:8000`
 - `GET /api/binance/price` - Fetch cryptocurrency prices from Binance
 
 **Configuration:**
-- Python 3.13 with `uv` package manager
+- Python 3.13 with pip
 - Reads environment variables from `.env` file
 - Supports multiple time intervals (1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M)
 - Date range filtering with YYYYMMDD format
+
+### API Logging
+
+The API outputs structured JSON logs for production environments.
+
+**View API Logs:**
+```bash
+# View all API logs
+docker compose logs -f api
+
+# View last 100 lines
+docker compose logs --tail=100 api
+
+# View logs with JSON formatting
+docker compose logs api | jq
+```
+
+**Log Levels:** Configurable via `API_LOG_LEVEL` in `.env` (DEBUG, INFO, WARNING, ERROR)
+
+**Key Log Events:**
+- Startup/shutdown events with environment info
+- Error requests (4xx, 5xx) with full request details
+- Process time included for all logged requests
 
 ## Version History
 

@@ -621,7 +621,118 @@ curl "http://localhost:8000/api/indicators/analysis?symbol=SOLUSDT&interval=1h"
 cd api && source .venv/bin/activate && python demo_indicators.py
 ```
 
-## Performance Considerations
+## FastAPI Docker Best Practices
+
+### Logging Configuration
+
+The API uses structured JSON logging for production environments.
+
+**Log Level**: Configurable via `API_LOG_LEVEL` environment variable (default: INFO)
+
+**Key Features:**
+- JSON-formatted logs for log aggregation systems
+- Error-only request logging (4xx/5xx responses)
+- Startup/shutdown event logging
+- Reduced noise from third-party libraries (httpx, httpcore, urllib3)
+
+**Log Viewing:**
+```bash
+# View all API logs
+docker compose logs -f api
+
+# View logs since a specific time
+docker compose logs -f api --since="2025-01-21T10:00:00"
+
+# View last 100 lines
+docker compose logs --tail=100 api
+
+# View JSON formatted logs
+docker compose logs api | jq
+```
+
+**Log Examples:**
+
+Startup Log:
+```json
+{
+  "timestamp": "2025-01-21T10:00:00.000Z",
+  "level": "INFO",
+  "logger": "__main__",
+  "message": "API starting up",
+  "module": "main",
+  "function": "lifespan",
+  "line": 28,
+  "extra": {"event": "startup", "environment": "development"}
+}
+```
+
+Error Request Log:
+```json
+{
+  "timestamp": "2025-01-21T10:30:45.123Z",
+  "level": "ERROR",
+  "logger": "api.request",
+  "message": "Request failed",
+  "module": "logging_middleware",
+  "function": "_log_error",
+  "line": 42,
+  "extra": {
+    "type": "request_error",
+    "method": "GET",
+    "path": "/api/binance/price",
+    "query_params": "symbol=BTCUSDT&interval=invalid",
+    "status_code": 422,
+    "client_host": "172.18.0.1",
+    "process_time_ms": 12.45,
+    "user_agent": "curl/7.81.0"
+  }
+}
+```
+
+### Docker Configuration
+
+**Production Settings:**
+- Restart policy: `unless-stopped`
+- Volumes mounted read-only (`:ro`)
+- Resource limits: 2 CPU, 1GB memory
+- Non-root user (appuser, uid 1000)
+
+**Resource Monitoring:**
+```bash
+# Check container health
+docker compose ps api
+docker inspect --format='{{.State.Health.Status}}' api
+
+# Check resource usage
+docker stats api
+
+# View detailed container info
+docker inspect api
+```
+
+### Troubleshooting
+
+```bash
+# Restart API service
+docker compose restart api
+
+# Rebuild and start
+docker compose up --build -d api
+
+# Enter container for debugging
+docker compose exec api sh
+
+# Test with invalid parameters to trigger error logging
+curl "http://localhost:8000/api/binance/price?symbol=INVALID&interval=1h"
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `API_LOG_LEVEL` | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
+| `ENVIRONMENT` | development | Environment name (development, production) |
+| `PYTHONUNBUFFERED` | 1 | Disable Python output buffering |
 
 - Use async/await for I/O operations
 - Implement proper connection pooling for HTTP clients
