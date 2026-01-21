@@ -58,11 +58,9 @@
 ### High Priority
 - [x] Fix remaining test failures (6 tests failing due to mocking pattern changes)
 - [x] Update test mocking to use FastAPI dependency override pattern consistently
-- [ ] Add integration tests for the new lifespan context
 - [x] Add version constant to settings for single source of truth
 
 ### Medium Priority
-- [ ] Add rate limiting middleware (currently configured but not implemented)
 - [ ] Add request ID tracking for debugging
 - [ ] Implement caching layer for frequently requested data
 - [ ] Add API response compression
