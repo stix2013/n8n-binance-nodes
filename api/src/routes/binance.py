@@ -1,165 +1,236 @@
-"""Binance API routes."""
+"""Binance API routes with best practices."""
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-import httpx
-import os
 import logging
-import json
 from datetime import datetime
+from typing import Annotated
 
-# Import utilities with fallback for both relative and absolute imports
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
 try:
     from ..utils.date_utils import convert_date_format, timestamp_to_iso
-    from ..models.api_models import PriceResponse, ErrorResponse, IntervalEnum
+    from ..models.api_models import (
+        PriceResponse,
+        ErrorResponse,
+        IntervalEnum,
+    )
+    from ..models.settings import settings
 except ImportError:
     from utils.date_utils import convert_date_format, timestamp_to_iso
     from models.api_models import PriceResponse, ErrorResponse, IntervalEnum
+    from models.settings import settings
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/binance", tags=["binance"])
+router = APIRouter(prefix="/binance", tags=["Price Data"])
+
+BINANCE_API_URL = f"{settings.binance_base_url}/api/v3/klines"
 
 
-async def get_binance_api_key() -> str:
+async def get_api_key() -> str:
     """Dependency to get Binance API key from environment."""
-    api_key = os.getenv("BINANCE_API_KEY")
+    api_key = settings.binance_api_key
     if not api_key:
         raise HTTPException(
-            status_code=500, detail="BINANCE_API_KEY not found in environment variables"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="BINANCE_API_KEY not configured",
         )
     return api_key
+
+
+async def get_http_client() -> httpx.AsyncClient:
+    """Dependency to get HTTP client with proper configuration."""
+    limits = httpx.Limits(
+        max_keepalive_connections=settings.http_client_max_keepalive_connections,
+        max_connections=settings.http_client_max_connections,
+    )
+    timeout = httpx.Timeout(settings.request_timeout)
+
+    return httpx.AsyncClient(
+        limits=limits,
+        timeout=timeout,
+        headers={"User-Agent": "n8n-binance-api/v1"},
+    )
+    timeout = httpx.Timeout(settings.request_timeout)
+
+    return httpx.AsyncClient(
+        limits=limits,
+        timeout=timeout,
+        headers={
+            "User-Agent": f"n8n-binance-api/{settings.__fields__['api_host'].default}"
+        },
+    )
+
+
+async def fetch_binance_data(
+    client: httpx.AsyncClient,
+    symbol: str,
+    interval: IntervalEnum,
+    limit: int,
+    start_timestamp: int | None = None,
+    end_timestamp: int | None = None,
+) -> list:
+    """Fetch kline data from Binance API."""
+    params = {
+        "symbol": symbol.upper(),
+        "interval": interval.value,
+        "limit": limit,
+    }
+
+    if start_timestamp:
+        params["startTime"] = start_timestamp
+    if end_timestamp:
+        params["endTime"] = end_timestamp
+
+    headers = {"X-MBX-APIKEY": settings.binance_api_key}
+
+    try:
+        response = await client.get(BINANCE_API_URL, params=params, headers=headers)
+
+        if response.status_code == status.HTTP_200_OK:
+            return response.json()
+
+        error_detail = f"Binance API error: {response.status_code}"
+        try:
+            error_data = response.json()
+            error_detail += f" - {error_data.get('msg', 'Unknown error')}"
+        except Exception:
+            error_detail += f" - {response.text}"
+
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=error_detail,
+        )
+
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail="Request timeout - Binance API took too long to respond",
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to connect to Binance API: {str(e)}",
+        )
+
+
+def transform_kline_data(klines: list) -> list[dict]:
+    """Transform Binance kline data to PriceDataPoint format."""
+    transformed = []
+    for kline in klines:
+        transformed.append(
+            {
+                "open_time": timestamp_to_iso(kline[0]),
+                "open_price": float(kline[1]),
+                "high_price": float(kline[2]),
+                "low_price": float(kline[3]),
+                "close_price": float(kline[4]),
+                "volume": float(kline[5]),
+                "close_time": timestamp_to_iso(kline[6]),
+                "quote_asset_volume": float(kline[7]),
+                "number_of_trades": int(kline[8]),
+                "taker_buy_base_asset_volume": float(kline[9]),
+                "taker_buy_quote_asset_volume": float(kline[10]),
+                "ignore": kline[11],
+            }
+        )
+    return transformed
+
+
+SymbolQuery = Annotated[
+    str,
+    Query(
+        ...,
+        min_length=1,
+        max_length=20,
+        description="Trading pair symbol (e.g., BTCUSDT)",
+    ),
+]
+
+IntervalQuery = Annotated[
+    IntervalEnum,
+    Query(description="Kline interval"),
+]
+
+LimitQuery = Annotated[
+    int,
+    Query(ge=1, le=1000, description="Number of records to return"),
+]
+
+DateQuery = Annotated[
+    str,
+    Query(description="Date in YYYYMMDD format"),
+]
 
 
 @router.get(
     "/price",
     response_model=PriceResponse,
     responses={
-        400: {"model": ErrorResponse},
-        422: {"model": ErrorResponse},
-        500: {"model": ErrorResponse},
-        503: {"model": ErrorResponse},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorResponse},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": ErrorResponse},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ErrorResponse},
     },
+    summary="Get Price Data",
+    description="Fetch historical kline/candlestick data from Binance API",
 )
 async def get_binance_price(
-    symbol: str = Query(
-        ...,
-        min_length=1,
-        max_length=20,
-        description="Trading pair symbol (e.g., BTCUSDT)",
-    ),
-    interval: IntervalEnum = Query(
-        default=IntervalEnum.ONE_HOUR, description="Kline interval"
-    ),
-    limit: int = Query(
-        default=50, ge=1, le=1000, description="Number of records to return"
-    ),
-    startdate: str = Query(None, description="Start date in YYYYMMDD format"),
-    enddate: str = Query(None, description="End date in YYYYMMDD format"),
-    api_key: str = Depends(get_binance_api_key),
-):
+    symbol: SymbolQuery,
+    interval: IntervalQuery,
+    api_key: Annotated[str, Depends(get_api_key)],
+    client: Annotated[httpx.AsyncClient, Depends(get_http_client)],
+    startdate: DateQuery = None,
+    enddate: DateQuery = None,
+    limit: LimitQuery = 50,
+) -> PriceResponse:
     """
-    Get historical price data from Binance API
+    Get historical price data from Binance API.
+
+    - **symbol**: Trading pair symbol (required) - e.g., BTCUSDT, ETHUSDT
+    - **interval**: Kline interval (default: 1h)
+    - **limit**: Number of records (default: 50, max: 1000)
+    - **startdate**: Start date filter (optional, YYYYMMDD format)
+    - **enddate**: End date filter (optional, YYYYMMDD format)
     """
+    start_timestamp: int | None = None
+    end_timestamp: int | None = None
 
-    # Validate input parameters
-    if not symbol.isalnum():
-        raise HTTPException(
-            status_code=422, detail="Symbol must contain only alphanumeric characters"
-        )
-
-    # Convert symbol to uppercase
-    symbol = symbol.upper()
-
-    # Validate date format if provided
-    for date_field, date_value in [("startdate", startdate), ("enddate", enddate)]:
-        if date_value:
-            if len(date_value) != 8 or not date_value.isdigit():
-                raise HTTPException(
-                    status_code=422, detail=f"{date_field} must be in YYYYMMDD format"
-                )
-            try:
-                datetime.strptime(date_value, "%Y%m%d")
-            except ValueError:
-                raise HTTPException(status_code=422, detail=f"Invalid {date_field}")
-
-    # Build Binance API URL
-    url = "https://api.binance.com/api/v3/klines"
-
-    # Prepare query parameters
-    params = {"symbol": symbol, "interval": interval.value, "limit": limit}
-
-    # Add date range if provided
-    try:
-        if startdate:
-            start_timestamp = convert_date_format(startdate)
-            params["startTime"] = start_timestamp
-
-        if enddate:
-            end_timestamp = convert_date_format(enddate)
-            params["endTime"] = end_timestamp
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    # Prepare headers
-    headers = {"X-MBX-APIKEY": api_key}
-
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url, params=params, headers=headers, timeout=30.0
+    if startdate:
+        try:
+            start_timestamp = int(convert_date_format(startdate))
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
             )
 
-            if response.status_code == 200:
-                data = response.json()
+    if enddate:
+        try:
+            end_timestamp = int(convert_date_format(enddate))
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
 
-                # Transform the response to a more user-friendly format
-                transformed_data = []
-                for kline in data:
-                    transformed_data.append(
-                        {
-                            "open_time": timestamp_to_iso(kline[0]),
-                            "open_price": float(kline[1]),
-                            "high_price": float(kline[2]),
-                            "low_price": float(kline[3]),
-                            "close_price": float(kline[4]),
-                            "volume": float(kline[5]),
-                            "close_time": timestamp_to_iso(kline[6]),
-                            "quote_asset_volume": float(kline[7]),
-                            "number_of_trades": int(kline[8]),
-                            "taker_buy_base_asset_volume": float(kline[9]),
-                            "taker_buy_quote_asset_volume": float(kline[10]),
-                            "ignore": kline[11],
-                        }
-                    )
-
-                return PriceResponse(
-                    symbol=symbol,
-                    data=transformed_data,
-                    count=len(transformed_data),
-                )
-            else:
-                error_detail = f"Binance API error: {response.status_code}"
-                try:
-                    error_data = response.json()
-                    error_detail += f" - {error_data.get('msg', 'Unknown error')}"
-                except (ValueError, json.JSONDecodeError):
-                    error_detail += f" - {response.text}"
-
-                raise HTTPException(
-                    status_code=response.status_code, detail=error_detail
-                )
-
-    except httpx.TimeoutException:
-        raise HTTPException(
-            status_code=408,
-            detail="Request timeout - Binance API took too long to respond",
+    try:
+        klines = await fetch_binance_data(
+            client, symbol, interval, limit, start_timestamp, end_timestamp
         )
-    except httpx.RequestError as e:
-        raise HTTPException(
-            status_code=503, detail=f"Failed to connect to Binance API: {str(e)}"
+
+        transformed_data = transform_kline_data(klines)
+
+        return PriceResponse(
+            symbol=symbol.upper(),
+            data=transformed_data,
+            count=len(transformed_data),
         )
+
     except HTTPException:
-        # Re-raise HTTPException instances without logging them as errors
         raise
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        logger.exception(f"Unexpected error in get_binance_price: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        )

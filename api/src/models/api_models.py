@@ -1,9 +1,16 @@
-"""Pydantic models for API requests and responses."""
+"""Pydantic models for API requests and responses with v2 best practices."""
 
-from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional
 from datetime import datetime
 from enum import Enum
+from typing import List, Optional
+
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+)
 
 
 class IntervalEnum(str, Enum):
@@ -28,6 +35,11 @@ class IntervalEnum(str, Enum):
 class PriceDataPoint(BaseModel):
     """Model for a single price data point."""
 
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
+
     open_time: datetime = Field(..., description="Opening time in ISO format")
     open_price: float = Field(..., ge=0, description="Opening price")
     high_price: float = Field(..., ge=0, description="Highest price")
@@ -45,9 +57,20 @@ class PriceDataPoint(BaseModel):
     )
     ignore: str = Field(..., description="Ignore field")
 
+    @field_serializer("open_time", "close_time")
+    @classmethod
+    def serialize_datetime(cls, v: datetime) -> str:
+        return v.isoformat()
+
 
 class PriceRequest(BaseModel):
     """Model for price request parameters."""
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        str_to_upper=True,
+        validate_assignment=True,
+    )
 
     symbol: str = Field(
         ...,
@@ -64,22 +87,21 @@ class PriceRequest(BaseModel):
     startdate: Optional[str] = Field(None, description="Start date in YYYYMMDD format")
     enddate: Optional[str] = Field(None, description="End date in YYYYMMDD format")
 
-    @field_validator("symbol")
+    @field_validator("symbol", mode="before")
     @classmethod
-    def validate_symbol(cls, v):
-        """Validate that symbol contains only alphanumeric characters."""
+    def validate_symbol(cls, v: str) -> str:
+        """Validate and normalize symbol."""
         if not v.isalnum():
             raise ValueError("Symbol must contain only alphanumeric characters")
         return v.upper()
 
-    @field_validator("startdate", "enddate")
+    @field_validator("startdate", "enddate", mode="before")
     @classmethod
-    def validate_date_format(cls, v):
+    def validate_date_format(cls, v: Optional[str]) -> Optional[str]:
         """Validate date format is YYYYMMDD."""
         if v is not None:
             if len(v) != 8 or not v.isdigit():
                 raise ValueError("Date must be in YYYYMMDD format")
-            # Additional validation for valid date
             try:
                 datetime.strptime(v, "%Y%m%d")
             except ValueError:
@@ -98,17 +120,43 @@ class PriceResponse(BaseModel):
 class ErrorResponse(BaseModel):
     """Model for error responses."""
 
+    success: bool = Field(default=False, description="Request success status")
     error: str = Field(..., description="Error message")
     detail: Optional[str] = Field(None, description="Additional error details")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Error timestamp"
+    )
+
+    @field_serializer("timestamp")
+    @classmethod
+    def serialize_datetime(cls, v: datetime) -> str:
+        return v.isoformat()
 
 
 class HealthResponse(BaseModel):
     """Model for health check response."""
 
     status: str = Field(..., description="Health status")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Check timestamp"
+    )
+
+    @field_serializer("timestamp")
+    @classmethod
+    def serialize_datetime(cls, v: datetime) -> str:
+        return v.isoformat()
 
 
 class RootResponse(BaseModel):
     """Model for root endpoint response."""
 
     message: str = Field(..., description="Welcome message")
+    version: str = Field(default="1.0.0", description="API version")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Response timestamp"
+    )
+
+    @field_serializer("timestamp")
+    @classmethod
+    def serialize_datetime(cls, v: datetime) -> str:
+        return v.isoformat()

@@ -1,34 +1,17 @@
-"""Pydantic models for technical indicators API."""
+"""Pydantic models for technical indicators API with v2 best practices."""
 
-from pydantic import BaseModel, Field
-from typing import Optional, Literal
 from datetime import datetime
 from enum import Enum
+from typing import Literal, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
-class TechnicalAnalysisRequest(BaseModel):
-    """Request for RSI/MACD analysis."""
+class IndicatorType(str, Enum):
+    """Supported indicator types."""
 
-    symbol: str = Field(
-        ..., min_length=1, max_length=20, description="Trading pair symbol"
-    )
-    interval: str = Field(
-        ...,
-        description="Candle interval (1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M)",
-    )
-    rsi_period: int = Field(
-        default=14, ge=2, le=100, description="RSI calculation period"
-    )
-    macd_fast: int = Field(default=12, ge=2, le=50, description="MACD fast EMA period")
-    macd_slow: int = Field(
-        default=26, ge=31, le=100, description="MACD slow EMA period"
-    )
-    macd_signal: int = Field(
-        default=9, ge=2, le=50, description="MACD signal line period"
-    )
-    limit: int = Field(
-        default=100, ge=30, le=1000, description="Number of candles to analyze"
-    )
+    RSI = "rsi"
+    MACD = "macd"
 
 
 class RSIResult(BaseModel):
@@ -54,8 +37,8 @@ class MACDSignal(BaseModel):
     signal_type: Literal["BULLISH", "BEARISH", "NEUTRAL"] = Field(
         description="MACD signal type"
     )
-    crossover: Optional[Literal["ABOVE", "BELOW"]] = Field(
-        None, description="Signal line crossover"
+    crossover: Optional[Literal["ABOVE", "BELOW", "EQUAL"]] = Field(
+        default=None, description="Signal line crossover"
     )
 
 
@@ -75,16 +58,20 @@ class TechnicalAnalysisResponse(BaseModel):
         ge=30, description="Number of candles used in analysis"
     )
 
-
-class IndicatorType(str, Enum):
-    """Supported indicator types."""
-
-    RSI = "rsi"
-    MACD = "macd"
+    @field_serializer("analysis_timestamp")
+    @classmethod
+    def serialize_datetime(cls, v: datetime) -> str:
+        return v.isoformat()
 
 
 class SingleIndicatorRequest(BaseModel):
     """Request for single indicator calculation."""
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        str_to_lower=True,
+        validate_assignment=True,
+    )
 
     symbol: str = Field(
         ..., min_length=1, max_length=20, description="Trading pair symbol"
@@ -103,9 +90,23 @@ class SingleIndicatorResponse(BaseModel):
     signal: str = Field(description="Indicator signal")
     timestamp: datetime = Field(description="Calculation timestamp")
 
+    @field_serializer("timestamp")
+    @classmethod
+    def serialize_datetime(cls, v: datetime) -> str:
+        return v.isoformat()
+
 
 class ErrorResponse(BaseModel):
     """Error response model."""
 
+    success: bool = Field(default=False, description="Request success status")
     error: str = Field(description="Error message")
     detail: Optional[str] = Field(None, description="Additional error details")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Error timestamp"
+    )
+
+    @field_serializer("timestamp")
+    @classmethod
+    def serialize_datetime(cls, v: datetime) -> str:
+        return v.isoformat()
