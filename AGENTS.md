@@ -119,21 +119,21 @@ python -m ruff format src/
 ### Docker Commands
 ```bash
 # Start all services
-docker-compose up --build
+docker compose up --build
 
 # Start specific services
-docker-compose up api
-docker-compose up task-runners
+docker compose up api
+docker compose up task-runners
 
 # View health status
-docker-compose ps
+docker compose ps
 
 # Logs
-docker-compose logs api
-docker-compose logs -f task-runners
+docker compose logs api
+docker compose logs -f task-runners
 
 # Restart services
-docker-compose restart api
+docker compose restart api
 ```
 
 ### Task Runner Commands (from `/dockers/task-runner-python/`)
@@ -358,6 +358,82 @@ GET /api/indicators/macd?symbol=BTCUSDT&interval=1h&fast=12&slow=26&signal=9
 }
 ```
 
+## Pydantic Type Checking Implementation
+
+The Python API uses comprehensive Pydantic v2 type checking for runtime validation, type safety, and automatic API documentation. See `api/PYDANTIC_IMPLEMENTATION.md` for detailed implementation documentation.
+
+### Overview
+Pydantic provides automatic validation for all API requests/responses, ensuring data integrity and type safety throughout the application. This includes request parameter validation, response formatting, and error handling.
+
+### Key Components
+
+#### Pydantic Models (`src/models/api_models.py`)
+- **PriceRequest**: Validates request parameters with custom validation rules
+- **PriceResponse**: Structured response model for API outputs
+- **PriceDataPoint**: Individual price data point model
+- **ErrorResponse**: Standardized error response format
+- **HealthResponse**: Health check response model
+- **RootResponse**: Root endpoint response model
+- **IntervalEnum**: Enum for valid Binance kline intervals
+
+#### Settings Management (`src/models/settings.py`)
+- **Settings**: Pydantic settings class for environment configuration
+- Centralized configuration management with type validation
+- Support for environment variables and .env files
+
+### Validation Features
+
+#### Automatic Validation
+- **Symbol validation**: Only alphanumeric characters allowed
+- **Date format validation**: Must be in YYYYMMDD format
+- **Limit range validation**: Must be between 1-1000
+- **Interval validation**: Must be valid Binance kline interval
+- **Required field validation**: Symbol is required
+
+#### Type Safety
+- **Enum support**: Interval enum for safe interval values
+- **Type conversion**: Automatic type coercion where appropriate
+- **Field constraints**: Min/max values, string length limits
+- **Optional fields**: Proper handling of optional parameters
+
+#### Error Handling
+- **HTTP 422**: Validation errors return proper status codes
+- **Detailed error messages**: Clear validation failure descriptions
+- **Consistent error format**: All errors follow ErrorResponse model
+
+### Developer Benefits
+
+1. **Runtime Type Safety**: Prevents runtime type errors, catches data validation issues early
+2. **API Documentation**: Automatic OpenAPI/Swagger documentation with clear parameter descriptions
+3. **IDE Support**: Auto-completion and type hints for better tooling
+4. **Data Integrity**: Input validation at API boundaries protects against malformed requests
+5. **Maintainability**: Centralized validation logic that's easy to extend
+
+### Usage Example
+```python
+# Valid request - automatically passes validation
+GET /api/binance/price?symbol=BTCUSDT&interval=1h&limit=100
+
+# Invalid request - returns HTTP 422 with detailed error
+GET /api/binance/price?symbol=BTC-USDT&interval=invalid
+# Returns: {"detail": "Symbol must contain only alphanumeric characters"}
+```
+
+### Running the Demo
+```bash
+cd api
+source .venv/bin/activate
+python demo_pydantic.py  # Interactive demonstration of all validation features
+```
+
+### Testing Coverage
+- 21 comprehensive tests for Pydantic validation
+- Tests for model instantiation, field validation, custom validators, enum handling
+- API endpoint validation tests (14 tests)
+- Pydantic model tests (7 tests)
+
+For complete details, models, validation rules, and examples, see `api/PYDANTIC_IMPLEMENTATION.md`.
+
 ## Docker Best Practices
 
 ### Health Checks
@@ -397,9 +473,9 @@ N8N_BASIC_AUTH_PASSWORD=password
 ```
 
 ### Development vs Production
-- **Development**: Use `docker-compose up --build`
-- **Production**: Use `docker-compose up -d` (detached mode)
-- **Debugging**: Use `docker-compose logs -f service_name`
+- **Development**: Use `docker compose up --build`
+- **Production**: Use `docker compose up -d` (detached mode)
+- **Debugging**: Use `docker compose logs -f service_name`
 
 ## Testing Guidelines
 
@@ -446,7 +522,7 @@ class TestIndicatorsAPI:
 - Validate all inputs with Pydantic models
 - Use environment variables for secrets
 - Implement proper error handling (no sensitive data in errors)
-- Use HTTPS in production (configured in docker-compose)
+- Use HTTPS in production (configured in docker compose)
 
 ### Dependencies
 - Pin versions in `pyproject.toml`
@@ -520,20 +596,20 @@ class TechnicalIndicators:
 1. **Port conflicts**: Check if port 8000 or 5678 is already in use
 2. **Environment variables**: Ensure `.env` file exists and is properly formatted
 3. **Import errors**: Check Python path and virtual environment activation
-4. **Docker issues**: Use `docker-compose down && docker-compose up --build`
+4. **Docker issues**: Use `docker compose down && docker compose up --build`
 5. **Timestamp errors**: Ensure using candle timestamp, not price value
 6. **Insufficient data**: Technical indicators require minimum 30 candles
 
 ### Debug Commands
 ```bash
 # Check service health
-docker-compose ps
+docker compose ps
 
 # View real-time logs
-docker-compose logs -f
+docker compose logs -f
 
 # Check environment
-docker-compose exec api env | grep BINANCE
+docker compose exec api env | grep BINANCE
 
 # Test API endpoint
 curl http://localhost:8000/health
