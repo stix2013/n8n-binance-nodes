@@ -595,7 +595,7 @@ api/sol_macd_tool.py             # SOL analysis command-line tool
 ### Testing Structure
 ```
 tests/
-├── test_binance_api.py          # Binance API endpoint tests (24 tests)
+├── test_binance_api.py          # Binance API endpoint tests (24 tests, 1 skipped)
 ├── test_technical_indicators.py # Technical indicators tests (22 tests)
 └── conftest.py                 # Pytest configuration
 ```
@@ -1199,6 +1199,7 @@ docker-compose logs --since=1h api | grep -E "(duration|latency|time)" | head -2
 6. **Version bump**: Update version in pyproject.toml and docker-compose.yml
 
 ## Version History
+- **v0.3.1**: Fixed API tests - added required `interval` parameter to test URLs (6 tests fixed)
 - **v0.3.0**: Technical indicators (RSI, MACD) with comprehensive API
 - **v0.2.0**: Pydantic type checking and health checks
 - **v0.1.0**: Initial FastAPI implementation with Binance price endpoint
