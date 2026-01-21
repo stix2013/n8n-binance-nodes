@@ -18,8 +18,24 @@ class JSONFormatter(logging.Formatter):
         }
         if record.exc_info:
             log_data["exception"] = self.formatException(record.exc_info)
-        if hasattr(record, "extra") and record.extra:
-            log_data["extra"] = record.extra
+        extra_data = {}
+        for key in (
+            "type",
+            "event",
+            "environment",
+            "status_code",
+            "method",
+            "path",
+            "query_params",
+            "client_host",
+            "process_time_ms",
+            "user_agent",
+            "exception",
+        ):
+            if hasattr(record, key):
+                extra_data[key] = getattr(record, key)
+        if extra_data:
+            log_data["extra"] = extra_data
         return json.dumps(log_data)
 
 
