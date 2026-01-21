@@ -1,28 +1,49 @@
 """Main FastAPI application."""
 
-from fastapi import FastAPI
 import logging
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 import sys
 import os
 
+from fastapi import FastAPI
+
 # Add the src directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Load environment variables
+load_dotenv("/app/.env")
 
 # Import Pydantic models and settings
 try:
     from .models.api_models import RootResponse, HealthResponse, ErrorResponse
     from .models.settings import settings
+    from .config.logging_config import setup_logging
+    from .middleware.logging_middleware import ErrorLoggingMiddleware
 except ImportError:
     from models.api_models import RootResponse, HealthResponse, ErrorResponse
     from models.settings import settings
+    from config.logging_config import setup_logging
+    from middleware.logging_middleware import ErrorLoggingMiddleware
 
-# Load environment variables
-load_dotenv("/app/.env")
-
-# Set up logging based on settings
-logging.basicConfig(level=getattr(logging, settings.log_level.upper()))
+# Set up logging
+setup_logging(settings.log_level)
 logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app):
+    """Lifespan context manager for startup/shutdown events."""
+    logger.info(
+        "API starting up",
+        extra={
+            "event": "startup",
+            "environment": os.getenv("ENVIRONMENT", "development"),
+        },
+    )
+    yield
+    logger.info("API shutting down", extra={"event": "shutdown"})
+
 
 # Create FastAPI app with settings
 app = FastAPI(
@@ -30,7 +51,11 @@ app = FastAPI(
     description="API for fetching cryptocurrency prices from Binance with Pydantic type validation and technical indicators",
     version="1.1.0",
     debug=settings.api_debug,
+    lifespan=lifespan,
 )
+
+# Register middleware
+app.add_middleware(ErrorLoggingMiddleware)
 
 # Import and include routers
 try:
