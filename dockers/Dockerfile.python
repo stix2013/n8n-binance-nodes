@@ -1,20 +1,27 @@
 FROM python:3.13-slim
 
-# Install uv.
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Install system dependencies (curl for health checks)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy the application into the container.
+# Copy requirements first for better layer caching
+COPY ./api/pyproject.toml /app/pyproject.toml
+
+# Install Python dependencies
+WORKDIR /app
+RUN pip install --no-cache-dir -e .
+
+# Copy application code
 COPY ./api /app
 
-# Install the application dependencies.
-WORKDIR /app
-ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
-RUN uv sync --frozen --no-cache
+# Create non-root user (appuser, uid 1000) for security
+RUN useradd -u 1000 -m appuser
 
-# Load environment variables from .env file
-RUN pip install python-dotenv
+# Set proper permissions for /app directory and switch to non-root user
+RUN chown -R appuser:appuser /app
+USER appuser
 
-# Run the application.
+# Run the application
 WORKDIR /app/src
-ENV PATH="/opt/venv/bin:$PATH"
-CMD ["fastapi", "run", "main.py", "--port", "8000", "--host", "0.0.0.0"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
