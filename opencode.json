@@ -3,10 +3,7 @@
   "mcp": {
     "n8n": {
       "type": "local",
-      "command": [
-        "bunx",
-        "n8n-mcp"
-      ],
+      "command": ["bunx", "n8n-mcp"],
       "environment": {
         "MCP_MODE": "stdio",
         "LOG_LEVEL": "error",
@@ -16,6 +13,18 @@
         "WEBHOOK_SECURITY_MODE": "moderate"
       },
       "enabled": true
+    }
+  },
+  "agent": {
+    "code-reviewer": {
+      "description": "Reviews code for best practices and potential issues",
+      "mode": "subagent",
+      "model": "gemini-3-flash-preview",
+      "tools": {
+        "write": false,
+        "edit": false
+      },
+      "prompt": "{file:./.opencode/prompts/code-reviewer.md}"
     }
   }
 }
