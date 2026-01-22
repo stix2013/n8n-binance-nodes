@@ -8,8 +8,6 @@ from pydantic import ConfigDict
 class Settings(BaseSettings):
     """Application settings using Pydantic."""
 
-    env_prefix = "API_"
-
     # Binance API settings
     binance_api_key: Optional[str] = None
     binance_api_secret: Optional[str] = None
@@ -27,7 +25,9 @@ class Settings(BaseSettings):
 
     # Allow extra environment variables to support shared .env file
     # The API shares the root .env with n8n and other services
-    model_config = ConfigDict(env_file="/app/.env", case_sensitive=False, extra="allow")
+    model_config = ConfigDict(
+        env_prefix="API_", env_file="/app/.env", case_sensitive=False, extra="allow"
+    )
 
 
 # Global settings instance

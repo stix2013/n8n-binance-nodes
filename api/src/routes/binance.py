@@ -9,10 +9,12 @@ from datetime import datetime
 # Import utilities with fallback for both relative and absolute imports
 try:
     from ..utils.date_utils import convert_date_format, timestamp_to_iso
+    from ..utils.price_validation import validate_price_data, PriceValidationError
     from ..models.api_models import PriceResponse, ErrorResponse, IntervalEnum
     from ..models.settings import settings
 except ImportError:
     from utils.date_utils import convert_date_format, timestamp_to_iso
+    from utils.price_validation import validate_price_data, PriceValidationError
     from models.api_models import PriceResponse, ErrorResponse, IntervalEnum
     from models.settings import settings
 
@@ -55,6 +57,15 @@ async def get_binance_price(
     ),
     startdate: str = Query(None, description="Start date in YYYYMMDD format"),
     enddate: str = Query(None, description="End date in YYYYMMDD format"),
+    skip_volume_validation: bool = Query(
+        False, description="Skip volume validation (volume > 0)"
+    ),
+    skip_time_validation: bool = Query(
+        False, description="Skip close_time validation (close at end of interval)"
+    ),
+    skip_price_validation: bool = Query(
+        False, description="Skip price validation (prices within high/low bounds)"
+    ),
     api_key: str = Depends(get_binance_api_key),
 ):
     """
@@ -130,6 +141,28 @@ async def get_binance_price(
                             "taker_buy_quote_asset_volume": float(kline[10]),
                             "ignore": kline[11],
                         }
+                    )
+
+                # Validate price data
+                validation_errors = validate_price_data(
+                    transformed_data,
+                    interval.value,
+                    skip_volume_validation=skip_volume_validation,
+                    skip_time_validation=skip_time_validation,
+                    skip_price_validation=skip_price_validation,
+                )
+
+                if validation_errors:
+                    error_messages = [
+                        f"Data point {error.index}: {error.message}"
+                        for error in validation_errors
+                    ]
+                    logger.warning(
+                        f"Price validation failed for {symbol}: {len(validation_errors)} errors found"
+                    )
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Price validation failed: {'; '.join(error_messages)}",
                     )
 
                 return PriceResponse(
