@@ -752,6 +752,7 @@ curl "http://localhost:8000/api/binance/price?symbol=INVALID&interval=1h"
 6. **Version bump**: Update version in pyproject.toml and docker-compose.yml
 
 ## Version History
+- **v0.4.1**: Structured JSON logging system and Docker production best practices
 - **v0.3.0**: Technical indicators (RSI, MACD) with comprehensive API
 - **v0.2.0**: Pydantic type checking and health checks
 - **v0.1.0**: Initial FastAPI implementation with Binance price endpoint

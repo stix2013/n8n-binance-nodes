@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-01-22
+
+### Added
+- **Environment Configuration**: Added `env_prefix = "API_"` to Settings class for consistent environment variable naming
+
+### Changed
+- **Logging System**: Implemented structured JSON logging for production environments
+  - Added JSONFormatter for log aggregation systems
+  - Integrated logging system in main.py
+  - Configurable log level via `API_LOG_LEVEL` environment variable
+  - Error-only request logging (4xx/5xx responses)
+  - Reduced noise from third-party libraries (httpx, httpcore, urllib3)
+
+### Changed
+- **Docker Configuration**: Updated docker-compose for production deployment
+  - Production settings: restart policy, read-only volumes, resource limits
+  - Non-root user (appuser, uid 1000) for security
+
+### Fixed
+- **JSON Formatter**: Properly capture extra fields in JSONFormatter
+- **Dockerfile**: Simplified API Dockerfile to use pip instead of uv venv
+
+### Technical
+- Added comprehensive FastAPI Docker Best Practices documentation
+- Reorganized API documentation to docs directory
+- Removed unused files (.python-version, requirements.txt)
+
 ## [0.3.1] - 2026-01-20
 
 ### Fixed
