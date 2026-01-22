@@ -8,6 +8,8 @@ from pydantic import ConfigDict
 class Settings(BaseSettings):
     """Application settings using Pydantic."""
 
+    env_prefix = "API_"
+
     # Binance API settings
     binance_api_key: Optional[str] = None
     binance_api_secret: Optional[str] = None
