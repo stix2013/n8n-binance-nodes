@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-01-22
+
+### Added
+- **Binance Price Data Validation**: Implemented comprehensive validation for Binance API price data
+  - Added `validate_close_time()` to ensure close_time matches expected interval timeframe
+  - Added `validate_prices()` to ensure high >= open/close and low <= open/close
+  - Added `validate_volume()` to ensure volume > 0
+  - Added optional query parameters: `skip_volume_validation`, `skip_time_validation`, `skip_price_validation`
+  - Added comprehensive test suite (25 tests for validation utils)
+  - Created new module `api/src/utils/price_validation.py`
+
+### Added
+- **N8N Version Configuration**: Made n8n version configurable via `N8N_VERSION` environment variable
+  - Updated `docker-compose.yml` to use `${N8N_VERSION:-2.4.4-amd64}` for n8n image
+  - Updated `docker-compose.yml` to use `${N8N_VERSION:-2.4.4}-local` for task-runners image
+  - Added `ARG N8N_VERSION` in `dockers/Dockerfile` for build-time configuration
+
+### Added
+- **API Version Configuration**: Made API image version configurable via `API_VERSION` environment variable
+  - Updated `docker-compose.yml` to use `${API_VERSION:-0.4.1}` for api image
+  - Added `ARG API_VERSION` in `dockers/Dockerfile.python` for build-time configuration
+  - Added image metadata labels for version tracking
+
+### Fixed
+- **Settings Configuration**: Fixed `env_prefix` configuration in Pydantic Settings class
+  - Moved `env_prefix` from class attribute to `ConfigDict` in `api/src/models/settings.py`
+
+### Testing
+- Updated test mock data with correct timestamps for close_time validation
+- All 71 tests passing in Docker container
+
 ## [0.4.1] - 2026-01-22
 
 ### Added
