@@ -1,4 +1,9 @@
+ARG API_VERSION=0.4.1
 FROM python:3.13-slim
+
+# Set image metadata labels
+LABEL version="${API_VERSION}" \
+      maintainer="n8n-binance-nodes"
 
 # Install system dependencies (curl for health checks)
 RUN apt-get update && apt-get install -y --no-install-recommends \
