@@ -9,9 +9,9 @@ A Docker-based n8n workflow automation environment with custom community nodes f
   - **ChartCrypto:** Generate crypto trading charts with technical indicators
 
 - **Infrastructure:**
-  - n8n 2.4.4 with external task runners
+  - n8n with external task runners (version configurable via `N8N_VERSION`)
   - PostgreSQL 16 database
-  - FastAPI service for custom endpoints
+  - FastAPI service for custom endpoints (Python 3.13, version configurable via `API_VERSION`)
   - Python 3.13 task runner environment
 
 - **Trading Tools:**
@@ -20,32 +20,67 @@ A Docker-based n8n workflow automation environment with custom community nodes f
   - News sentiment analysis integration
   - Automated signal generation (long, short, hold)
 
+- **Data Validation:**
+  - Binance price data validation (close_time, price consistency, volume > 0)
+  - Optional validation skip parameters for flexibility
+
 ## Project Structure
 
 ```
 n8n-binance-nodes/
-├── nodes/
+├── .env                            # Environment configuration (API keys, versions, ports)
+├── .env-example                    # Environment template example
+├── docker-compose.yml              # Main Docker orchestration
+├── README.md                       # This file
+├── CHANGELOG.md                    # Version history and changes
+├── AGENTS.md                       # Agent development guidelines
+├── opencode.json                   # OpenCode configuration
+├── policy.yaml                     # Policy definitions
+│
+├── nodes/                          # n8n custom community nodes
 │   └── @stix/
-│       ├── n8n-nodes-binance-kline/    # Binance API integration node
-│       └── n8n-nodes-chart-crypto/     # Crypto charting node
-├── api/                                # FastAPI service (Python 3.13)
+│       ├── n8n-nodes-binance-kline/   # Binance Kline node (crypto market data)
+│       └── n8n-nodes-chart-crypto/    # Crypto charting node
+│
+├── api/                            # FastAPI Python service
 │   ├── src/
-│   │   ├── main.py                     # FastAPI entry point
-│   │   ├── routes/                     # API route handlers
-│   │   └── utils/                      # Utility functions
-│   ├── tests/                          # Unit tests
-│   └── pyproject.toml                  # Python dependencies
-├── dockers/
-│   ├── Dockerfile.python               # Python/FastAPI container image
-│   ├── Dockerfile                      # Task runner image
-│   └── Dockerfile.postgres             # PostgreSQL image
-├── config/
-│   └── n8n-task-runners.json           # Task runner configuration
-├── docs/
-│   ├── day-trader-expert.md            # Trading strategy documentation
-│   └── chart-img/                      # Chart examples
-├── docker-compose.yml                  # Main orchestration
-└── .env                               # Environment configuration
+│   │   ├── main.py                 # FastAPI entry point
+│   │   ├── config/                 # Configuration modules
+│   │   │   └── logging_config.py   # JSON logging configuration
+│   │   ├── middleware/             # HTTP middleware
+│   │   │   └── logging_middleware.py
+│   │   ├── models/                 # Pydantic models
+│   │   │   ├── api_models.py       # Request/response models
+│   │   │   ├── indicators.py       # Technical indicators models
+│   │   │   └── settings.py         # Environment settings
+│   │   ├── routes/                 # API route handlers
+│   │   │   ├── binance.py          # Binance API endpoints
+│   │   │   └── indicators.py       # Technical indicators endpoints
+│   │   └── utils/                  # Utility functions
+│   │       ├── date_utils.py       # Date/time conversion
+│   │       ├── indicators.py       # RSI, MACD calculations
+│   │       └── price_validation.py # Binance data validation
+│   ├── tests/                      # Unit tests (71 tests)
+│   │   ├── test_binance_api.py
+│   │   ├── test_technical_indicators.py
+│   │   └── test_price_validation.py
+│   ├── pyproject.toml              # Python dependencies
+│   └── demo_indicators.py          # Technical indicators demo
+│
+├── dockers/                        # Docker build files
+│   ├── Dockerfile                  # Task runner image (n8nio/runners)
+│   ├── Dockerfile.python           # FastAPI Python 3.13 image
+│   ├── Dockerfile.postgres         # PostgreSQL customization
+│   └── n8n-task-runners.json       # Task runner config
+│
+├── config/                         # Configuration files
+│   └── n8n-task-runners.json       # n8n task runner settings
+│
+├── docs/                           # Documentation
+│   ├── day-trader-expert.md        # Trading strategy guide
+│   └── chart-img/                  # Chart examples
+│
+└── .vscode/                        # VS Code settings
 ```
 
 ## Quick Start
@@ -168,7 +203,10 @@ FastAPI service available at `http://localhost:8000`
 **Endpoints:**
 - `GET /` - Root endpoint
 - `GET /health` - Health check
-- `GET /api/binance/price` - Fetch cryptocurrency prices from Binance
+- `GET /api/binance/price` - Fetch cryptocurrency prices from Binance (with validation)
+- `GET /api/indicators/analysis` - Full RSI + MACD technical analysis
+- `GET /api/indicators/rsi` - RSI indicator only
+- `GET /api/indicators/macd` - MACD indicator only
 
 **Configuration:**
 - Python 3.13 with pip
@@ -203,6 +241,9 @@ docker compose logs api | jq
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version information.
 
+- **v0.5.0** (2026-01-22) - Binance price validation, version configuration
+- **v0.4.1** (2026-01-22) - Structured JSON logging, Docker best practices
+- **v2.4.4** (2026-01-18) - Upgrade to n8n 2.4.4-amd64
 - **v2.4.2** (2026-01-15) - Upgrade to n8n 2.4.2-amd64
 - **v2.3.2** (2026-01-12) - PostgreSQL SSL fix, base image updates
 
