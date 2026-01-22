@@ -43,6 +43,8 @@ class TestBinanceAPI:
     def test_binance_price_success(self):
         """Test successful Binance price fetch with all parameters"""
         # Mock response data from Binance API
+        # Open time: 1704067200000 (2024-01-01T00:00:00Z)
+        # Close time: 1704070800000 (2024-01-01T01:00:00Z) - exactly 1 hour later for 1h interval
         mock_response_data = [
             [
                 1704067200000,  # Open time
@@ -51,7 +53,7 @@ class TestBinanceAPI:
                 "46700.00000000",  # Low price
                 "46850.00000000",  # Close price
                 "125.43210000",  # Volume
-                1704067260000,  # Close time
+                1704070800000,  # Close time (1 hour after open time)
                 "5876543.21000000",  # Quote asset volume
                 1543,  # Number of trades
                 "62.12340000",  # Taker buy base asset volume
@@ -125,7 +127,7 @@ class TestBinanceAPI:
                 "46700.00000000",
                 "46850.00000000",
                 "125.43210000",
-                1704067260000,
+                1704070800000,  # Close time (1 hour after open time)
                 "5876543.21000000",
                 1543,
                 "62.12340000",
@@ -244,7 +246,7 @@ class TestBinanceAPI:
                 "46700.00000000",
                 "46850.00000000",
                 "125.43210000",
-                1704067260000,
+                1704070800000,  # Close time (1 hour after open time)
                 "5876543.21000000",
                 1543,
                 "62.12340000",
