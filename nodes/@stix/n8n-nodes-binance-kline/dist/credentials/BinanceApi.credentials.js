@@ -5,6 +5,9 @@ class BinanceApi {
     constructor() {
         this.name = 'binanceApi';
         this.displayName = 'Binance API';
+        this.displayNamePlaceholder = 'Binance API Key';
+        this.documentationUrl = 'https://docs.n8n.io/integrations/community-nodes/binance';
+        this.icon = { light: 'file:icons/binance-kline.svg', dark: 'file:icons/binance-kline.dark.svg' };
         this.properties = [
             {
                 displayName: 'API Key',
@@ -18,13 +21,14 @@ class BinanceApi {
                 name: 'apiSecret',
                 type: 'string',
                 default: '',
+                typeOptions: { password: true },
             },
         ];
         this.authenticate = {
             type: 'generic',
             properties: {
                 headers: {
-                    Authorization: 'Bearer {{binanceApi.apiKey}}',
+                    'X-MBX-APIKEY': '={{$credentials.apiKey}}',
                 },
             },
         };
