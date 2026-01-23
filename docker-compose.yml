@@ -48,7 +48,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - n8n_mcp:/data/mcp
-      - ./nodes/@stix/n8n-nodes-crypto/dist:/home/node/.n8n/custom/node_modules/@stix/n8n-nodes-binance-kline/dist
+      - ./nodes/@stix/n8n-nodes-binance-kline:/home/node/.n8n/custom/node_modules/@stix/n8n-nodes-binance-kline
     # You can remove this section if you don't need a specific limit
     ulimits:
       nofile:

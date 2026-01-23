@@ -4,6 +4,7 @@
     "description": "Binance Kline Node for n8n community node",
     "license": "MIT",
     "homepage": "",
+    "main": "dist/nodes/BinanceKline/BinanceKline.node.js",
     "keywords": [
         "n8n-community-node-package",
         "binance",
