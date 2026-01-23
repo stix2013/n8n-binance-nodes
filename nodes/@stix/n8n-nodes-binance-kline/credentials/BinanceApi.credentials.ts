@@ -28,7 +28,7 @@ export class BinanceApi implements ICredentialType {
     type: 'generic',
     properties: {
       headers: {
-        Authorization: 'Bearer {{binanceApi.apiKey}}',
+        'X-MBX-APIKEY': '={{$credentials.apiKey}}',
       },
     },
   };
