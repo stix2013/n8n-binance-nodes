@@ -462,3 +462,154 @@ For first-time node developers using our specific stack:
 - BunJS Documentation: https://bun.sh/docs
 - n8n Docker Setup: https://docs.n8n.io/hosting/installation/docker/
 - OpenCode MCP n8n-mcp: https://github.com/opencode-co/n8n-mcp
+
+## Practical Implementation: BinanceKline Node
+
+This section documents the practical implementation of a Binance Kline node for the n8n-binance-nodes project.
+
+### Implementation Summary
+
+The BinanceKline node was created to fetch cryptocurrency market data from Binance API with customizable symbol parameters. The implementation includes:
+
+1. **Node file**: `nodes/BinanceKline/BinanceKline.node.ts`
+2. **Credentials**: `credentials/BinanceApi.credentials.ts` with API key authentication
+3. **Package configuration**: `package.json` with proper n8n metadata
+
+### Key Implementation Details
+
+#### Credentials Configuration
+
+The Binance API uses a custom header for authentication (`X-MBX-APIKEY`), not Bearer token:
+
+```typescript
+export class BinanceApi implements ICredentialType {
+    name = 'binanceApi';
+    displayName = 'Binance API';
+    documentationUrl = 'https://binance-docs.github.io/apidocs/spot/en/#api-key-setup';
+    
+    properties: INodeProperties[] = [
+        {
+            displayName: 'API Key',
+            name: 'apiKey',
+            type: 'string',
+            typeOptions: { password: true },
+            default: '',
+        },
+        {
+            displayName: 'API Secret',
+            name: 'apiSecret',
+            type: 'string',
+            typeOptions: { password: true },
+            default: '',
+        },
+    ];
+
+    authenticate = {
+        type: 'generic',
+        properties: {
+            headers: {
+                'X-MBX-APIKEY': '={{$credentials.apiKey}}',
+            },
+        },
+    };
+}
+```
+
+#### Package.json Requirements
+
+```json
+{
+  "name": "@stix/n8n-nodes-binance-kline",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/BinanceApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/BinanceKline/BinanceKline.node.js"
+    ]
+  }
+}
+```
+
+### Common Compliance Issues Fixed
+
+1. **Missing `main` field**: Added to point to the compiled JS entry point
+2. **Wrong auth header**: Changed from `Authorization: Bearer` to `X-MBX-APIKEY`
+3. **Missing password typeOptions**: Added `typeOptions: { password: true }` to secret fields
+4. **Missing documentationUrl**: Added to credentials for user guidance
+5. **Volume mount path**: Mount entire package, not just dist/, for npm compatibility
+
+### Development Workflow
+
+```bash
+# 1. Install dependencies
+cd nodes/@stix/n8n-nodes-binance-kline
+bun install
+
+# 2. Build the node
+bun run build
+
+# 3. Lint the code
+npx eslint . --ext .ts --config eslint.config.mjs
+
+# 4. Restart n8n to pick up changes
+cd /home/stevan/projects/AI/n8n-binance-nodes
+docker compose restart n8n
+
+# 5. Check n8n logs
+docker logs n8n-main --tail 50 -f
+```
+
+### Docker Configuration for Node Development
+
+```yaml
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.4.4
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=user
+      - N8N_BASIC_AUTH_PASSWORD=password123
+      - N8N_COMMUNITY_PACKAGES_ENABLED=true
+      - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom/
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./nodes/@stix/n8n-nodes-binance-kline:/home/node/.n8n/custom/n8n-nodes-binance-kline
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
+```
+
+### Project Structure
+
+```
+n8n-binance-nodes/
+├── nodes/@stix/
+│   └── n8n-nodes-binance-kline/
+│       ├── nodes/
+│       │   └── BinanceKline/
+│       │       └── BinanceKline.node.ts    # Main node implementation
+│       ├── credentials/
+│       │   └── BinanceApi.credentials.ts   # API credentials
+│       ├── icons/                          # Credential/node icons
+│       ├── package.json                    # Node package config
+│       ├── tsconfig.json                   # TypeScript config
+│       ├── eslint.config.mjs               # Linting config
+│       └── dist/                           # Built output
+└── docker-compose.yml                      # Docker orchestration
+```
+
+### Testing the Node
+
+1. Access n8n at http://localhost:5678
+2. Create a new workflow
+3. Search for "Binance" in the nodes panel
+4. Create a new credential with your Binance API key/secret
+5. Configure the node with symbol (e.g., BTCUSDT) and interval (e.g., 1h)
+6. Execute the workflow and verify output

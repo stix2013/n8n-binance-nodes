@@ -464,7 +464,86 @@ docker stats api
 6. **Version bump**: Update version in pyproject.toml and docker-compose.yml
 
 ## Version History
+- **v0.5.0**: n8n custom node development with BinanceKline node
 - **v0.4.1**: Structured JSON logging system and Docker production best practices
 - **v0.3.0**: Technical indicators (RSI, MACD) with comprehensive API
 - **v0.2.0**: Pydantic type checking and health checks
 - **v0.1.0**: Initial FastAPI implementation with Binance price endpoint
+
+## n8n Custom Node Development
+
+### Node Location
+Custom n8n community nodes are located in:
+```
+nodes/@stix/
+├── n8n-nodes-binance-kline/     # Main node package
+│   ├── nodes/                   # Node implementation
+│   ├── credentials/             # Credential types
+│   ├── icons/                   # Node icons
+│   └── package.json             # Node package config
+```
+
+### Node Development Commands
+
+#### Build and Lint
+```bash
+# Navigate to node package
+cd nodes/@stix/n8n-nodes-binance-kline
+
+# Install dependencies
+bun install
+
+# Build TypeScript
+bun run build
+
+# Lint code
+npx eslint . --ext .ts --config eslint.config.mjs
+```
+
+#### Test in n8n
+```bash
+# Restart n8n to pick up changes
+docker compose restart n8n
+
+# View n8n logs
+docker logs n8n-main --tail 50 -f
+
+# Access n8n UI
+# http://localhost:5678
+# Credentials: user / password123
+```
+
+### Node Compliance Checklist
+
+- [ ] Package name follows `n8n-nodes-<name>` or `@scope/n8n-nodes-<name>`
+- [ ] `package.json` includes `n8n` section with `nodes` and `credentials`
+- [ ] `main` field in `package.json` points to built JS entry point
+- [ ] Credentials use `typeOptions: { password: true }` for secret fields
+- [ ] Credentials include `documentationUrl` property
+- [ ] Authentication uses correct header format (e.g., `X-MBX-APIKEY` for Binance)
+- [ ] Icons exist in package root (n8n copies to dist during build)
+- [ ] Code passes linting with eslint.config.mjs
+
+### Credentials Configuration
+
+Binance API credentials use custom header authentication:
+
+```typescript
+authenticate: {
+    type: 'generic',
+    properties: {
+        headers: {
+            'X-MBX-APIKEY': '={{$credentials.apiKey}}'
+        }
+    }
+}
+```
+
+### Docker Volume Mount
+
+Mount the entire node package (not just dist/) for npm install compatibility:
+
+```yaml
+volumes:
+  - ./nodes/@stix/n8n-nodes-binance-kline:/home/node/.n8n/custom/n8n-nodes-binance-kline
+```

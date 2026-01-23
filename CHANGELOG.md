@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-01-23
+
+### Fixed
+- **n8n Community Node Compliance**: Cleaned up node structure and fixed compliance issues
+  - Removed nested `ChartCrypto` node from `n8n-nodes-binance-kline` package
+  - Removed unused packages: `n8n-nodes-chart-crypto`, `n8n-nodes-crypto`
+  - Fixed Binance API credentials to use `X-MBX-APIKEY` header instead of `Authorization: Bearer`
+  - Added `typeOptions: { password: true }` to `apiSecret` field for proper secret handling
+  - Added `documentationUrl` property to credentials for user guidance
+  - Added icons directory with credential icons
+  - Added `main` field to `package.json` pointing to compiled JS entry point
+  - Updated `docker-compose.yml` volume mount path to mount entire package (not just dist/)
+  - All linting checks pass with `eslint.config.mjs`
+
+### Added
+- **n8n Node Development Documentation**: Added comprehensive development guidelines
+  - Added "n8n Custom Node Development" section to `AGENTS.md` with build/lint/test commands
+  - Added Node Compliance Checklist for community node verification
+  - Added credentials configuration examples for Binance API
+  - Updated `docs/n8n-custom-node-kimi.md` with practical implementation guide
+  - Documented common compliance issues and fixes
+
+### Changed
+- **Node Package Structure**: Simplified to single focused node package
+  - `nodes/@stix/n8n-nodes-binance-kline/` is now the only active node package
+  - Improved separation of concerns for easier maintenance
+
 ## [0.5.0] - 2026-01-22
 
 ### Added
