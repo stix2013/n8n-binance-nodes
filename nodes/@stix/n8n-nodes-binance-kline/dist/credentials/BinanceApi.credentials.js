@@ -23,6 +23,14 @@ class BinanceApi {
                 default: '',
                 typeOptions: { password: true },
             },
+            {
+                displayName: 'Watchlist',
+                name: 'watchlist',
+                type: 'string',
+                default: '',
+                placeholder: 'BTCUSDT, ETHUSDT, SOLUSDT',
+                description: 'Comma-separated list of your favorite crypto pairs for quick access',
+            },
         ];
         this.authenticate = {
             type: 'generic',
