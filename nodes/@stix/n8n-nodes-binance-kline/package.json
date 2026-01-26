@@ -1,6 +1,6 @@
 {
     "name": "@stix/n8n-nodes-binance-kline",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Binance Kline Node for n8n community node",
     "license": "MIT",
     "homepage": "",
