@@ -1,3 +1,5 @@
+N8N_VERSION=2.6.0
+# N8N
 N8N_HOST=localhost
 N8N_PORT=5678
 N8N_HOST_PORT=5678
@@ -10,7 +12,9 @@ N8N_BASIC_AUTH_PASSWORD=your_secure_password
 N8N_GIT_NODE_DISABLE_BARE_REPOS=false
 N8N_DEV_RELOAD=true
 N8N_COMMUNITY_PACKAGES_ENABLED=true
-# Runners
+N8N_API_KEY="your_n8n_api_key"
+N8N_API_URL="https://your-zrok-url.share.zrok.io"
+# N8N Runners
 N8N_RUNNERS_ENABLED=true
 N8N_RUNNERS_MODE=external
 N8N_RUNNERS_BROKER_LISTEN_ADDRESS="0.0.0.0"
@@ -23,17 +27,22 @@ NODE_FUNCTION_ALLOW_EXTERNAL="moment,uuid,@binance/spot,@binance/common,trading-
 TZ="Asia/Jakarta"
 # Database
 DB_SQLITE_POOL_SIZE=2
-# Python API
+# API
+API_VERSION=0.5.0
 API_HOST=0.0.0.0
 API_PORT=8000
+API_HOST_PORT=8000
 API_PROTOCOL=http
 API_LOG_LEVEL=INFO
+ENVIRONMENT=development
 # Postgres
-POSTGRES_DB=n8n-database
+POSTGRES_DB=n8n
 POSTGRES_PASSWORD=your_postgres_password
-POSTGRES_USER=postgres
+# Zrok (for webhooks)
+WEBHOOK_URL="https://your-zrok-url.share.zrok.io"
+# Zrok Configuration
+ZROK_RESERVED_NAME="your-reserved-name"
+ZROK_PUBLIC_URL="https://your-zrok-url.share.zrok.io"
 # Binance API Key (for n8n-binance-nodes)
 BINANCE_API_KEY=your_binance_api_key
-BINANCE_API_SECRET=your_binance_api_secret
-# NGrok (for webhooks)
-WEBHOOK_URL=https://your-ngrok-url.ngrok.io
+BINANCE_SECRET_KEY=your_binance_api_secret

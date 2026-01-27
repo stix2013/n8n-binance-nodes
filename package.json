@@ -1,0 +1,18 @@
+{
+  "name": "n8n-binance-nodes",
+  "version": "1.0.0",
+  "description": "n8n workflow automation with Binance nodes",
+  "scripts": {
+    "start": "bun scripts/start-env.ts",
+    "stop": "bun scripts/stop-env.ts"
+  },
+  "keywords": [
+    "n8n",
+    "binance",
+    "automation",
+    "docker",
+    "zrok"
+  ],
+  "author": "Stevan H. Moeladi",
+  "license": "MIT"
+}
