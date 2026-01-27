@@ -1,4 +1,4 @@
-ARG N8N_VERSION=2.4.4
+ARG N8N_VERSION=2.6.0
 FROM n8nio/runners:${N8N_VERSION}-amd64
 USER root
 
