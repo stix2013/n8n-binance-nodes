@@ -106,7 +106,7 @@ cp env-example .env
 
 3. Start the services:
 ```bash
-docker-compose up -d
+bun start
 ```
 
 4. Access n8n at `http://localhost:5678`
@@ -182,6 +182,8 @@ Key variables in `.env`:
 
 ### Other
 - `TZ`: Timezone (default: Asia/Jakarta)
+- `ZROK_RESERVED_NAME`: Zrok reserved name for public access
+- `ZROK_PUBLIC_URL`: Public URL for Zrok tunnel
 
 ## Development
 
@@ -195,6 +197,26 @@ The project uses external task runners with Python 3.13 for:
 - Machine learning with torch
 
 Allowed modules: `numpy,pandas,feedparser,requests,bs4,textblob,vaderSentiment,torch,datetime,urllib,quote`
+
+### Environment Management
+
+The project includes convenience scripts for managing the development environment.
+
+**Start Environment:**
+```bash
+bun start
+```
+This command starts all Docker containers and launches the Zrok tunnel.
+
+**Stop Environment:**
+```bash
+bun stop
+```
+This command stops all Docker containers and terminates the Zrok tunnel.
+
+**Configuration:**
+- `ZROK_RESERVED_NAME`: The reserved Zrok share name (e.g., `stix2025n8n`)
+- `ZROK_PUBLIC_URL`: The public URL for the tunnel (e.g., `https://stixgoauth2025.share.zrok.io`)
 
 ### API Service
 
@@ -241,6 +263,8 @@ docker compose logs api | jq
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version information.
 
+- **v1.0.0** (2026-01-27) - Startup scripts, Zrok integration, n8n 2.6.0
+- **v0.5.1** (2026-01-23) - Node compliance fixes, n8n documentation
 - **v0.5.0** (2026-01-22) - Binance price validation, version configuration
 - **v0.4.1** (2026-01-22) - Structured JSON logging, Docker best practices
 - **v2.4.4** (2026-01-18) - Upgrade to n8n 2.4.4-amd64
