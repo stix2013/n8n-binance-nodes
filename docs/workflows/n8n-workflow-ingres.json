@@ -1,0 +1,115 @@
+{
+  "name": "Test Binance Ingest Analysis (Fixed)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "3f3cee36-fe6d-445e-9f2f-44c08fbed6e5",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform BinanceKline output to IngestRequest\nconst data = $input.item.json;\n\nreturn {\n  data: {\n    symbol: data.symbol,\n    interval: data.interval,\n    limit: data.limit,\n    currentPrice: data.currentPrice,\n    klineCount: data.klineCount,\n    klines: data.klines,\n    fetchedAt: data.fetchedAt\n  },\n  parameters: {\n    rsi_period: 14,\n    macd_fast: 12,\n    macd_slow: 26,\n    macd_signal: 9\n  }\n};"
+      },
+      "id": "51d34346-2cc0-40a6-b2a3-1cbc0c53c8ad",
+      "name": "Transform for API",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/ingest/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.item.json) }}",
+        "options": {}
+      },
+      "id": "aba8218f-ee52-4095-8186-4a39a95f1c92",
+      "name": "Call Ingest API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1424,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "interval": "15m"
+      },
+      "type": "CUSTOM.binanceKline",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -272
+      ],
+      "id": "cf27a6c0-530e-4f7e-b72d-5eaf8c2acb33",
+      "name": "Binance Kline",
+      "credentials": {
+        "binanceApi": {
+          "id": "tmVGRcPSpJIYsaeS",
+          "name": "Binance account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Transform for API": {
+      "main": [
+        [
+          {
+            "node": "Call Ingest API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Binance Kline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Binance Kline": {
+      "main": [
+        [
+          {
+            "node": "Transform for API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "72a4f3e3-5fe7-4f50-a3b6-e3ac8cc09396",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c5132ea42f91439834dd110c2ce2f5a137182faaae992ba119ae691d81f22581"
+  },
+  "id": "wPmX_1YPRlQmHBRVpz4DT",
+  "tags": []
+}
