@@ -60,14 +60,15 @@ app.add_middleware(ErrorLoggingMiddleware)
 # Import and include routers
 try:
     # Try relative import first
-    from .routes import binance, indicators
+    from .routes import binance, indicators, ingest
 except ImportError:
     # Fall back to absolute import for direct execution
-    from routes import binance, indicators
+    from routes import binance, indicators, ingest
 
 # Include routers
 app.include_router(binance.router)
 app.include_router(indicators.router)
+app.include_router(ingest.router)
 
 
 @app.get("/", response_model=RootResponse)

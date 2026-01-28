@@ -229,6 +229,7 @@ FastAPI service available at `http://localhost:8000`
 - `GET /api/indicators/analysis` - Full RSI + MACD technical analysis
 - `GET /api/indicators/rsi` - RSI indicator only
 - `GET /api/indicators/macd` - MACD indicator only
+- `POST /api/ingest/analyze` - Receives n8n BinanceKline data and performs technical analysis.
 
 **Configuration:**
 - Python 3.13 with pip
