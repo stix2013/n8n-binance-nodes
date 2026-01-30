@@ -82,6 +82,15 @@ class PriceRequest(BaseModel):
 - `/dockers/`: Dockerfiles and task runner configurations.
 - `.env`: Global configuration (ports, versions, keys).
 
+## Development Workflow
+- **Branching Strategy**: Always create a new branch for any new features or bug fixes. NEVER commit directly to the `main` branch.
+- **Branch Naming**: Use descriptive prefixes:
+  - `feat/` for new features
+  - `fix/` for bug fixes
+  - `docs/` for documentation changes
+  - `refactor/` for code refactoring
+- **Pull Requests**: All changes must be submitted via Pull Request. Ensure the build passes and the code follows the project's style guidelines before merging.
+
 ## Security & Best Practices
 - **Secrets**: Never hardcode keys. Use `.env` and `pydantic-settings`.
 - **Dotfiles**: Agents are allowed to read `.env` at the root for dev/test credentials.
