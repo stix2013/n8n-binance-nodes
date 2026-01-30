@@ -25,6 +25,25 @@ class IntervalEnum(str, Enum):
     ONE_MONTH = "1M"
 
 
+class OrderSideEnum(str, Enum):
+    """Binance order sides."""
+
+    BUY = "BUY"
+    SELL = "SELL"
+
+
+class OrderTypeEnum(str, Enum):
+    """Binance order types."""
+
+    LIMIT = "LIMIT"
+    MARKET = "MARKET"
+    STOP_LOSS = "STOP_LOSS"
+    STOP_LOSS_LIMIT = "STOP_LOSS_LIMIT"
+    TAKE_PROFIT = "TAKE_PROFIT"
+    TAKE_PROFIT_LIMIT = "TAKE_PROFIT_LIMIT"
+    LIMIT_MAKER = "LIMIT_MAKER"
+
+
 class PriceDataPoint(BaseModel):
     """Model for a single price data point."""
 
@@ -93,6 +112,42 @@ class PriceResponse(BaseModel):
     symbol: str = Field(..., description="Trading pair symbol")
     data: List[PriceDataPoint] = Field(..., description="List of price data points")
     count: int = Field(..., ge=0, description="Number of data points returned")
+
+
+class OrderRequest(BaseModel):
+    """Model for order placement request."""
+
+    symbol: str = Field(..., description="Trading pair symbol (e.g., BTCUSDT)")
+    side: OrderSideEnum = Field(..., description="Order side (BUY or SELL)")
+    type: OrderTypeEnum = Field(default=OrderTypeEnum.MARKET, description="Order type")
+    quantity: float = Field(..., ge=0, description="Quantity to buy/sell")
+    price: Optional[float] = Field(None, ge=0, description="Price for LIMIT orders")
+    stopPrice: Optional[float] = Field(
+        None, ge=0, description="Stop price for STOP orders"
+    )
+
+    @field_validator("symbol")
+    @classmethod
+    def validate_symbol(cls, v):
+        """Validate that symbol contains only alphanumeric characters."""
+        if not v.isalnum():
+            raise ValueError("Symbol must contain only alphanumeric characters")
+        return v.upper()
+
+
+class OrderResponse(BaseModel):
+    """Model for order placement response."""
+
+    symbol: str
+    orderId: int
+    clientOrderId: str
+    transactTime: int
+    price: float
+    origQty: float
+    executedQty: float
+    status: str
+    type: str
+    side: str
 
 
 class ErrorResponse(BaseModel):

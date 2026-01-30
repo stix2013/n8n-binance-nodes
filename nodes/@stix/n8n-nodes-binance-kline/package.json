@@ -37,7 +37,8 @@
             "dist/credentials/BinanceApi.credentials.js"
         ],
         "nodes": [
-            "dist/nodes/BinanceKline/BinanceKline.node.js"
+            "dist/nodes/BinanceKline/BinanceKline.node.js",
+            "dist/nodes/BinanceOrder/BinanceOrder.node.js"
         ]
     },
     "devDependencies": {
