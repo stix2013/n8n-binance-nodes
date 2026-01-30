@@ -114,6 +114,13 @@ class PriceResponse(BaseModel):
     count: int = Field(..., ge=0, description="Number of data points returned")
 
 
+class StopLossTypeEnum(str, Enum):
+    """Stop loss execution types."""
+
+    MARKET = "MARKET"
+    LIMIT = "LIMIT"
+
+
 class OrderRequest(BaseModel):
     """Model for order placement request."""
 
@@ -124,6 +131,20 @@ class OrderRequest(BaseModel):
     price: Optional[float] = Field(None, ge=0, description="Price for LIMIT orders")
     stopPrice: Optional[float] = Field(
         None, ge=0, description="Stop price for STOP orders"
+    )
+
+    # Bracket Order Parameters
+    takeProfitPrice: Optional[float] = Field(
+        None, ge=0, description="Take profit price"
+    )
+    stopLossPrice: Optional[float] = Field(
+        None, ge=0, description="Stop loss trigger price"
+    )
+    stopLossLimitPrice: Optional[float] = Field(
+        None, ge=0, description="Stop loss execution price (for LIMIT)"
+    )
+    stopLossType: Optional[StopLossTypeEnum] = Field(
+        None, description="Stop loss execution type (MARKET or LIMIT)"
     )
 
     @field_validator("symbol")
@@ -139,15 +160,21 @@ class OrderResponse(BaseModel):
     """Model for order placement response."""
 
     symbol: str
-    orderId: int
-    clientOrderId: str
-    transactTime: int
-    price: float
-    origQty: float
-    executedQty: float
-    status: str
-    type: str
-    side: str
+    orderId: Optional[int] = None
+    orderListId: Optional[int] = None  # For OCO/OTOCO
+    clientOrderId: Optional[str] = None
+    transactTime: Optional[int] = None
+    price: Optional[float] = None
+    origQty: Optional[float] = None
+    executedQty: Optional[float] = None
+    status: Optional[str] = None
+    type: Optional[str] = None
+    side: Optional[str] = None
+    # For OCO/OTOCO response
+    contingencyType: Optional[str] = None
+    listStatusType: Optional[str] = None
+    listOrderStatus: Optional[str] = None
+    orders: Optional[List[dict]] = None
 
 
 class ErrorResponse(BaseModel):

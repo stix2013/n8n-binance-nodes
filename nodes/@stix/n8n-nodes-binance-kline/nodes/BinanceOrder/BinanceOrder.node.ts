@@ -98,6 +98,73 @@ export class BinanceOrder implements INodeType {
 					},
 				},
 			},
+			{
+				displayName: 'Bracket Order (SL/TP)',
+				name: 'useBracket',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to add Take Profit and Stop Loss orders',
+				displayOptions: {
+					show: {
+						type: ['LIMIT', 'MARKET'],
+					},
+				},
+			},
+			{
+				displayName: 'Take Profit Price',
+				name: 'takeProfitPrice',
+				type: 'number',
+				default: 0,
+				required: true,
+				displayOptions: {
+					show: {
+						useBracket: [true],
+					},
+				},
+				description: 'Price to take profit',
+			},
+			{
+				displayName: 'Stop Loss Price',
+				name: 'stopLossPrice',
+				type: 'number',
+				default: 0,
+				required: true,
+				displayOptions: {
+					show: {
+						useBracket: [true],
+					},
+				},
+				description: 'Trigger price for stop loss',
+			},
+			{
+				displayName: 'Stop Loss Type',
+				name: 'stopLossType',
+				type: 'options',
+				options: [
+					{ name: 'Market', value: 'MARKET' },
+					{ name: 'Limit', value: 'LIMIT' },
+				],
+				default: 'MARKET',
+				displayOptions: {
+					show: {
+						useBracket: [true],
+					},
+				},
+				description: 'Whether to execute Stop Loss at Market or Limit price',
+			},
+			{
+				displayName: 'Stop Loss Limit Price',
+				name: 'stopLossLimitPrice',
+				type: 'number',
+				default: 0,
+				displayOptions: {
+					show: {
+						useBracket: [true],
+						stopLossType: ['LIMIT'],
+					},
+				},
+				description: 'Execution price for Stop Loss Limit order',
+			},
 		],
 	};
 
@@ -113,6 +180,22 @@ export class BinanceOrder implements INodeType {
 				const quantity = this.getNodeParameter('quantity', itemIndex) as number;
 				const price = this.getNodeParameter('price', itemIndex, undefined) as number | undefined;
 				const stopPrice = this.getNodeParameter('stopPrice', itemIndex, undefined) as number | undefined;
+				
+				// Bracket params
+				const useBracket = this.getNodeParameter('useBracket', itemIndex, false) as boolean;
+				let takeProfitPrice: number | undefined;
+				let stopLossPrice: number | undefined;
+				let stopLossType: string | undefined;
+				let stopLossLimitPrice: number | undefined;
+
+				if (useBracket) {
+					takeProfitPrice = this.getNodeParameter('takeProfitPrice', itemIndex) as number;
+					stopLossPrice = this.getNodeParameter('stopLossPrice', itemIndex) as number;
+					stopLossType = this.getNodeParameter('stopLossType', itemIndex) as string;
+					if (stopLossType === 'LIMIT') {
+						stopLossLimitPrice = this.getNodeParameter('stopLossLimitPrice', itemIndex) as number;
+					}
+				}
 
 				const body: any = {
 					symbol: symbol.toUpperCase(),
@@ -127,6 +210,13 @@ export class BinanceOrder implements INodeType {
 
 				if (stopPrice !== undefined && stopPrice !== 0) {
 					body.stopPrice = stopPrice;
+				}
+				
+				if (useBracket) {
+					if (takeProfitPrice) body.takeProfitPrice = takeProfitPrice;
+					if (stopLossPrice) body.stopLossPrice = stopLossPrice;
+					if (stopLossType) body.stopLossType = stopLossType;
+					if (stopLossLimitPrice) body.stopLossLimitPrice = stopLossLimitPrice;
 				}
 
 				const response = await this.helpers.httpRequest({

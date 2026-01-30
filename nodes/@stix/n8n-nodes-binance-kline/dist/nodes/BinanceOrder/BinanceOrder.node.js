@@ -94,6 +94,73 @@ class BinanceOrder {
                         },
                     },
                 },
+                {
+                    displayName: 'Bracket Order (SL/TP)',
+                    name: 'useBracket',
+                    type: 'boolean',
+                    default: false,
+                    description: 'Whether to add Take Profit and Stop Loss orders',
+                    displayOptions: {
+                        show: {
+                            type: ['LIMIT', 'MARKET'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Take Profit Price',
+                    name: 'takeProfitPrice',
+                    type: 'number',
+                    default: 0,
+                    required: true,
+                    displayOptions: {
+                        show: {
+                            useBracket: [true],
+                        },
+                    },
+                    description: 'Price to take profit',
+                },
+                {
+                    displayName: 'Stop Loss Price',
+                    name: 'stopLossPrice',
+                    type: 'number',
+                    default: 0,
+                    required: true,
+                    displayOptions: {
+                        show: {
+                            useBracket: [true],
+                        },
+                    },
+                    description: 'Trigger price for stop loss',
+                },
+                {
+                    displayName: 'Stop Loss Type',
+                    name: 'stopLossType',
+                    type: 'options',
+                    options: [
+                        { name: 'Market', value: 'MARKET' },
+                        { name: 'Limit', value: 'LIMIT' },
+                    ],
+                    default: 'MARKET',
+                    displayOptions: {
+                        show: {
+                            useBracket: [true],
+                        },
+                    },
+                    description: 'Whether to execute Stop Loss at Market or Limit price',
+                },
+                {
+                    displayName: 'Stop Loss Limit Price',
+                    name: 'stopLossLimitPrice',
+                    type: 'number',
+                    default: 0,
+                    displayOptions: {
+                        show: {
+                            useBracket: [true],
+                            stopLossType: ['LIMIT'],
+                        },
+                    },
+                    description: 'Execution price for Stop Loss Limit order',
+                },
             ],
         };
     }
@@ -108,6 +175,19 @@ class BinanceOrder {
                 const quantity = this.getNodeParameter('quantity', itemIndex);
                 const price = this.getNodeParameter('price', itemIndex, undefined);
                 const stopPrice = this.getNodeParameter('stopPrice', itemIndex, undefined);
+                const useBracket = this.getNodeParameter('useBracket', itemIndex, false);
+                let takeProfitPrice;
+                let stopLossPrice;
+                let stopLossType;
+                let stopLossLimitPrice;
+                if (useBracket) {
+                    takeProfitPrice = this.getNodeParameter('takeProfitPrice', itemIndex);
+                    stopLossPrice = this.getNodeParameter('stopLossPrice', itemIndex);
+                    stopLossType = this.getNodeParameter('stopLossType', itemIndex);
+                    if (stopLossType === 'LIMIT') {
+                        stopLossLimitPrice = this.getNodeParameter('stopLossLimitPrice', itemIndex);
+                    }
+                }
                 const body = {
                     symbol: symbol.toUpperCase(),
                     side,
@@ -119,6 +199,16 @@ class BinanceOrder {
                 }
                 if (stopPrice !== undefined && stopPrice !== 0) {
                     body.stopPrice = stopPrice;
+                }
+                if (useBracket) {
+                    if (takeProfitPrice)
+                        body.takeProfitPrice = takeProfitPrice;
+                    if (stopLossPrice)
+                        body.stopLossPrice = stopLossPrice;
+                    if (stopLossType)
+                        body.stopLossType = stopLossType;
+                    if (stopLossLimitPrice)
+                        body.stopLossLimitPrice = stopLossLimitPrice;
                 }
                 const response = await this.helpers.httpRequest({
                     method: 'POST',
