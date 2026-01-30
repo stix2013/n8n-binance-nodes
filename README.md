@@ -80,7 +80,11 @@ n8n-binance-nodes/
 │
 ├── scripts/                        # Environment management scripts
 │   ├── start-env.ts                # Start services and Zrok tunnel
-│   └── stop-env.ts                 # Stop services and Zrok tunnel
+│   ├── stop-env.ts                 # Stop services and Zrok tunnel
+│   ├── build-images.ts             # Automated Docker image builder
+│   ├── build-image-choice.ts       # Interactive visual image selector
+│   └── utils/                      # Script utilities
+│       └── docker-build.ts         # Shared Docker build logic
 │
 └── .vscode/                        # VS Code settings
 ```
@@ -222,6 +226,16 @@ This command starts all Docker containers and launches the Zrok tunnel.
 bun stop
 ```
 This command stops all Docker containers and terminates the Zrok tunnel.
+
+**Build Docker Images:**
+```bash
+# Automated build for all images
+bun run build:images
+
+# Interactive build with visual selection menu
+bun run build:image
+```
+These scripts build the custom n8n-runners, FastAPI API, and Postgres images using versions from `.env`.
 
 **Configuration:**
 - `ZROK_RESERVED_NAME`: The reserved Zrok share name (e.g., `stix2025n8n`)
