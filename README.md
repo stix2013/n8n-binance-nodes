@@ -39,8 +39,7 @@ n8n-binance-nodes/
 │
 ├── nodes/                          # n8n custom community nodes
 │   └── @stix/
-│       ├── n8n-nodes-binance-kline/   # Binance Kline node (crypto market data)
-│       └── n8n-nodes-chart-crypto/    # Crypto charting node
+│       └── n8n-nodes-binance-kline/   # Binance Kline node (crypto market data)
 │
 ├── api/                            # FastAPI Python service
 │   ├── src/
@@ -60,10 +59,7 @@ n8n-binance-nodes/
 │   │       ├── date_utils.py       # Date/time conversion
 │   │       ├── indicators.py       # RSI, MACD calculations
 │   │       └── price_validation.py # Binance data validation
-│   ├── tests/                      # Unit tests (71 tests)
-│   │   ├── test_binance_api.py
-│   │   ├── test_technical_indicators.py
-│   │   └── test_price_validation.py
+│   ├── tests/                      # Unit tests
 │   ├── pyproject.toml              # Python dependencies
 │   └── demo_indicators.py          # Technical indicators demo
 │
@@ -78,7 +74,13 @@ n8n-binance-nodes/
 │
 ├── docs/                           # Documentation
 │   ├── day-trader-expert.md        # Trading strategy guide
-│   └── chart-img/                  # Chart examples
+│   ├── chart-img/                  # Chart examples
+│   └── workflows/                  # Example n8n workflows
+│       └── n8n-workflow-ingres.json # Data ingestion and analysis workflow
+│
+├── scripts/                        # Environment management scripts
+│   ├── start-env.ts                # Start services and Zrok tunnel
+│   └── stop-env.ts                 # Stop services and Zrok tunnel
 │
 └── .vscode/                        # VS Code settings
 ```
@@ -147,6 +149,13 @@ The project includes pre-configured trading analysis patterns:
 - **Execution Engine (5m):** Order execution logic
 
 See `docs/day-trader-expert.md` for detailed trading strategies and signal logic.
+
+## Example Workflows
+
+The project includes example workflows to demonstrate node usage and API integration:
+
+- **Data Ingestion Analysis (`docs/workflows/n8n-workflow-ingres.json`):** 
+  Demonstrates how to fetch market data using the `BinanceKline` custom node, transform the data for the API, and call the `/api/ingest/analyze` endpoint for technical analysis.
 
 ## Building Custom Nodes
 
