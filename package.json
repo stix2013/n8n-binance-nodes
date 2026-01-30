@@ -4,7 +4,9 @@
   "description": "n8n workflow automation with Binance nodes",
   "scripts": {
     "start": "bun scripts/start-env.ts",
-    "stop": "bun scripts/stop-env.ts"
+    "stop": "bun scripts/stop-env.ts",
+    "build:images": "bun scripts/build-images.ts",
+    "build:image": "bun scripts/build-image-choice.ts"
   },
   "keywords": [
     "n8n",

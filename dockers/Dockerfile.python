@@ -1,6 +1,9 @@
 ARG API_VERSION=0.4.1
 FROM python:3.13-slim
 
+# Redeclare ARG after FROM to make it available in this stage
+ARG API_VERSION
+
 # Set image metadata labels
 LABEL version="${API_VERSION}" \
       maintainer="n8n-binance-nodes"
