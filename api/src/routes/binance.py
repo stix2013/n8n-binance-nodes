@@ -10,13 +10,26 @@ from datetime import datetime
 try:
     from ..utils.date_utils import convert_date_format, timestamp_to_iso
     from ..utils.price_validation import validate_price_data, PriceValidationError
-    from ..models.api_models import PriceResponse, ErrorResponse, IntervalEnum
+    from ..utils.crypto_utils import generate_signature, get_timestamp
+    from ..models.api_models import (
+        PriceResponse,
+        ErrorResponse,
+        IntervalEnum,
+        OrderRequest,
+        OrderResponse,
+    )
     from ..models.settings import settings
 except ImportError:
     from utils.date_utils import convert_date_format, timestamp_to_iso
-    from utils.price_validation import validate_price_data, PriceValidationError
-    from models.api_models import PriceResponse, ErrorResponse, IntervalEnum
-    from models.settings import settings
+    from utils.price_validation import validate_price_data
+    from utils.crypto_utils import generate_signature, get_timestamp
+    from models.api_models import (
+        PriceResponse,
+        ErrorResponse,
+        IntervalEnum,
+        OrderRequest,
+        OrderResponse,
+    )
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/binance", tags=["binance"])
@@ -30,6 +43,17 @@ async def get_binance_api_key() -> str:
             status_code=500, detail="BINANCE_API_KEY not found in environment variables"
         )
     return api_key
+
+
+async def get_binance_secret_key() -> str:
+    """Dependency to get Binance secret key from environment."""
+    secret_key = os.getenv("BINANCE_SECRET_KEY")
+    if not secret_key:
+        raise HTTPException(
+            status_code=500,
+            detail="BINANCE_SECRET_KEY not found in environment variables",
+        )
+    return secret_key
 
 
 @router.get(
@@ -175,7 +199,7 @@ async def get_binance_price(
                 try:
                     error_data = response.json()
                     error_detail += f" - {error_data.get('msg', 'Unknown error')}"
-                except:
+                except Exception:
                     error_detail += f" - {response.text}"
 
                 raise HTTPException(
@@ -196,4 +220,86 @@ async def get_binance_price(
         raise
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.post(
+    "/order",
+    response_model=OrderResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
+)
+async def place_binance_order(
+    order: OrderRequest,
+    api_key: str = Depends(get_binance_api_key),
+    secret_key: str = Depends(get_binance_secret_key),
+):
+    """
+    Place an order on Binance
+    """
+    url = "https://api.binance.com/api/v3/order"
+
+    # Prepare base parameters
+    params = {
+        "symbol": order.symbol,
+        "side": order.side.value,
+        "type": order.type.value,
+        "quantity": order.quantity,
+        "timestamp": get_timestamp(),
+    }
+
+    if order.type != "MARKET":
+        params["timeInForce"] = "GTC"  # Good Till Cancelled
+
+    if order.price is not None:
+        params["price"] = order.price
+
+    if order.stopPrice is not None:
+        params["stopPrice"] = order.stopPrice
+
+    # Create query string for signature
+    query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+    signature = generate_signature(query_string, secret_key)
+    params["signature"] = signature
+
+    headers = {"X-MBX-APIKEY": api_key}
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url, params=params, headers=headers, timeout=30.0
+            )
+
+            if response.status_code == 200:
+                return OrderResponse(**response.json())
+            else:
+                error_detail = f"Binance API error: {response.status_code}"
+                try:
+                    error_data = response.json()
+                    error_detail += f" - {error_data.get('msg', 'Unknown error')}"
+                except Exception:
+                    error_detail += f" - {response.text}"
+
+                raise HTTPException(
+                    status_code=response.status_code, detail=error_detail
+                )
+
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=408,
+            detail="Request timeout - Binance API took too long to respond",
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=503, detail=f"Failed to connect to Binance API: {str(e)}"
+        )
+    except HTTPException:
+        # Re-raise HTTPException instances without logging them as errors
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in place_binance_order: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
