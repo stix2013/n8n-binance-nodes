@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-04
+
+### Added
+- **BinanceOrder Node**: New n8n node for automated trade execution.
+  - Supports Market, Limit, Stop Loss, and Take Profit orders.
+  - Implements Bracket orders (Sequential OCO and Atomic OTOCO).
+- **Integration Test Framework**: Robust end-to-end testing for n8n nodes.
+  - Local Mock Binance server to intercept Python backend traffic.
+  - Comprehensive suite of 11 integration tests.
+- **New API Endpoints**:
+  - `POST /api/ingest/analyze`: Specialized endpoint for processing n8n BinanceKline data.
+- **Visual Build Tools**:
+  - `bun run build:image`: Interactive terminal menu for selective Docker image building.
+- **Documentation**:
+  - Detailed post-mortem on integration testing architecture in `docs/problems/`.
+  - Updated `README.md` with new workflow descriptions and build tool guides.
+  - Enhanced `AGENTS.md` with PR rules and branching strategies.
+
+### Changed
+- **API Version**: Upgraded API to `1.2.0`.
+- **Node Configuration**: Refactored nodes to use `N8N_BINANCE_API_URL` environment variable for flexible service discovery.
+- **Backend Architecture**: Modified Binance routes to support `BINANCE_BASE_URL` override for testing.
+- **Environment Management**: Updated `env-example` and `.env` with new configuration parameters.
+
+### Fixed
+- **Mocking Isolation**: Resolved the "invisible mock" issue where `nock` couldn't intercept subprocess traffic.
+- **Type Safety**: Improved Pydantic validation for complex order responses.
+
 ## [1.0.0] - 2026-01-27
 
 ### Added
