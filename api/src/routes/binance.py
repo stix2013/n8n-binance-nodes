@@ -118,7 +118,8 @@ async def get_binance_price(
                 raise HTTPException(status_code=422, detail=f"Invalid {date_field}")
 
     # Build Binance API URL
-    url = "https://api.binance.com/api/v3/klines"
+    base_url = os.getenv("BINANCE_BASE_URL", "https://api.binance.com")
+    url = f"{base_url}/api/v3/klines"
 
     # Prepare query parameters
     params = {"symbol": symbol, "interval": interval.value, "limit": limit}
@@ -246,12 +247,13 @@ async def place_binance_order(
 
     # Check if this is a bracket order
     has_bracket = order.takeProfitPrice is not None or order.stopLossPrice is not None
+    base_url = os.getenv("BINANCE_BASE_URL", "https://api.binance.com")
 
     try:
         async with httpx.AsyncClient() as client:
             # CASE 1: Limit Order + Bracket (OTOCO)
             if has_bracket and order.type == "LIMIT":
-                url = "https://api.binance.com/api/v3/orderList/otoco"
+                url = f"{base_url}/api/v3/orderList/otoco"
 
                 params = {
                     "symbol": order.symbol,
@@ -311,7 +313,7 @@ async def place_binance_order(
             # CASE 2: Market Order + Bracket (Sequential)
             elif has_bracket and order.type == "MARKET":
                 # Step 1: Execute Market Entry
-                url_order = "https://api.binance.com/api/v3/order"
+                url_order = f"{base_url}/api/v3/order"
                 params_entry = {
                     "symbol": order.symbol,
                     "side": order.side.value,
@@ -334,7 +336,7 @@ async def place_binance_order(
                 executed_qty = float(entry_data.get("executedQty", order.quantity))
 
                 # Step 2: Execute OCO Exit
-                url_oco = "https://api.binance.com/api/v3/orderList/oco"
+                url_oco = f"{base_url}/api/v3/orderList/oco"
                 exit_side = "SELL" if order.side.value == "BUY" else "BUY"
 
                 params_oco = {
@@ -389,7 +391,7 @@ async def place_binance_order(
 
             # CASE 3: Standard Single Order (Limit/Market/Stop, etc.)
             else:
-                url = "https://api.binance.com/api/v3/order"
+                url = f"{base_url}/api/v3/order"
 
                 # Prepare base parameters
                 params = {

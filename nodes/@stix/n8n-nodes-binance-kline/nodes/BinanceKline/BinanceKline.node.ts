@@ -196,9 +196,10 @@ export class BinanceKline implements INodeType {
 
 				// Fetch kline data for each symbol
 				for (const symbol of symbols) {
+					const baseUrl = process.env.N8N_BINANCE_API_URL || 'http://api:8000';
 					const response = await this.helpers.httpRequest({
 						method: 'GET' as IHttpRequestMethods,
-						url: 'http://api:8000/api/binance/price',
+						url: `${baseUrl}/api/binance/price`,
 						qs: {
 							symbol,
 							interval,
