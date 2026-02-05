@@ -6,7 +6,7 @@ A Docker-based n8n workflow automation environment with custom community nodes f
 
 - **Custom n8n Community Nodes:**
   - **BinanceKline:** Fetch cryptocurrency market data from Binance API with customizable symbol parameters
-  - **ChartCrypto:** Generate crypto trading charts with technical indicators
+  - **BinanceOrder:** Place market, limit, stop-loss, and bracket orders (TP/SL) on Binance via FastAPI proxy
 
 - **Infrastructure:**
   - n8n with external task runners (version configurable via `N8N_VERSION`)
@@ -29,7 +29,7 @@ A Docker-based n8n workflow automation environment with custom community nodes f
 ```
 n8n-binance-nodes/
 ├── .env                            # Environment configuration (API keys, versions, ports)
-├── .env-example                    # Environment template example
+├── env-example                     # Environment template example
 ├── docker-compose.yml              # Main Docker orchestration
 ├── README.md                       # This file
 ├── CHANGELOG.md                    # Version history and changes
@@ -39,7 +39,7 @@ n8n-binance-nodes/
 │
 ├── nodes/                          # n8n custom community nodes
 │   └── @stix/
-│       └── n8n-nodes-binance-kline/   # Binance Kline node (crypto market data)
+│       └── n8n-nodes-binance-kline/   # Binance Kline & Order nodes
 │
 ├── api/                            # FastAPI Python service
 │   ├── src/
@@ -64,6 +64,7 @@ n8n-binance-nodes/
 │   └── demo_indicators.py          # Technical indicators demo
 │
 ├── dockers/                        # Docker build files
+│   ├── task-runner-python/         # External task runner implementation
 │   ├── Dockerfile                  # Task runner image (n8nio/runners)
 │   ├── Dockerfile.python           # FastAPI Python 3.13 image
 │   ├── Dockerfile.postgres         # PostgreSQL customization
@@ -75,6 +76,8 @@ n8n-binance-nodes/
 ├── docs/                           # Documentation
 │   ├── day-trader-expert.md        # Trading strategy guide
 │   ├── chart-img/                  # Chart examples
+│   ├── problems/                   # Known issues and solutions
+│   ├── crypto/                     # Crypto-related documentation
 │   └── workflows/                  # Example n8n workflows
 │       └── n8n-workflow-ingres.json # Data ingestion and analysis workflow
 │
@@ -136,12 +139,21 @@ Fetches cryptocurrency trading data from Binance.
 - Symbol: Crypto pair (e.g., `BTCUSDT`)
 - Requires Binance API credentials
 
-### ChartCrypto Node
+### BinanceOrder Node
 
-Generates trading charts with technical indicators for analysis.
+Places various order types on Binance via the FastAPI proxy.
+
+**Supported Order Types:**
+- **Market**: Immediate execution at current price.
+- **Limit**: Execution at a specific price or better.
+- **Stop Loss**: Triggered when price reaches a certain level.
+- **Bracket (TP/SL)**: OCO (One-Cancels-the-Other) orders for profit taking and loss prevention.
 
 **Configuration:**
-- Symbol: Crypto pair identifier
+- Symbol: Trading pair (e.g., `BTCUSDT`).
+- Side: `BUY` or `SELL`.
+- Type: `MARKET`, `LIMIT`, `STOP_LOSS`, etc.
+- Optional parameters for TP/SL and limit prices.
 
 ## Trading Workflows
 
@@ -167,9 +179,9 @@ For each node package:
 
 ```bash
 cd nodes/@stix/n8n-nodes-{node-name}
-npm install
-npm run build
-npm run lint
+bun install
+bun run build
+bun run lint
 ```
 
 ## Environment Variables

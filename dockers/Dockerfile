@@ -1,5 +1,5 @@
 ARG N8N_VERSION=2.6.0
-FROM n8nio/runners:${N8N_VERSION}-amd64
+FROM n8nio/runners:${N8N_VERSION}
 USER root
 
 RUN cd /opt/runners/task-runner-javascript && \
