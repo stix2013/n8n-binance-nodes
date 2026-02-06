@@ -96,3 +96,6 @@ class PriceRequest(BaseModel):
 - **Dotfiles**: Agents are allowed to read `.env` at the root for dev/test credentials.
 - **I/O**: Use async/await for all network/file operations in API.
 - **Validation**: Validate all external data (Binance API responses, user input) via Pydantic or n8n schemas.
+
+## Troubleshooting
+- **Integration Testing**: See [docs/problems/2026-02-04-integration-testing-architecture.md](docs/problems/2026-02-04-integration-testing-architecture.md) for solutions to common issues with process isolation, ESM/CJS compatibility, and cross-language data serialization.
