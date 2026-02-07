@@ -150,7 +150,7 @@ services:
       - PYTHONUNBUFFERED=1
       - API_LOG_LEVEL=${API_LOG_LEVEL:-INFO}
     volumes:
-      - ./api:/app:ro
+      - ./api:/app
       - ./.env:/app/.env:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
