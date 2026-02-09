@@ -5,7 +5,7 @@ async function main() {
   console.log("==================================");
 
   // Load versions from .env
-  const n8nVersion = await getEnvValue("N8N_VERSION") || "2.6.0";
+  const n8nVersion = await getEnvValue("N8N_VERSION") || "2.6.4";
   const apiVersion = await getEnvValue("API_VERSION") || "0.4.1";
 
   console.log(`Configured Versions:`);
