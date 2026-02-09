@@ -73,7 +73,7 @@ async function selectOption() {
 async function main() {
   const choice = await selectOption();
 
-  const n8nVersion = await getEnvValue("N8N_VERSION") || "2.6.0";
+  const n8nVersion = await getEnvValue("N8N_VERSION") || "2.6.4";
   const apiVersion = await getEnvValue("API_VERSION") || "0.4.1";
 
   switch (choice) {

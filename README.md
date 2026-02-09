@@ -299,6 +299,8 @@ docker compose logs api | jq
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version information.
 
+- **v1.2.1** (2026-02-09) - Upgrade to n8n 2.6.4-amd64 (security patches)
+- **v1.2.0** (2026-02-04) - BinanceOrder Node, Integration Tests, Visual Build Tools
 - **v1.0.0** (2026-01-27) - Startup scripts, Zrok integration, n8n 2.6.0
 - **v0.5.1** (2026-01-23) - Node compliance fixes, n8n documentation
 - **v0.5.0** (2026-01-22) - Binance price validation, version configuration
