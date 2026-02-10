@@ -6,6 +6,7 @@ try:
         IngestResponse,
         RSIResult,
         MACDResult,
+        SMAResult,
     )
     from ..utils.indicators import TechnicalIndicators
 except ImportError:
@@ -14,6 +15,7 @@ except ImportError:
         IngestResponse,
         RSIResult,
         MACDResult,
+        SMAResult,
     )
     from utils.indicators import TechnicalIndicators
 from datetime import datetime
@@ -21,6 +23,28 @@ import logging
 
 router = APIRouter(prefix="/api/ingest", tags=["ingest"])
 logger = logging.getLogger(__name__)
+
+# SMA window configuration based on interval
+INTERVAL_SMA_WINDOWS = {
+    "15m": [10, 20, 50],
+    "1h": [20, 50, 200],
+    "4h": [20, 50, 200],
+}
+
+
+def get_sma_windows(interval: str) -> list[int]:
+    """
+    Get appropriate SMA windows based on the candle interval.
+
+    Args:
+        interval: Candle interval (e.g., "15m", "1h", "4h")
+
+    Returns:
+        List of SMA windows to calculate
+    """
+    return INTERVAL_SMA_WINDOWS.get(
+        interval, [20, 50]
+    )  # Default to [20, 50] if interval not found
 
 
 @router.post("/analyze", response_model=IngestResponse)
@@ -58,13 +82,18 @@ async def analyze_n8n_data(request: IngestRequest):
             macd_data
         )
 
-        # Generate Recommendation
+        # Get current price
+        current_price = prices[-1]
+
+        # Calculate SMA based on interval
+        sma_windows = get_sma_windows(request.data.interval)
+        sma_values = TechnicalIndicators.calculate_sma(prices, sma_windows)
+        sma_signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
+
+        # Generate Recommendation (considering RSI, MACD, and SMA)
         recommendation = TechnicalIndicators.generate_overall_recommendation(
             rsi_signal, macd_signal_type, macd_crossover
         )
-
-        # Prepare Response
-        current_price = prices[-1]
         last_close_time_ms = sorted_klines[-1].closeTime
         analysis_timestamp = datetime.fromtimestamp(last_close_time_ms / 1000.0)
 
@@ -80,6 +109,13 @@ async def analyze_n8n_data(request: IngestRequest):
                 histogram=macd_data["histogram"],
                 signal_type=macd_signal_type,
                 crossover=macd_crossover,
+            ),
+            sma=SMAResult(
+                sma_10=sma_values.get(10),
+                sma_20=sma_values.get(20),
+                sma_50=sma_values.get(50),
+                sma_200=sma_values.get(200),
+                signal=sma_signal,
             ),
             recommendation=recommendation,
         )

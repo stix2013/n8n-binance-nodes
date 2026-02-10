@@ -22,6 +22,7 @@ try:
         RSIResult,
         MACDResult,
         MACDSignal,
+        SMAResult,
         SingleIndicatorRequest,
         SingleIndicatorResponse,
         IndicatorType,
@@ -43,6 +44,7 @@ except ImportError:
         RSIResult,
         MACDResult,
         MACDSignal,
+        SMAResult,
         SingleIndicatorRequest,
         SingleIndicatorResponse,
         IndicatorType,
@@ -52,6 +54,28 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/indicators", tags=["technical-indicators"])
+
+# SMA window configuration based on interval
+INTERVAL_SMA_WINDOWS = {
+    "15m": [10, 20, 50],
+    "1h": [20, 50, 200],
+    "4h": [20, 50, 200],
+}
+
+
+def get_sma_windows(interval: str) -> list[int]:
+    """
+    Get appropriate SMA windows based on the candle interval.
+
+    Args:
+        interval: Candle interval (e.g., "15m", "1h", "4h")
+
+    Returns:
+        List of SMA windows to calculate
+    """
+    return INTERVAL_SMA_WINDOWS.get(
+        interval, [20, 50]
+    )  # Default to [20, 50] if interval not found
 
 
 async def get_binance_api_key() -> str:
@@ -164,7 +188,7 @@ async def get_technical_analysis(
     api_key: str = Depends(get_binance_api_key),
 ) -> TechnicalAnalysisResponse:
     """
-    Get comprehensive RSI and MACD analysis for a trading pair.
+    Get comprehensive RSI, MACD, and SMA analysis for a trading pair.
 
     - **symbol**: Trading pair symbol (required) - e.g., BTCUSDT, ETHUSDT
     - **interval**: Candle interval (required)
@@ -173,6 +197,7 @@ async def get_technical_analysis(
     - **macd_slow**: MACD slow EMA period (default: 26, range: 31-100)
     - **macd_signal**: MACD signal line period (default: 9, range: 2-50)
     - **limit**: Number of candles to analyze (default: 100, range: 30-1000)
+    - **SMA intervals**: 15m=[10,20,50], 1h/4h=[20,50,200]
     """
 
     # Validate symbol format
@@ -208,13 +233,18 @@ async def get_technical_analysis(
             macd_data
         )
 
+        # Get current price
+        current_price = closing_prices[-1]
+
+        # Calculate SMA based on interval
+        sma_windows = get_sma_windows(interval)
+        sma_values = TechnicalIndicators.calculate_sma(closing_prices, sma_windows)
+        sma_signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
+
         # Generate overall recommendation
         overall_recommendation = TechnicalIndicators.generate_overall_recommendation(
             rsi_signal, macd_signal_type, macd_crossover
         )
-
-        # Create response
-        current_price = closing_prices[-1]
 
         return TechnicalAnalysisResponse(
             symbol=symbol.upper(),
@@ -228,6 +258,13 @@ async def get_technical_analysis(
             ),
             macd_interpretation=MACDSignal(
                 signal_type=macd_signal_type, crossover=macd_crossover
+            ),
+            sma=SMAResult(
+                sma_10=sma_values.get(10),
+                sma_20=sma_values.get(20),
+                sma_50=sma_values.get(50),
+                sma_200=sma_values.get(200),
+                signal=sma_signal,
             ),
             overall_recommendation=overall_recommendation,
             analysis_timestamp=timestamp_to_iso(last_timestamp)
@@ -243,6 +280,78 @@ async def get_technical_analysis(
         raise
     except Exception as e:
         logger.error(f"Unexpected error in technical analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get(
+    "/sma",
+    response_model=SMAResult,
+    responses={
+        400: {"model": IndicatorsErrorResponse},
+        422: {"model": IndicatorsErrorResponse},
+        500: {"model": IndicatorsErrorResponse},
+        503: {"model": IndicatorsErrorResponse},
+    },
+)
+async def get_sma_indicator(
+    symbol: str = Query(
+        ...,
+        min_length=1,
+        max_length=20,
+        description="Trading pair symbol (e.g., BTCUSDT)",
+    ),
+    interval: str = Query(
+        ...,
+        description="Candle interval (15m, 1h, 4h, etc.)",
+    ),
+    limit: int = Query(100, ge=30, le=1000, description="Number of candles to analyze"),
+    api_key: str = Depends(get_binance_api_key),
+) -> SMAResult:
+    """
+    Get Simple Moving Average (SMA) indicator values.
+
+    - **symbol**: Trading pair symbol (required) - e.g., BTCUSDT, ETHUSDT
+    - **interval**: Candle interval (required)
+    - **limit**: Number of candles to analyze (default: 100, range: 30-1000)
+    - **SMA intervals**: 15m=[10,20,50], 1h/4h=[20,50,200]
+    """
+
+    # Validate symbol format
+    if not symbol.isalnum():
+        raise HTTPException(
+            status_code=422, detail="Symbol must contain only alphanumeric characters"
+        )
+
+    try:
+        # Fetch price data from Binance
+        closing_prices, last_timestamp = await get_price_data(
+            symbol, interval, limit, api_key
+        )
+
+        # Validate price data
+        TechnicalIndicators.validate_price_data(closing_prices, min_candles=30)
+
+        # Calculate SMA based on interval
+        sma_windows = get_sma_windows(interval)
+        sma_values = TechnicalIndicators.calculate_sma(closing_prices, sma_windows)
+        current_price = closing_prices[-1]
+        sma_signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
+
+        return SMAResult(
+            sma_10=sma_values.get(10),
+            sma_20=sma_values.get(20),
+            sma_50=sma_values.get(50),
+            sma_200=sma_values.get(200),
+            signal=sma_signal,
+        )
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        # Re-raise HTTPException instances without logging them as errors
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in SMA calculation: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
@@ -277,9 +386,9 @@ async def get_single_indicator(
 
     # Validate indicator name
     indicator_name = indicator_name.lower()
-    if indicator_name not in ["rsi", "macd"]:
+    if indicator_name not in ["rsi", "macd", "sma"]:
         raise HTTPException(
-            status_code=400, detail="Supported indicators: 'rsi', 'macd'"
+            status_code=400, detail="Supported indicators: 'rsi', 'macd', 'sma'"
         )
 
     # Set default periods
@@ -297,16 +406,27 @@ async def get_single_indicator(
         # Validate price data
         TechnicalIndicators.validate_price_data(closing_prices, min_candles=30)
 
+        # Get current price
+        current_price = closing_prices[-1]
+
         # Calculate indicator
         if indicator_name == "rsi":
             value = TechnicalIndicators.calculate_rsi(closing_prices, period)
             signal = TechnicalIndicators.generate_rsi_signal(value)
-        else:  # macd
+        elif indicator_name == "macd":
             # For MACD, we'll return the MACD line as the primary value
             macd_data = TechnicalIndicators.calculate_macd(closing_prices, period)
             value = macd_data["macd_line"]
             signal_type, _ = TechnicalIndicators.generate_macd_signal(macd_data)
             signal = signal_type
+        else:  # sma
+            # For SMA, we'll return the longest available SMA as the primary value
+            sma_windows = get_sma_windows(interval)
+            sma_values = TechnicalIndicators.calculate_sma(closing_prices, sma_windows)
+            # Return the longest SMA period as the primary value
+            longest_window = max(sma_windows)
+            value = sma_values[longest_window]
+            signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
 
         return SingleIndicatorResponse(
             symbol=symbol.upper(),
@@ -324,4 +444,5 @@ async def get_single_indicator(
         raise
     except Exception as e:
         logger.error(f"Unexpected error calculating {indicator_name}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

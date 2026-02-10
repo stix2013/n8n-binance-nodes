@@ -59,8 +59,20 @@ class MACDSignal(BaseModel):
     )
 
 
+class SMAResult(BaseModel):
+    """SMA calculation result."""
+
+    sma_10: Optional[float] = Field(None, description="10-period SMA value")
+    sma_20: Optional[float] = Field(None, description="20-period SMA value")
+    sma_50: Optional[float] = Field(None, description="50-period SMA value")
+    sma_200: Optional[float] = Field(None, description="200-period SMA value")
+    signal: Literal["BULLISH", "BEARISH", "NEUTRAL"] = Field(
+        description="SMA trend signal"
+    )
+
+
 class TechnicalAnalysisResponse(BaseModel):
-    """Response with RSI and MACD analysis."""
+    """Response with RSI, MACD, and SMA analysis."""
 
     symbol: str = Field(description="Trading pair symbol")
     interval: str = Field(description="Candle interval used for analysis")
@@ -68,6 +80,7 @@ class TechnicalAnalysisResponse(BaseModel):
     rsi: RSIResult = Field(description="RSI analysis result")
     macd: MACDResult = Field(description="MACD calculation result")
     macd_interpretation: MACDSignal = Field(description="MACD signal interpretation")
+    sma: SMAResult = Field(description="SMA analysis result")
     overall_recommendation: Literal[
         "STRONG_BUY", "BUY", "HOLD", "SELL", "STRONG_SELL"
     ] = Field(description="Overall trading recommendation")
@@ -82,6 +95,7 @@ class IndicatorType(str, Enum):
 
     RSI = "rsi"
     MACD = "macd"
+    SMA = "sma"
 
 
 class SingleIndicatorRequest(BaseModel):

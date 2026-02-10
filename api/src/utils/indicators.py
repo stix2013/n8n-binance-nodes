@@ -289,3 +289,78 @@ class TechnicalIndicators:
             raise ValueError(
                 "Price data must contain variation (all prices are identical)"
             )
+
+    @staticmethod
+    def calculate_sma(prices: List[float], windows: List[int]) -> Dict[int, float]:
+        """
+        Calculate Simple Moving Average (SMA) for multiple windows using pandas.
+
+        Args:
+            prices: List of closing prices
+            windows: List of SMA periods to calculate (e.g., [10, 20, 50])
+
+        Returns:
+            Dictionary mapping window size to SMA value for the latest price
+
+        Raises:
+            ValueError: If insufficient data or invalid inputs
+        """
+        if not prices:
+            raise ValueError("Price data cannot be empty for SMA calculation")
+
+        if not windows:
+            raise ValueError("Windows list cannot be empty")
+
+        # Validate windows
+        max_window = max(windows)
+        if len(prices) < max_window:
+            raise ValueError(
+                f"Insufficient data for SMA calculation. Need at least {max_window} prices, got {len(prices)}"
+            )
+
+        if any(w < 1 for w in windows):
+            raise ValueError(f"SMA windows must be at least 1, got {windows}")
+
+        # Use pandas for efficient SMA calculation
+        prices_series = pd.Series(prices)
+
+        sma_values = {}
+        for window in windows:
+            sma = prices_series.rolling(window=window).mean()
+            # Get the last valid value
+            sma_values[window] = round(sma.iloc[-1], 6)
+
+        return sma_values
+
+    @staticmethod
+    def generate_sma_signal(current_price: float, sma_values: Dict[int, float]) -> str:
+        """
+        Generate trading signal based on SMA values.
+
+        Args:
+            current_price: Current closing price
+            sma_values: Dictionary of SMA values by window
+
+        Returns:
+            Signal string: "BULLISH", "BEARISH", or "NEUTRAL"
+        """
+        if not sma_values:
+            return "NEUTRAL"
+
+        # Sort windows from smallest to largest
+        sorted_windows = sorted(sma_values.keys())
+
+        # Get SMA values
+        short_sma = sma_values[sorted_windows[0]]
+        long_sma = sma_values[sorted_windows[-1]]
+
+        # Price above long-term SMA suggests uptrend
+        # Short-term SMA above long-term SMA confirms bullish
+        if current_price > long_sma and short_sma > long_sma:
+            return "BULLISH"
+        # Price below long-term SMA suggests downtrend
+        # Short-term SMA below long-term SMA confirms bearish
+        elif current_price < long_sma and short_sma < long_sma:
+            return "BEARISH"
+        else:
+            return "NEUTRAL"
