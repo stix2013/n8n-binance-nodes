@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-02-10
+
+### Added
+- **SMA Indicator**: Integrated Simple Moving Average (SMA) calculation into the technical analysis API endpoints.
+- **API Response Enhancement**: Added `interval` field to price and technical analysis responses for better data traceability.
+- **Troubleshooting Guide**: Added a new Troubleshooting section to `AGENTS.md` to assist with common environment and runner issues.
+
+### Fixed
+- **Docker Deployment**: Fixed `.env` file mounting issues by removing the read-only flag from the API volume.
+- **Zrok Integration**: Enabled headless mode for Zrok to prevent TTY-related errors in headless environments.
+
+### Changed
+- **Python Upgrade**: Upgraded the API service environment to Python 3.14.
+- **Documentation**: Updated `README.md` with accurate project structure and expanded `BinanceOrder` node documentation.
+- **Project Version**: Bumped global project version to `1.4.0` (includes all cumulative changes since `1.2.0`).
+
 ## [1.3.0] - 2026-02-10
+
 
 ### Added
 - **API Response Enhancement**: Added `interval` field to price and technical analysis responses for better data traceability.
