@@ -299,6 +299,166 @@ class TestTechnicalIndicators:
         with pytest.raises(ValueError, match="Price data must contain variation"):
             TechnicalIndicators.validate_price_data([10.0] * 30, min_candles=30)
 
+    def test_calculate_sma_valid_data(self):
+        """Test SMA calculation with valid data using pandas."""
+        from utils.indicators import TechnicalIndicators
+
+        # Create a simple price series with 50 prices
+        prices = [
+            10.0,
+            10.5,
+            10.3,
+            10.8,
+            11.0,
+            10.9,
+            11.2,
+            11.5,
+            11.3,
+            11.7,
+            11.8,
+            12.0,
+            11.9,
+            12.2,
+            12.5,
+            12.3,
+            12.8,
+            13.0,
+            12.9,
+            13.2,
+            13.5,
+            13.3,
+            13.8,
+            14.0,
+            13.9,
+            14.2,
+            14.5,
+            14.3,
+            14.8,
+            15.0,
+            15.2,
+            15.5,
+            15.3,
+            15.8,
+            16.0,
+            15.9,
+            16.2,
+            16.5,
+            16.3,
+            16.8,
+            17.0,
+            16.9,
+            17.2,
+            17.5,
+            17.3,
+            17.8,
+            18.0,
+            17.9,
+            18.2,
+            18.5,
+        ]  # 50 prices
+
+        # Test with multiple windows
+        sma_windows = [10, 20, 50]
+        sma_values = TechnicalIndicators.calculate_sma(prices, sma_windows)
+
+        # Verify all windows are calculated
+        assert 10 in sma_values
+        assert 20 in sma_values
+        assert 50 in sma_values
+
+        # Verify values are floats
+        assert isinstance(sma_values[10], float)
+        assert isinstance(sma_values[20], float)
+        assert isinstance(sma_values[50], float)
+
+        # Verify SMA values are reasonable (should be between min and max of last N prices)
+        last_10 = prices[-10:]
+        assert min(last_10) <= sma_values[10] <= max(last_10)
+
+        last_20 = prices[-20:]
+        assert min(last_20) <= sma_values[20] <= max(last_20)
+
+    def test_calculate_sma_single_window(self):
+        """Test SMA calculation with a single window."""
+        from utils.indicators import TechnicalIndicators
+
+        prices = [10.0 + i * 0.1 for i in range(50)]  # 50 prices
+
+        sma_values = TechnicalIndicators.calculate_sma(prices, [20])
+
+        assert len(sma_values) == 1
+        assert 20 in sma_values
+        assert isinstance(sma_values[20], float)
+
+        # Manual calculation verification
+        expected_sma = sum(prices[-20:]) / 20
+        assert sma_values[20] == pytest.approx(expected_sma, rel=1e-6)
+
+    def test_calculate_sma_insufficient_data(self):
+        """Test SMA calculation with insufficient data."""
+        from utils.indicators import TechnicalIndicators
+
+        prices = [10.0, 10.5, 10.3]  # Only 3 prices, need at least 10 for window 10
+
+        with pytest.raises(ValueError, match="Insufficient data"):
+            TechnicalIndicators.calculate_sma(prices, [10, 20])
+
+    def test_calculate_sma_empty_prices(self):
+        """Test SMA calculation with empty prices."""
+        from utils.indicators import TechnicalIndicators
+
+        with pytest.raises(ValueError, match="Price data cannot be empty"):
+            TechnicalIndicators.calculate_sma([], [10, 20])
+
+    def test_calculate_sma_empty_windows(self):
+        """Test SMA calculation with empty windows list."""
+        from utils.indicators import TechnicalIndicators
+
+        prices = [10.0 + i * 0.1 for i in range(50)]
+
+        with pytest.raises(ValueError, match="Windows list cannot be empty"):
+            TechnicalIndicators.calculate_sma(prices, [])
+
+    def test_generate_sma_signal_bullish(self):
+        """Test SMA signal generation for bullish trend."""
+        from utils.indicators import TechnicalIndicators
+
+        # Current price above long-term SMA, short-term above long-term
+        current_price = 15.0
+        sma_values = {10: 14.5, 50: 14.0}  # Price > long, short > long
+
+        signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
+        assert signal == "BULLISH"
+
+    def test_generate_sma_signal_bearish(self):
+        """Test SMA signal generation for bearish trend."""
+        from utils.indicators import TechnicalIndicators
+
+        # Current price below long-term SMA, short-term below long-term
+        current_price = 13.0
+        sma_values = {10: 13.5, 50: 14.0}  # Price < long, short < long
+
+        signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
+        assert signal == "BEARISH"
+
+    def test_generate_sma_signal_neutral(self):
+        """Test SMA signal generation for neutral trend."""
+        from utils.indicators import TechnicalIndicators
+
+        # Mixed signals (price above long but short below long)
+        current_price = 14.5
+        sma_values = {10: 13.5, 50: 14.0}  # Price > long, short < long
+
+        signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
+        assert signal == "NEUTRAL"
+
+    def test_generate_sma_signal_empty(self):
+        """Test SMA signal generation with empty SMA values."""
+        from utils.indicators import TechnicalIndicators
+
+        signal = TechnicalIndicators.generate_sma_signal(15.0, {})
+        assert signal == "NEUTRAL"
+
 
 class TestTechnicalIndicatorsAPI:
     """Test suite for technical indicators API endpoints"""
@@ -343,7 +503,7 @@ class TestTechnicalIndicatorsAPI:
                 mock_client_class.return_value.__aenter__.return_value = mock_client
 
                 response = client.get(
-                    "/api/indicators/analysis?symbol=BTCUSDT&interval=1h&limit=50"
+                    "/api/indicators/analysis?symbol=BTCUSDT&interval=15m&limit=50"
                 )
 
                 assert response.status_code == 200
@@ -352,7 +512,7 @@ class TestTechnicalIndicatorsAPI:
                 # Verify response structure
                 assert "symbol" in data
                 assert "interval" in data
-                assert data["interval"] == "1h"
+                assert data["interval"] == "15m"
                 assert "current_price" in data
                 assert "rsi" in data
                 assert "macd" in data
@@ -369,6 +529,11 @@ class TestTechnicalIndicatorsAPI:
                 assert "macd_line" in data["macd"]
                 assert "signal_line" in data["macd"]
                 assert "histogram" in data["macd"]
+
+                # Verify SMA structure
+                assert "sma" in data
+                assert "signal" in data["sma"]
+                assert data["sma"]["signal"] in ["BULLISH", "BEARISH", "NEUTRAL"]
 
     def test_technical_analysis_invalid_symbol(self):
         """Test technical analysis with invalid symbol."""
@@ -525,6 +690,97 @@ class TestTechnicalIndicatorsAPI:
                 assert "signal" in data
                 assert data["indicator"] == "macd"
 
+    def test_single_indicator_sma_endpoint(self):
+        """Test single SMA indicator endpoint."""
+        mock_response_data = []
+        base_price = 45000.0
+        for i in range(50):
+            close_price = base_price + (i * 100)
+            mock_response_data.append(
+                [
+                    1704067200000 + (i * 900000),
+                    f"{close_price + 100:.2f}".encode(),
+                    f"{close_price + 200:.2f}".encode(),
+                    f"{close_price - 100:.2f}".encode(),
+                    f"{close_price:.2f}".encode(),
+                    "1000.00000000",
+                    1704068100000 + (i * 900000),
+                    "45500000.00000000",
+                    1000,
+                    "500.00000000",
+                    "22750000.00000000",
+                    "ignore",
+                ]
+            )
+
+        with patch.dict(
+            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
+        ):
+            with patch("routes.indicators.httpx.AsyncClient") as mock_client_class:
+                mock_client = AsyncMock()
+                mock_response = MagicMock()
+                mock_response.status_code = 200
+                mock_response.json.return_value = mock_response_data
+                mock_client.get.return_value = mock_response
+                mock_client_class.return_value.__aenter__.return_value = mock_client
+
+                response = client.get("/api/indicators/sma?symbol=BTCUSDT&interval=15m")
+
+                assert response.status_code == 200
+                data = response.json()
+
+                # Verify response structure for 15m interval (should have 10, 20, 50 SMAs)
+                assert "sma_10" in data
+                assert "sma_20" in data
+                assert "sma_50" in data
+                assert "signal" in data
+                assert data["signal"] in ["BULLISH", "BEARISH", "NEUTRAL"]
+
+    def test_single_indicator_sma_15m_endpoint(self):
+        """Test SMA indicator endpoint with 15m interval."""
+        mock_response_data = []
+        base_price = 45000.0
+        for i in range(50):
+            close_price = base_price + (i * 100)
+            mock_response_data.append(
+                [
+                    1704067200000 + (i * 60000),
+                    f"{close_price + 100:.2f}".encode(),
+                    f"{close_price + 200:.2f}".encode(),
+                    f"{close_price - 100:.2f}".encode(),
+                    f"{close_price:.2f}".encode(),
+                    "1000.00000000",
+                    1704067260000 + (i * 60000),
+                    "45500000.00000000",
+                    1000,
+                    "500.00000000",
+                    "22750000.00000000",
+                    "ignore",
+                ]
+            )
+
+        with patch.dict(
+            os.environ, {"BINANCE_API_KEY": self.mock_api_key}, clear=False
+        ):
+            with patch("routes.indicators.httpx.AsyncClient") as mock_client_class:
+                mock_client = AsyncMock()
+                mock_response = MagicMock()
+                mock_response.status_code = 200
+                mock_response.json.return_value = mock_response_data
+                mock_client.get.return_value = mock_response
+                mock_client_class.return_value.__aenter__.return_value = mock_client
+
+                response = client.get("/api/indicators/sma?symbol=BTCUSDT&interval=15m")
+
+                assert response.status_code == 200
+                data = response.json()
+
+                # Verify response structure for 15m interval (should have 10, 20, 50 SMAs)
+                assert "sma_10" in data
+                assert "sma_20" in data
+                assert "sma_50" in data
+                assert data["sma_200"] is None  # 200 should be None for 15m
+
     def test_single_indicator_invalid_name(self):
         """Test single indicator with invalid indicator name."""
         with patch.dict(
@@ -533,7 +789,10 @@ class TestTechnicalIndicatorsAPI:
             response = client.get("/api/indicators/invalid?symbol=BTCUSDT&interval=1h")
 
             assert response.status_code == 400  # Route-level validation error
-            assert "Supported indicators: 'rsi', 'macd'" in response.json()["detail"]
+            assert (
+                "Supported indicators: 'rsi', 'macd', 'sma'"
+                in response.json()["detail"]
+            )
 
     def test_technical_analysis_missing_api_key(self):
         """Test technical analysis without API key."""
@@ -618,6 +877,48 @@ class TestTechnicalIndicatorsIntegration:
         assert "macd_line" in macd_result
         assert "signal_line" in macd_result
         assert "histogram" in macd_result
+
+    def test_mathematical_accuracy_sma(self):
+        """Test SMA calculation mathematical accuracy using pandas."""
+        from utils.indicators import TechnicalIndicators
+        import pandas as pd
+
+        # Create a simple price series
+        prices = [10.0 + i * 0.5 for i in range(50)]  # Linear increase
+
+        # Test SMA calculation
+        sma_values = TechnicalIndicators.calculate_sma(prices, [10, 20])
+
+        # Verify against pandas calculation
+        prices_series = pd.Series(prices)
+        expected_sma_10 = prices_series.rolling(window=10).mean().iloc[-1]
+        expected_sma_20 = prices_series.rolling(window=20).mean().iloc[-1]
+
+        assert sma_values[10] == pytest.approx(expected_sma_10, rel=1e-6)
+        assert sma_values[20] == pytest.approx(expected_sma_20, rel=1e-6)
+
+        # Verify SMA is between first and last prices (for linear trend)
+        assert min(prices[-10:]) <= sma_values[10] <= max(prices[-10:])
+        assert min(prices[-20:]) <= sma_values[20] <= max(prices[-20:])
+
+    def test_sma_consistency_with_manual_calculation(self):
+        """Test SMA consistency with manual rolling average calculation."""
+        from utils.indicators import TechnicalIndicators
+
+        prices = [100.0 + i * 10 for i in range(50)]  # 100, 110, 120, ...
+
+        sma_values = TechnicalIndicators.calculate_sma(prices, [5, 10])
+
+        # Manual calculation for last 5 values
+        last_5 = prices[-5:]
+        manual_sma_5 = sum(last_5) / 5
+
+        # Manual calculation for last 10 values
+        last_10 = prices[-10:]
+        manual_sma_10 = sum(last_10) / 10
+
+        assert sma_values[5] == pytest.approx(manual_sma_5, rel=1e-6)
+        assert sma_values[10] == pytest.approx(manual_sma_10, rel=1e-6)
 
 
 if __name__ == "__main__":

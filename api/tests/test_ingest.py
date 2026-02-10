@@ -18,20 +18,20 @@ client = TestClient(app)
 # Sample kline data matching n8n BinanceKline node output
 SAMPLE_KLINE_DATA = {
     "symbol": "BTCUSDT",
-    "interval": "1h",
+    "interval": "15m",
     "limit": 100,
     "currentPrice": "42000.50",
     "klineCount": 100,
     "fetchedAt": "2023-10-27T10:00:00.000Z",
     "klines": [
         {
-            "openTime": 1698393600000 + (i * 3600000),
+            "openTime": 1698393600000 + (i * 900000),
             "open": str(40000 + i * 10),
             "high": str(40100 + i * 10),
             "low": str(39900 + i * 10),
             "close": str(40000 + i * 15),
             "volume": "100.5",
-            "closeTime": 1698400799999 + (i * 3600000),
+            "closeTime": 1698394499999 + (i * 900000),
             "quoteVolume": "4020000",
             "trades": 1500,
             "takerBuyBaseVolume": "50.25",
@@ -50,20 +50,20 @@ class TestIngestAPI:
         # Create sample data with sufficient variation for RSI calculation
         sample_data = {
             "symbol": "BTCUSDT",
-            "interval": "1h",
+            "interval": "15m",
             "limit": 100,
             "currentPrice": "42000.50",
             "klineCount": 100,
             "fetchedAt": "2023-10-27T10:00:00.000Z",
             "klines": [
                 {
-                    "openTime": 1698393600000 + (i * 3600000),
+                    "openTime": 1698393600000 + (i * 900000),
                     "open": str(40000 + i * 15),
                     "high": str(40100 + i * 15),
                     "low": str(39900 + i * 15),
                     "close": str(40000 + (i % 2) * 50 + i * 15),  # Add some variation
                     "volume": "100.5",
-                    "closeTime": 1698400799999 + (i * 3600000),
+                    "closeTime": 1698394499999 + (i * 900000),
                     "quoteVolume": "4020000",
                     "trades": 1500,
                     "takerBuyBaseVolume": "50.25",
@@ -79,7 +79,7 @@ class TestIngestAPI:
         result = response.json()
 
         assert result["symbol"] == "BTCUSDT"
-        assert result["interval"] == "1h"
+        assert result["interval"] == "15m"
         assert "rsi" in result
         assert "macd" in result
         assert "recommendation" in result
@@ -106,20 +106,20 @@ class TestIngestAPI:
         # Create sample data with sufficient candles
         sample_data = {
             "symbol": "BTCUSDT",
-            "interval": "1h",
+            "interval": "15m",
             "limit": 100,
             "currentPrice": "42000.50",
             "klineCount": 100,
             "fetchedAt": "2023-10-27T10:00:00.000Z",
             "klines": [
                 {
-                    "openTime": 1698393600000 + (i * 3600000),
+                    "openTime": 1698393600000 + (i * 900000),
                     "open": str(40000 + i * 15),
                     "high": str(40100 + i * 15),
                     "low": str(39900 + i * 15),
                     "close": str(40000 + (i % 2) * 50 + i * 15),
                     "volume": "100.5",
-                    "closeTime": 1698400799999 + (i * 3600000),
+                    "closeTime": 1698394499999 + (i * 900000),
                     "quoteVolume": "4020000",
                     "trades": 1500,
                     "takerBuyBaseVolume": "50.25",
@@ -146,7 +146,7 @@ class TestIngestAPI:
         result = response.json()
 
         assert result["symbol"] == "BTCUSDT"
-        assert result["interval"] == "1h"
+        assert result["interval"] == "15m"
         assert "rsi" in result
         assert "macd" in result
 
