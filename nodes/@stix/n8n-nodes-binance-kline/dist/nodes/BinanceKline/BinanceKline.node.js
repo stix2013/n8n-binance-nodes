@@ -131,9 +131,10 @@ class BinanceKline {
                     symbols = [symbol.toUpperCase()];
                 }
                 for (const symbol of symbols) {
+                    const baseUrl = process.env.N8N_BINANCE_API_URL || 'http://api:8000';
                     const response = await this.helpers.httpRequest({
                         method: 'GET',
-                        url: 'http://api:8000/api/binance/price',
+                        url: `${baseUrl}/api/binance/price`,
                         qs: {
                             symbol,
                             interval,

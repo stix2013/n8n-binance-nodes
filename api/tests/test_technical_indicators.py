@@ -351,6 +351,8 @@ class TestTechnicalIndicatorsAPI:
 
                 # Verify response structure
                 assert "symbol" in data
+                assert "interval" in data
+                assert data["interval"] == "1h"
                 assert "current_price" in data
                 assert "rsi" in data
                 assert "macd" in data
@@ -468,6 +470,8 @@ class TestTechnicalIndicatorsAPI:
 
                 # Verify response structure
                 assert "symbol" in data
+                assert "interval" in data
+                assert data["interval"] == "1h"
                 assert "indicator" in data
                 assert "value" in data
                 assert "signal" in data
@@ -514,6 +518,8 @@ class TestTechnicalIndicatorsAPI:
 
                 # Verify response structure
                 assert "symbol" in data
+                assert "interval" in data
+                assert data["interval"] == "1h"
                 assert "indicator" in data
                 assert "value" in data
                 assert "signal" in data

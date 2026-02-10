@@ -210,9 +210,10 @@ class BinanceOrder {
                     if (stopLossLimitPrice)
                         body.stopLossLimitPrice = stopLossLimitPrice;
                 }
+                const baseUrl = process.env.N8N_BINANCE_API_URL || 'http://api:8000';
                 const response = await this.helpers.httpRequest({
                     method: 'POST',
-                    url: 'http://api:8000/api/binance/order',
+                    url: `${baseUrl}/api/binance/order`,
                     body,
                     timeout: 30000,
                 });
