@@ -3,7 +3,7 @@
 Essential guidelines for agentic coding agents in the `n8n-binance-nodes` repository.
 
 ## Environment & Prerequisites
-- **API (Python)**: >=3.13.9, FastAPI, Pydantic v2. Use `uv` or `pip` in `.venv`.
+- **API (Python)**: >=3.14, FastAPI, Pydantic v2. Use `uv` or `pip` in `.venv`.
 - **Nodes (TS)**: n8n 2.6.4, BunJS 1.3.6.
 - **Docker**: Containerized deployment for n8n, PostgreSQL, and API.
 

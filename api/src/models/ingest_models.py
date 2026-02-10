@@ -38,6 +38,7 @@ class AnalysisParameters(BaseModel):
     macd_fast: int = Field(default=12, ge=2, description="MACD fast period")
     macd_slow: int = Field(default=26, ge=2, description="MACD slow period")
     macd_signal: int = Field(default=9, ge=2, description="MACD signal period")
+    sma_enabled: bool = Field(default=True, description="Calculate SMA indicators")
 
 
 class IngestRequest(BaseModel):
@@ -60,6 +61,16 @@ class MACDResult(BaseModel):
     crossover: str
 
 
+class SMAResult(BaseModel):
+    """SMA calculation result."""
+
+    sma_10: Optional[float] = None
+    sma_20: Optional[float] = None
+    sma_50: Optional[float] = None
+    sma_200: Optional[float] = None
+    signal: str
+
+
 class IngestResponse(BaseModel):
     """Response containing analysis results."""
 
@@ -69,4 +80,5 @@ class IngestResponse(BaseModel):
     analysis_timestamp: datetime
     rsi: RSIResult
     macd: MACDResult
+    sma: SMAResult
     recommendation: str
