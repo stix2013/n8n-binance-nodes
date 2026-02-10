@@ -70,6 +70,7 @@ async def analyze_n8n_data(request: IngestRequest):
 
         return IngestResponse(
             symbol=request.data.symbol,
+            interval=request.data.interval,
             current_price=current_price,
             analysis_timestamp=analysis_timestamp,
             rsi=RSIResult(value=rsi_value, signal=rsi_signal),

@@ -218,36 +218,7 @@ async def get_technical_analysis(
 
         return TechnicalAnalysisResponse(
             symbol=symbol.upper(),
-            current_price=current_price,
-            rsi=RSIResult(value=rsi_value, signal=rsi_signal),
-            macd=MACDResult(
-                macd_line=macd_data["macd_line"],
-                signal_line=macd_data["signal_line"],
-                histogram=macd_data["histogram"],
-            ),
-            macd_interpretation=MACDSignal(
-                signal_type=macd_signal_type, crossover=macd_crossover
-            ),
-            overall_recommendation=overall_recommendation,
-            analysis_timestamp=timestamp_to_iso(last_timestamp)
-            if last_timestamp
-            else None,
-            candles_analyzed=len(closing_prices),
-        )
-        macd_signal_type, macd_crossover = TechnicalIndicators.generate_macd_signal(
-            macd_data
-        )
-
-        # Generate overall recommendation
-        overall_recommendation = TechnicalIndicators.generate_overall_recommendation(
-            rsi_signal, macd_signal_type, macd_crossover
-        )
-
-        # Create response
-        current_price = closing_prices[-1]
-
-        return TechnicalAnalysisResponse(
-            symbol=symbol.upper(),
+            interval=interval,
             current_price=current_price,
             rsi=RSIResult(value=rsi_value, signal=rsi_signal),
             macd=MACDResult(
@@ -339,6 +310,7 @@ async def get_single_indicator(
 
         return SingleIndicatorResponse(
             symbol=symbol.upper(),
+            interval=interval,
             indicator=IndicatorType(indicator_name),  # Return enum value
             value=value,
             signal=signal,

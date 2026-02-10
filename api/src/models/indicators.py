@@ -63,6 +63,7 @@ class TechnicalAnalysisResponse(BaseModel):
     """Response with RSI and MACD analysis."""
 
     symbol: str = Field(description="Trading pair symbol")
+    interval: str = Field(description="Candle interval used for analysis")
     current_price: float = Field(ge=0, description="Current closing price")
     rsi: RSIResult = Field(description="RSI analysis result")
     macd: MACDResult = Field(description="MACD calculation result")
@@ -98,6 +99,7 @@ class SingleIndicatorResponse(BaseModel):
     """Response for single indicator calculation."""
 
     symbol: str = Field(description="Trading pair symbol")
+    interval: str = Field(description="Candle interval used for calculation")
     indicator: IndicatorType = Field(description="Indicator type calculated")
     value: float = Field(description="Indicator value")
     signal: str = Field(description="Indicator signal")

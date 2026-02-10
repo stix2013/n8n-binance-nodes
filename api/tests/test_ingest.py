@@ -79,6 +79,7 @@ class TestIngestAPI:
         result = response.json()
 
         assert result["symbol"] == "BTCUSDT"
+        assert result["interval"] == "1h"
         assert "rsi" in result
         assert "macd" in result
         assert "recommendation" in result
@@ -145,6 +146,7 @@ class TestIngestAPI:
         result = response.json()
 
         assert result["symbol"] == "BTCUSDT"
+        assert result["interval"] == "1h"
         assert "rsi" in result
         assert "macd" in result
 
