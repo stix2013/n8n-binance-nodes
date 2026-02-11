@@ -7,4 +7,6 @@ api/.coverage
 api/htmlcov/
 api/.coverage
 api/.pytest_cache/
->>>>>>> origin/main
+
+# Analyse results
+docs/analyse

@@ -74,7 +74,8 @@ async function main() {
   const choice = await selectOption();
 
   const n8nVersion = await getEnvValue("N8N_VERSION") || "2.6.4";
-  const apiVersion = await getEnvValue("API_VERSION") || "0.4.1";
+  const apiVersion = await getEnvValue("API_VERSION") || "1.4.0";
+  const apiPythonVersion = await getEnvValue("API_PYTHON_VERSION") || "3.14";
 
   switch (choice) {
     case "all":
@@ -86,7 +87,7 @@ async function main() {
       await buildImage(`n8nio-runners:${n8nVersion}-local`, "dockers/Dockerfile", "./dockers", { N8N_VERSION: n8nVersion });
       break;
     case "api":
-      await buildImage(`api-python3.13:${apiVersion}`, "dockers/Dockerfile.python", ".", { API_VERSION: apiVersion });
+      await buildImage(`api-python${apiPythonVersion}:${apiVersion}`, "dockers/Dockerfile.python", ".", { API_VERSION: apiVersion });
       break;
     case "postgres":
       await buildImage("postgres-custom:16-alpine", "dockers/Dockerfile.postgres", "./dockers");

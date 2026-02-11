@@ -49,6 +49,8 @@ services:
       - n8n_data:/home/node/.n8n
       - n8n_mcp:/data/mcp
       - ./nodes/@stix/n8n-nodes-binance-kline:/home/node/.n8n/custom/node_modules/@stix/n8n-nodes-binance-kline
+      - ./nodes/@stix/n8n-nodes-markdown-saver:/home/node/.n8n/custom/node_modules/@stix/n8n-nodes-markdown-saver
+      - ./docs/analyse:/data/analyse
     extra_hosts:
       - "api.binance.com:108.156.104.23"
     # You can remove this section if you don't need a specific limit
@@ -132,12 +134,12 @@ services:
       retries: 5
       start_period: 10s
   api:
-    image: api-python3.14:${API_VERSION:-0.4.1}
+    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.4.0}
     build:
       context: .
       dockerfile: dockers/Dockerfile.python
       args:
-        - API_VERSION=${API_VERSION:-0.4.1}
+        - API_VERSION=${API_VERSION:-1.4.0}
     container_name: api
     restart: unless-stopped
     networks:

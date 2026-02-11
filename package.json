@@ -1,6 +1,6 @@
 {
   "name": "n8n-binance-nodes",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "description": "n8n workflow automation with Binance nodes",
   "scripts": {
     "start": "bun scripts/start-env.ts",
