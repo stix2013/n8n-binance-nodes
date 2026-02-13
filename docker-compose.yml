@@ -3,6 +3,7 @@ services:
     image: n8nio/n8n:${N8N_VERSION:-2.6.4-amd64}
     container_name: n8n-main
     restart: always
+    user: "1000:1000"
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -20,6 +21,8 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
       - N8N_DEV_RELOAD=${N8N_DEV_RELOAD}
       - N8N_PROXY_HOPS=1
+      # File access
+      - N8N_RESTRICT_FILE_ACCESS_TO=/home/node/analyse
       # Runners
       - N8N_RUNNERS_ENABLED=${N8N_RUNNERS_ENABLED}
       - N8N_RUNNERS_MODE=${N8N_RUNNERS_MODE}
@@ -50,7 +53,7 @@ services:
       - n8n_mcp:/data/mcp
       - ./nodes/@stix/n8n-nodes-binance-kline:/home/node/.n8n/custom/node_modules/@stix/n8n-nodes-binance-kline
       - ./nodes/@stix/n8n-nodes-markdown-saver:/home/node/.n8n/custom/node_modules/@stix/n8n-nodes-markdown-saver
-      - ./docs/analyse:/data/analyse
+      - ./docs/analyse:/home/node/analyse:rw
     extra_hosts:
       - "api.binance.com:108.156.104.23"
     # You can remove this section if you don't need a specific limit
@@ -91,6 +94,7 @@ services:
       - "developers.binance.com:18.172.242.31"
     environment:
       - N8N_RUNNERS_TASK_BROKER_URI=http://n8n-main:5679
+      - N8N_RESTRICT_FILE_ACCESS_TO=/home/node/analyse
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
       - N8N_RUNNERS_LAUNCHER_LOG_LEVEL=${N8N_RUNNERS_LAUNCHER_LOG_LEVEL}
       - N8N_RUNNERS_EXTERNAL_ALLOW=${N8N_RUNNERS_EXTERNAL_ALLOW}
@@ -101,6 +105,7 @@ services:
       - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=120
     volumes:
       - ./config/n8n-task-runners.json:/etc/n8n-task-runners.json
+      - ./docs/analyse:/home/node/analyse:rw
     depends_on:
       - n8n
     healthcheck:
