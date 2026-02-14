@@ -1,7 +1,7 @@
 [project]
 name = "api"
-version = "1.4.0"
-description = "API for n8n"
+version = "1.5.0"
+description = "API for n8n - News Sentiment Analysis"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -13,6 +13,14 @@ dependencies = [
     "pydantic-settings>=2.0.0",
     "numpy>=1.24.0",
     "pandas>=2.0.0",
+    # News sentiment dependencies
+    "asyncpg>=0.29.0",
+    "feedparser>=6.0.12",
+    "vaderSentiment>=3.3.2",
+    "spacy>=3.7.0",
+    "apscheduler>=3.10.4",
+    "beautifulsoup4>=4.12.0",
+    "tenacity>=8.2.0",
 ]
 
 [project.optional-dependencies]
