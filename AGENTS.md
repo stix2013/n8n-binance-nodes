@@ -99,3 +99,4 @@ class PriceRequest(BaseModel):
 
 ## Troubleshooting
 - **Integration Testing**: See [docs/problems/2026-02-04-integration-testing-architecture.md](docs/problems/2026-02-04-integration-testing-architecture.md) for solutions to common issues with process isolation, ESM/CJS compatibility, and cross-language data serialization.
+- **n8n File Write Permissions**: See [docs/problems/2026-02-13-n8n-file-write-permissions.md](docs/problems/2026-02-13-n8n-file-write-permissions.md) for solutions to file permission errors with the Read/Write Files from Disk node when using external task runners and SELinux.
