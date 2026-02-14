@@ -30,10 +30,16 @@ except ImportError:
 setup_logging(settings.log_level)
 logger = logging.getLogger(__name__)
 
+# Global service instances
+news_service = None
+news_scheduler = None
+
 
 @asynccontextmanager
 async def lifespan(app):
     """Lifespan context manager for startup/shutdown events."""
+    global news_service, news_scheduler
+
     logger.info(
         "API starting up",
         extra={
@@ -41,7 +47,44 @@ async def lifespan(app):
             "environment": os.getenv("ENVIRONMENT", "development"),
         },
     )
+
+    # Initialize database and news service
+    try:
+        from services.database import db
+        from services.news_service import NewsService
+        from scheduler.news_scheduler import NewsScheduler
+
+        # Connect to database
+        await db.connect()
+        logger.info("Database connected")
+
+        # Run migrations
+        await db.init_migrations()
+        logger.info("Database migrations completed")
+
+        # Initialize news service
+        news_service = NewsService(db)
+        logger.info("News service initialized")
+
+        # Start scheduler
+        news_scheduler = NewsScheduler(news_service)
+        news_scheduler.start()
+
+        # Initial fetch on startup
+        await news_service.fetch_active_sources()
+        await news_service.refresh_materialized_view()
+
+    except Exception as e:
+        logger.error(f"Failed to initialize news service: {e}")
+
     yield
+
+    # Shutdown
+    if news_scheduler:
+        news_scheduler.shutdown()
+    if db.pool:
+        await db.disconnect()
+
     logger.info("API shutting down", extra={"event": "shutdown"})
 
 
@@ -49,7 +92,7 @@ async def lifespan(app):
 app = FastAPI(
     title="n8n Binance API",
     description="API for fetching cryptocurrency prices from Binance with Pydantic type validation and technical indicators",
-    version="1.1.0",
+    version="1.5.0",
     debug=settings.api_debug,
     lifespan=lifespan,
 )
@@ -60,15 +103,16 @@ app.add_middleware(ErrorLoggingMiddleware)
 # Import and include routers
 try:
     # Try relative import first
-    from .routes import binance, indicators, ingest
+    from .routes import binance, indicators, ingest, news
 except ImportError:
     # Fall back to absolute import for direct execution
-    from routes import binance, indicators, ingest
+    from routes import binance, indicators, ingest, news
 
 # Include routers
 app.include_router(binance.router)
 app.include_router(indicators.router)
 app.include_router(ingest.router)
+app.include_router(news.router)
 
 
 @app.get("/", response_model=RootResponse)
