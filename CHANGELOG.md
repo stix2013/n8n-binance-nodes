@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-02-14
+
+### Added
+- **News Sentiment Analysis**: Integrated comprehensive news sentiment analysis into the API
+  - Added news models for sentiment data
+  - Implemented news routes with sentiment endpoints
+  - Created scheduler for periodic news fetching
+  - Added services for news processing and sentiment analysis (RSS fetcher, coin detector, failover manager)
+  - Added database services for news storage
+- **MarkdownSaver Node**: New n8n node for JSON to Markdown conversion with character filtering
+- **Technical Analysis Documentation**: Added comprehensive documentation and example workflows for technical analysis
+
+### Changed
+- **n8n Version**: Upgraded n8n from `2.6.4` to `2.7.5`
+  - Updated `N8N_VERSION` in `.env` and `docker-compose.yml`
+- **API Version**: Upgraded API to `1.5.0`
+- **Documentation**: Updated `README.md` with accurate project structure
+
+### Fixed
+- **Docker File Permissions**: Fixed n8n file write permissions for external task runners with SELinux
+
 ## [1.4.0] - 2026-02-10
 
 ### Added

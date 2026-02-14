@@ -144,7 +144,7 @@ services:
       context: .
       dockerfile: dockers/Dockerfile.python
       args:
-        - API_VERSION=${API_VERSION:-1.4.0}
+        - API_VERSION=${API_VERSION:-1.5.0}
     container_name: api
     restart: unless-stopped
     networks:

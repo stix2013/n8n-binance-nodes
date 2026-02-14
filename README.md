@@ -7,12 +7,13 @@ A Docker-based n8n workflow automation environment with custom community nodes f
 - **Custom n8n Community Nodes:**
   - **BinanceKline:** Fetch cryptocurrency market data from Binance API with customizable symbol parameters
   - **BinanceOrder:** Place market, limit, stop-loss, and bracket orders (TP/SL) on Binance via FastAPI proxy
+  - **MarkdownSaver:** Convert JSON to Markdown with character filtering for data transformation
 
 - **Infrastructure:**
   - n8n with external task runners (version configurable via `N8N_VERSION`)
   - PostgreSQL 16 database
-  - FastAPI service for custom endpoints (Python 3.13, version configurable via `API_VERSION`)
-  - Python 3.13 task runner environment
+  - FastAPI service for custom endpoints (Python 3.14, version configurable via `API_VERSION`)
+  - Python 3.14 task runner environment
 
 - **Trading Tools:**
   - Technical analysis workflows (MACD, RSI, Volume)
@@ -39,7 +40,8 @@ n8n-binance-nodes/
 │
 ├── nodes/                          # n8n custom community nodes
 │   └── @stix/
-│       └── n8n-nodes-binance-kline/   # Binance Kline & Order nodes
+│       ├── n8n-nodes-binance-kline/   # Binance Kline & Order nodes
+│       └── n8n-nodes-markdown-saver/  # MarkdownSaver node
 │
 ├── api/                            # FastAPI Python service
 │   ├── src/
@@ -51,14 +53,27 @@ n8n-binance-nodes/
 │   │   ├── models/                 # Pydantic models
 │   │   │   ├── api_models.py       # Request/response models
 │   │   │   ├── indicators.py       # Technical indicators models
+│   │   │   ├── news_models.py      # News sentiment models
 │   │   │   └── settings.py         # Environment settings
 │   │   ├── routes/                 # API route handlers
 │   │   │   ├── binance.py          # Binance API endpoints
-│   │   │   └── indicators.py       # Technical indicators endpoints
+│   │   │   ├── indicators.py       # Technical indicators endpoints
+│   │   │   └── news.py             # News sentiment endpoints
+│   │   ├── services/               # Business logic services
+│   │   │   ├── coin_detector.py    # Crypto coin detection
+│   │   │   ├── database.py         # Database operations
+│   │   │   ├── failover_manager.py # API failover handling
+│   │   │   ├── news_service.py    # News processing
+│   │   │   ├── rss_fetcher.py     # RSS feed fetching
+│   │   │   └── sentiment_analyzer.py # Sentiment analysis
+│   │   ├── scheduler/              # Background job schedulers
+│   │   │   └── news_scheduler.py   # News fetching scheduler
 │   │   └── utils/                  # Utility functions
 │   │       ├── date_utils.py       # Date/time conversion
-│   │       ├── indicators.py       # RSI, MACD calculations
+│   │       ├── indicators.py       # RSI, MACD, SMA calculations
 │   │       └── price_validation.py # Binance data validation
+│   ├── migrations/                 # Database migrations
+│   │   └── 001_news_tables.sql    # News tables schema
 │   ├── tests/                      # Unit tests
 │   ├── pyproject.toml              # Python dependencies
 │   └── demo_indicators.py          # Technical indicators demo
@@ -299,6 +314,9 @@ docker compose logs api | jq
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version information.
 
+- **v1.5.0** (2026-02-14) - News Sentiment Analysis, MarkdownSaver Node, n8n 2.7.5
+- **v1.4.0** (2026-02-10) - SMA Indicator, API response enhancement, Python 3.14
+- **v1.3.0** (2026-02-10) - Interval field, troubleshooting guide
 - **v1.2.1** (2026-02-09) - Upgrade to n8n 2.6.4-amd64 (security patches)
 - **v1.2.0** (2026-02-04) - BinanceOrder Node, Integration Tests, Visual Build Tools
 - **v1.0.0** (2026-01-27) - Startup scripts, Zrok integration, n8n 2.6.0
