@@ -10,3 +10,6 @@ api/.pytest_cache/
 
 # Analyse results
 docs/analyse
+
+# custom nodes
+nodes/**/dist
