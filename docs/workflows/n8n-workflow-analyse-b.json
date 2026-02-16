@@ -2,27 +2,16 @@
   "name": "Binance Ingest Analysis",
   "nodes": [
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        528,
-        -160
-      ],
-      "id": "c09b03f7-eaa0-4faa-b7c0-bcc2580d1aca",
-      "name": "When clicking ‘Execute workflow’"
-    },
-    {
       "parameters": {
         "symbol": "={{ $json.symbol }}",
-        "interval": "={{ $json.interval }}",
+        "interval": "={{ $json.intervals[1] }}",
         "limit": "={{ $json.limit }}"
       },
       "type": "CUSTOM.binanceKline",
       "typeVersion": 1,
       "position": [
-        976,
-        -352
+        784,
+        -416
       ],
       "id": "b12ca816-52bc-41b5-805b-85e7b60481a1",
       "name": "Kline 1h",
@@ -36,14 +25,14 @@
     {
       "parameters": {
         "symbol": "={{ $json.symbol }}",
-        "interval": "={{ $json.interval }}",
+        "interval": "={{ $json.intervals[0] }}",
         "limit": "={{ $json.limit }}"
       },
       "type": "CUSTOM.binanceKline",
       "typeVersion": 1,
       "position": [
-        976,
-        -160
+        784,
+        -224
       ],
       "id": "34b3abb7-52ef-45ff-8d83-246560bf4f94",
       "name": "Kline 15m",
@@ -74,8 +63,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1424,
-        -352
+        1232,
+        -416
       ]
     },
     {
@@ -98,19 +87,19 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1424,
-        -160
+        1232,
+        -224
       ]
     },
     {
       "parameters": {
-        "numberInputs": 3
+        "numberInputs": 4
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1648,
-        -176
+        1456,
+        -352
       ],
       "id": "da380a48-250c-4f7d-8381-19d767528cd3",
       "name": "Merge"
@@ -125,8 +114,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
-        -352
+        1008,
+        -416
       ]
     },
     {
@@ -139,60 +128,21 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
-        -160
+        1008,
+        -224
       ]
     },
     {
       "parameters": {
-        "jsCode": "return {\n  symbol: $input.first().json.symbol,\n  interval: \"1h\",\n  limit:$input.first().json.limit \n}"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        752,
-        -352
-      ],
-      "id": "3bceb1e3-8a4f-45b8-93b3-a800566c706a",
-      "name": "Interval 1h"
-    },
-    {
-      "parameters": {
-        "jsCode": "return {\n  symbol: $input.first().json.symbol,\n  interval: \"15m\",\n  limit:$input.first().json.limit \n}"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        752,
-        -160
-      ],
-      "id": "32899057-0564-40ad-8eae-27a544b282a7",
-      "name": "Inteval 15m"
-    },
-    {
-      "parameters": {
-        "jsCode": "return {\n  symbol: $input.first().json.symbol,\n  interval: \"4h\",\n  limit:$input.first().json.limit \n}"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        752,
-        32
-      ],
-      "id": "865e1024-60a2-4f19-9794-da68a20429de",
-      "name": "Interval 4h"
-    },
-    {
-      "parameters": {
         "symbol": "={{ $json.symbol }}",
-        "interval": "={{ $json.interval }}",
+        "interval": "={{ $json.intervals[2] }}",
         "limit": "={{ $json.limit }}"
       },
       "type": "CUSTOM.binanceKline",
       "typeVersion": 1,
       "position": [
-        976,
-        32
+        784,
+        -32
       ],
       "id": "fd9988eb-869e-438e-8d52-1a509a3154f4",
       "name": "Kline 4h",
@@ -213,8 +163,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
-        32
+        1008,
+        -32
       ]
     },
     {
@@ -237,19 +187,19 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1424,
-        32
+        1232,
+        -32
       ]
     },
     {
       "parameters": {
-        "jsCode": "const analyse_data = [];\n\nfor (const item of $input.all()) {\n  analyse_data.push({\n    interval: item.json.interval,\n    rsi: { ...item.json.rsi },\n    macd: { ...item.json.macd },\n    sma: {...item.json.sma}\n  });\n}\n\nreturn [\n  {\n    symbol: $input.first().json.symbol,\n    analyse_data\n  }\n];"
+        "jsCode": "const analyse_data = [];\n\nfor (const item of $input.all()) {\n  if (item.json.rsi) {\n  analyse_data.push({\n    interval: item.json.interval,\n    rsi: { ...item.json.rsi },\n    macd: { ...item.json.macd },\n    sma: {...item.json.sma}\n  });\n  }\n}\n\nreturn [\n  {\n    coin: $('Translate to Symbol').first().json.coin,\n    limit: $('Translate to Symbol').first().json.limit,\n    symbol: $input.first().json.symbol,\n    current_price: $input.first().json.price,\n    analyse_data\n  }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1872,
-        -160
+        1680,
+        -320
       ],
       "id": "6363a30d-2997-4961-9ba4-d8ed619474e6",
       "name": "Reformat"
@@ -257,7 +207,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are an expert cryptocurrency day trader with deep expertise in technical analysis, risk management, and multi-timeframe strategy. Analyze the following data for {{ $json.symbol }} and provide actionable trading insights. You can get the news sentiment for {{ $json.symbol }} from the `News Sentiment` tool.\n\n## INPUT DATA\n\n**Symbol:** {{ $json.symbol }}\n\n### Timeframe 1 ({{ $json.analyse_data[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.analyse_data[0].rsi.value }}\n- Signal: {{ $json.analyse_data[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.analyse_data[0].macd.macd_line }}\n- Signal Line: {{ $json.analyse_data[0].macd.signal_line }}\n- Histogram: {{ $json.analyse_data[0].macd.histogram }}\n- Signal Type: {{ $json.analyse_data[0].macd.signal_type }}\n- Crossover: {{ $json.analyse_data[0].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.analyse_data[0].sma.sma_20 }}\n- SMA 50: {{ $json.analyse_data[0].sma.sma_50 }}\n- SMA 200: {{ $json.analyse_data[0].sma.sma_200 }}\n- Signal: {{ $json.analyse_data[0].sma.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.analyse_data[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.analyse_data[1].rsi.value }}\n- Signal: {{ $json.analyse_data[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.analyse_data[1].macd.macd_line }}\n- Signal Line: {{ $json.analyse_data[1].macd.signal_line }}\n- Histogram: {{ $json.analyse_data[1].macd.histogram }}\n- Signal Type: {{ $json.analyse_data[1].macd.signal_type }}\n- Crossover: {{ $json.analyse_data[1].macd.crossover }}\n\n** SMA:**\n- SMA 10: {{ $json.analyse_data[1].sma.sma_10 }}\n- SMA 20: {{ $json.analyse_data[1].sma.sma_20 }}\n- SMA 50: {{ $json.analyse_data[1].sma.sma_50 }}\n- Signal: {{ $json.analyse_data[1].sma.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.analyse_data[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.analyse_data[2].rsi.value }}\n- Signal: {{ $json.analyse_data[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.analyse_data[2].macd.macd_line }}\n- Signal Line: {{ $json.analyse_data[2].macd.signal_line }}\n- Histogram: {{ $json.analyse_data[2].macd.histogram }}\n- Signal Type: {{ $json.analyse_data[2].macd.signal_type }}\n- Crossover: {{ $json.analyse_data[2].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.analyse_data[2].sma.sma_20 }}\n- SMA 50: {{ $json.analyse_data[2].sma.sma_50 }}\n- SMA 200: {{ $json.analyse_data[2].sma.sma_200 }}\n- Signal: {{ $json.analyse_data[2].sma.signal }}\n\n---\n\n## YOUR ANALYSIS TASK\n\n### 1. MULTI-TIMEFRAME CONFLUENCE ANALYSIS\n- **Trend Alignment:** Determine if all three timeframes agree on trend direction (Bullish/Bearish/Neutral/Mixed)\n- **Signal Quality:** Rate the setup as Strong (all align), Moderate (2/3 align), or Weak (conflicting)\n- **Primary Bias:** Identify the dominant trend based on the longest timeframe, using shorter timeframes for entry timing\n\n### 2. INDICATOR SYNTHESIS\n**RSI Analysis:**\n- Identify momentum extremes (<30 oversold, >70 overbought) on any timeframe\n- Look for divergences between price action and RSI\n- Note RSI trend direction (rising/falling momentum)\n\n**MACD Analysis:**\n- Evaluate histogram momentum (expanding = strengthening, contracting = weakening)\n- Prioritize crossover signals on the entry timeframe (shortest)\n- Check for MACD divergences across timeframes\n\n**SMA Analysis:**\n- Determine if price is trading above (bullish) or below (bearish) SMA on each timeframe\n- Identify potential dynamic support/resistance levels\n\n### 3. TRADING DECISION FRAMEWORK\n\n**For LONG Positions (Buy), require:**\n- [ ] Long-term trend bullish (price > SMA on T3, MACD bullish)\n- [ ] Medium-term pullback or consolidation (RSI <50 or near 40, MACD histogram turning positive)\n- [ ] Short-term entry trigger (bullish MACD crossover, RSI bouncing from oversold)\n\n**For SHORT Positions (Sell), require:**\n- [ ] Long-term trend bearish (price < SMA on T3, MACD bearish)\n- [ ] Medium-term rally or consolidation (RSI >50 or near 60, MACD histogram turning negative)\n- [ ] Short-term entry trigger (bearish MACD crossover, RSI rejecting from overbought)\n\n### 4. RISK MANAGEMENT PARAMETERS\n- **Suggested Stop Loss:** Place below recent swing low (longs) or above recent swing high (shorts), or 2-3% from entry\n- **Position Sizing:** Recommend 1-2% risk per trade based on stop distance\n- **Invalidation Conditions:** List specific indicator reversals that would cancel the trade idea\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\n**📊 MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**🎯 TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**📈 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**⚠️ RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**💡 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following",
+        "text": "=You are an expert cryptocurrency day trader with deep expertise in technical analysis, risk management, and multi-timeframe strategy. Analyze the following data for {{ $json.symbol }} and provide actionable trading insights. You can get the news sentiment for {{ $json.symbol }} from the `News Sentiment` tool. The current price for {{ $json.symbol }} is {{ $json.current_price }}.\n\n## INPUT DATA\n\n**Symbol:** {{ $json.symbol }}\n\n### Timeframe 1 ({{ $json.analyse_data[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.analyse_data[0].rsi.value }}\n- Signal: {{ $json.analyse_data[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.analyse_data[0].macd.macd_line }}\n- Signal Line: {{ $json.analyse_data[0].macd.signal_line }}\n- Histogram: {{ $json.analyse_data[0].macd.histogram }}\n- Signal Type: {{ $json.analyse_data[0].macd.signal_type }}\n- Crossover: {{ $json.analyse_data[0].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.analyse_data[0].sma.sma_20 }}\n- SMA 50: {{ $json.analyse_data[0].sma.sma_50 }}\n- SMA 200: {{ $json.analyse_data[0].sma.sma_200 }}\n- Signal: {{ $json.analyse_data[0].sma.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.analyse_data[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.analyse_data[1].rsi.value }}\n- Signal: {{ $json.analyse_data[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.analyse_data[1].macd.macd_line }}\n- Signal Line: {{ $json.analyse_data[1].macd.signal_line }}\n- Histogram: {{ $json.analyse_data[1].macd.histogram }}\n- Signal Type: {{ $json.analyse_data[1].macd.signal_type }}\n- Crossover: {{ $json.analyse_data[1].macd.crossover }}\n\n** SMA:**\n- SMA 10: {{ $json.analyse_data[1].sma.sma_10 }}\n- SMA 20: {{ $json.analyse_data[1].sma.sma_20 }}\n- SMA 50: {{ $json.analyse_data[1].sma.sma_50 }}\n- Signal: {{ $json.analyse_data[1].sma.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.analyse_data[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.analyse_data[2].rsi.value }}\n- Signal: {{ $json.analyse_data[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.analyse_data[2].macd.macd_line }}\n- Signal Line: {{ $json.analyse_data[2].macd.signal_line }}\n- Histogram: {{ $json.analyse_data[2].macd.histogram }}\n- Signal Type: {{ $json.analyse_data[2].macd.signal_type }}\n- Crossover: {{ $json.analyse_data[2].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.analyse_data[2].sma.sma_20 }}\n- SMA 50: {{ $json.analyse_data[2].sma.sma_50 }}\n- SMA 200: {{ $json.analyse_data[2].sma.sma_200 }}\n- Signal: {{ $json.analyse_data[2].sma.signal }}\n\n---\n\n## YOUR ANALYSIS TASK\n\n### 1. MULTI-TIMEFRAME CONFLUENCE ANALYSIS\n- **Trend Alignment:** Determine if all three timeframes agree on trend direction (Bullish/Bearish/Neutral/Mixed)\n- **Signal Quality:** Rate the setup as Strong (all align), Moderate (2/3 align), or Weak (conflicting)\n- **Primary Bias:** Identify the dominant trend based on the longest timeframe, using shorter timeframes for entry timing\n\n### 2. INDICATOR SYNTHESIS\n**RSI Analysis:**\n- Identify momentum extremes (<30 oversold, >70 overbought) on any timeframe\n- Look for divergences between price action and RSI\n- Note RSI trend direction (rising/falling momentum)\n\n**MACD Analysis:**\n- Evaluate histogram momentum (expanding = strengthening, contracting = weakening)\n- Prioritize crossover signals on the entry timeframe (shortest)\n- Check for MACD divergences across timeframes\n\n**SMA Analysis:**\n- Determine if price is trading above (bullish) or below (bearish) SMA on each timeframe\n- Identify potential dynamic support/resistance levels\n\n### 3. TRADING DECISION FRAMEWORK\n\n**For LONG Positions (Buy), require:**\n- [ ] Long-term trend bullish (price > SMA on T3, MACD bullish)\n- [ ] Medium-term pullback or consolidation (RSI <50 or near 40, MACD histogram turning positive)\n- [ ] Short-term entry trigger (bullish MACD crossover, RSI bouncing from oversold)\n\n**For SHORT Positions (Sell), require:**\n- [ ] Long-term trend bearish (price < SMA on T3, MACD bearish)\n- [ ] Medium-term rally or consolidation (RSI >50 or near 60, MACD histogram turning negative)\n- [ ] Short-term entry trigger (bearish MACD crossover, RSI rejecting from overbought)\n\n### 4. RISK MANAGEMENT PARAMETERS\n- **Suggested Stop Loss:** Place below recent swing low (longs) or above recent swing high (shorts), or 2-3% from entry\n- **Position Sizing:** Recommend 1-2% risk per trade based on stop distance\n- **Invalidation Conditions:** List specific indicator reversals that would cancel the trade idea\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\n**📊 MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**🎯 TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**📈 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**⚠️ RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**💡 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following",
         "needsFallback": true,
         "options": {
           "systemMessage": "=Provide your analysis in this structure:\nAnalyse for {{ $json.symbol }}\n\n**📊 MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**🎯 TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**📈 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**⚠️ RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**💡 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]"
@@ -266,33 +216,11 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        2216,
-        -160
+        2024,
+        -320
       ],
       "id": "4cdc3a24-97f1-4e76-80e6-ca4822f2f7d3",
       "name": "AI Agent"
-    },
-    {
-      "parameters": {
-        "modelName": "models/gemini-3-flash-preview",
-        "options": {
-          "temperature": 0.1
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        2096,
-        64
-      ],
-      "id": "0ac4d327-3650-4617-9eda-43754080cad4",
-      "name": "Google Gemini Chat Model",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "yQBvEEzQX2TcmaLh",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      }
     },
     {
       "parameters": {
@@ -302,8 +230,8 @@
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
       "position": [
-        2352,
-        64
+        2160,
+        -96
       ],
       "id": "84054ea1-5011-49c3-bd0a-8010bbf14aba",
       "name": "Postgres Chat Memory",
@@ -322,8 +250,8 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        2480,
-        64
+        2288,
+        -96
       ],
       "id": "f4aa26e1-3b6e-44d5-b92f-68e278048538",
       "name": "News Sentiment"
@@ -341,8 +269,8 @@
       "type": "CUSTOM.markdownSaver",
       "typeVersion": 1,
       "position": [
-        2688,
-        -160
+        2496,
+        -320
       ],
       "id": "ecdae9c0-ec3d-458d-8f89-58e746e4ce4a",
       "name": "Markdown Binary"
@@ -357,11 +285,33 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        2912,
-        -160
+        2720,
+        -320
       ],
       "id": "538980f4-2316-4204-be9c-1d60e0963937",
       "name": "Write to docs/analyse"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        -96
+      ],
+      "id": "0ac4d327-3650-4617-9eda-43754080cad4",
+      "name": "Trader Main",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yQBvEEzQX2TcmaLh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
     },
     {
       "parameters": {
@@ -373,51 +323,62 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        2224,
-        64
+        2032,
+        -96
       ],
       "id": "ce053e0f-f51e-40e3-9515-51170a9c0679",
-      "name": "Google Gemini Chat Model1",
+      "name": "Trader Backup",
       "credentials": {
         "googlePalmApi": {
           "id": "yQBvEEzQX2TcmaLh",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        336,
+        -320
+      ],
+      "id": "679cd77b-e03f-4c53-87ba-b6cf1ebed908",
+      "name": "When chat message received",
+      "webhookId": "32d400f6-4238-4446-976a-3c76b912526d"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.binance.com/api/v3/ticker/price?symbol={{ $json.symbol }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1232,
+        -608
+      ],
+      "id": "45075c7f-4627-4543-a554-672f03ef5a5e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const coin = $input.first().json.chatInput.toUpperCase();\nconst symbol = coin + 'USDT'; \nconst limit = 500;\nconst intervals = [\n  '15m', // for 15 minutes timeframe\n  '1h', // for 1 hour timeframe\n  '4h', // for 4 hours timeframe\n]\n\nreturn [{\n    coin,\n    symbol,\n    limit,\n    intervals,\n  }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -320
+      ],
+      "id": "e04d479c-4edf-44b7-85a4-5c163b14e382",
+      "name": "Translate to Symbol"
     }
   ],
-  "pinData": {
-    "When clicking ‘Execute workflow’": [
-      {
-        "json": {
-          "symbol": "ETHUSDT",
-          "limit": 500
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "connections": {
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "Interval 1h",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Inteval 15m",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Interval 4h",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Kline 1h": {
       "main": [
         [
@@ -446,7 +407,7 @@
           {
             "node": "Merge",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -457,7 +418,7 @@
           {
             "node": "Merge",
             "type": "main",
-            "index": 1
+            "index": 2
           }
         ]
       ]
@@ -495,39 +456,6 @@
         ]
       ]
     },
-    "Interval 1h": {
-      "main": [
-        [
-          {
-            "node": "Kline 1h",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Inteval 15m": {
-      "main": [
-        [
-          {
-            "node": "Kline 15m",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Interval 4h": {
-      "main": [
-        [
-          {
-            "node": "Kline 4h",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Kline 4h": {
       "main": [
         [
@@ -556,7 +484,7 @@
           {
             "node": "Merge",
             "type": "main",
-            "index": 2
+            "index": 3
           }
         ]
       ]
@@ -567,17 +495,6 @@
           {
             "node": "AI Agent",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -632,13 +549,72 @@
         []
       ]
     },
-    "Google Gemini Chat Model1": {
+    "Trader Main": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trader Backup": {
       "ai_languageModel": [
         [
           {
             "node": "AI Agent",
             "type": "ai_languageModel",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Translate to Symbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate to Symbol": {
+      "main": [
+        [
+          {
+            "node": "Kline 1h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Kline 15m",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Kline 4h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -652,7 +628,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "a0a62722-59a7-4d2b-ac59-b11708a1fea7",
+  "versionId": "acf967d9-c824-4dec-b539-d90f4483f132",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c5132ea42f91439834dd110c2ce2f5a137182faaae992ba119ae691d81f22581"
