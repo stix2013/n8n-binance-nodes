@@ -173,7 +173,7 @@ async def get_recent_futures_orders(
 
 
 @router.get(
-    "/futures/klines",
+    "/futures/kline",
     response_model=CandlestickResponse,
     summary="Get futures klines",
     description="Get cached futures candlestick data from database",
@@ -275,19 +275,19 @@ async def get_mark_price(
 
 
 @router.get(
-    "/futures/openInterest",
-    response_model=OpenInterestResponse,
-    summary="Get open interest",
-    description="Get current open interest for a futures symbol",
+    "/futures/markPrice",
+    response_model=MarkPriceResponse,
+    summary="Get mark price",
+    description="Get current mark price for a futures symbol",
 )
-async def get_open_interest(
+async def get_mark_price(
     symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
     market_type: str = Query(..., description="Market type (usd_m or coin_m)"),
 ):
     """
-    Get current open interest for a futures symbol.
+    Get current mark price for a futures symbol.
 
-    Open interest represents the total number of outstanding derivative contracts.
+    Mark price is used for liquidation and margin calculations.
     """
     try:
         try:
@@ -298,32 +298,127 @@ async def get_open_interest(
         client = BinanceClient()
 
         if market_type.lower() in ["usd_m", "usdm", "usd-m"]:
-            data = await client.get_usdm_open_interest(symbol)
+            data = await client.get_usdm_mark_price(symbol)
         elif market_type.lower() in ["coin_m", "coinm", "coin-m"]:
-            data = await client.get_coinm_open_interest(symbol)
+            data = await client.get_coinm_mark_price(symbol)
         else:
-            await client.close()
             raise HTTPException(
                 status_code=400, detail=f"Invalid market type: {market_type}"
             )
 
         await client.close()
 
-        return OpenInterestResponse(
+        return MarkPriceResponse(
             success=True,
             symbol=symbol.upper(),
             market_type=market_type.lower(),
-            open_interest=float(data.get("openInterest", 0)),
+            mark_price=float(data.get("markPrice", 0)),
+            index_price=float(data.get("indexPrice"))
+            if data.get("indexPrice")
+            else None,
+            estimated_settle_price=float(data.get("estimatedSettlePrice"))
+            if data.get("estimatedSettlePrice")
+            else None,
+            last_funding_rate=float(data.get("lastFundingRate"))
+            if data.get("lastFundingRate")
+            else None,
+            next_funding_time=datetime.fromtimestamp(
+                data.get("nextFundingTime", 0) / 1000
+            )
+            if data.get("nextFundingTime")
+            else None,
             time=datetime.fromtimestamp(data.get("time", 0) / 1000)
             if data.get("time")
             else None,
         )
 
     except BinanceAPIError as e:
-        logger.error(f"Binance API error in get_open_interest: {e}")
+        logger.error(f"Binance API error in get_mark_price: {e}")
         raise HTTPException(status_code=e.status_code or 400, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error in get_open_interest: {e}")
+        logger.error(f"Unexpected error in get_mark_price: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get(
+    "/futures/markPriceKline",
+    response_model=CandlestickResponse,
+    summary="Get mark price klines",
+    description="Get mark price candlestick data for futures",
+)
+async def get_mark_price_klines(
+    symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
+    market_type: str = Query(..., description="Market type (usd_m or coin_m)"),
+    interval: IntervalEnum = Query(
+        default=IntervalEnum.ONE_HOUR, description="Kline interval"
+    ),
+    limit: int = Query(default=100, ge=1, le=1000, description="Number of candles"),
+):
+    """
+    Get mark price kline data for futures.
+
+    Returns mark price candlestick data from Binance.
+    """
+    try:
+        try:
+            from ..utils.binance_client import BinanceClient
+        except ImportError:
+            from utils.binance_client import BinanceClient
+
+        client = BinanceClient()
+
+        if market_type.lower() not in ["usd_m", "usdm", "usd-m"]:
+            await client.close()
+            raise HTTPException(
+                status_code=400,
+                detail="Mark price klines only available for USD-M futures",
+            )
+
+        # Fetch mark price klines from Binance
+        klines = await client.get_usdm_mark_price_klines(
+            symbol=symbol, interval=interval.value, limit=limit
+        )
+
+        await client.close()
+
+        # Transform to CandlestickData format
+        from datetime import datetime as dt
+
+        candles = []
+        for kline in klines:
+            candles.append(
+                CandlestickData(
+                    symbol=symbol.upper(),
+                    market_type=market_type.lower(),
+                    interval=interval.value,
+                    open_time=dt.fromtimestamp(kline[0] / 1000),
+                    open_price=float(kline[1]),
+                    high_price=float(kline[2]),
+                    low_price=float(kline[3]),
+                    close_price=float(kline[4]),
+                    volume=0.0,  # Mark price klines don't have volume
+                    close_time=dt.fromtimestamp(kline[6] / 1000),
+                    quote_volume=0.0,
+                    trades=0,
+                    taker_buy_base_volume=0.0,
+                    taker_buy_quote_volume=0.0,
+                )
+            )
+
+        return CandlestickResponse(
+            success=True,
+            symbol=symbol.upper(),
+            market_type=market_type.lower(),
+            interval=interval.value,
+            data=candles,
+            count=len(candles),
+        )
+
+    except BinanceAPIError as e:
+        logger.error(f"Binance API error in get_mark_price_klines: {e}")
+        raise HTTPException(status_code=e.status_code or 400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error in get_mark_price_klines: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
