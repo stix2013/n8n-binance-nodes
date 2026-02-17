@@ -75,7 +75,7 @@ async def lifespan(app):
         await news_service.refresh_materialized_view()
 
     except Exception as e:
-        logger.error(f"Failed to initialize news service: {e}")
+        logger.error(f"Failed to initialize services: {e}")
 
     yield
 
@@ -103,16 +103,17 @@ app.add_middleware(ErrorLoggingMiddleware)
 # Import and include routers
 try:
     # Try relative import first
-    from .routes import binance, indicators, ingest, news
+    from .routes import binance, indicators, ingest, news, trading
 except ImportError:
     # Fall back to absolute import for direct execution
-    from routes import binance, indicators, ingest, news
+    from routes import binance, indicators, ingest, news, trading
 
 # Include routers
 app.include_router(binance.router)
 app.include_router(indicators.router)
 app.include_router(ingest.router)
 app.include_router(news.router)
+app.include_router(trading.router)
 
 
 @app.get("/", response_model=RootResponse)

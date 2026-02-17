@@ -33,14 +33,25 @@ class Database:
             yield conn
 
     async def init_migrations(self) -> None:
-        migration_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "migrations", "001_news_tables.sql"
+        """Initialize all database migrations in order."""
+        migrations_dir = os.path.join(
+            os.path.dirname(__file__), "..", "..", "migrations"
         )
-        if os.path.exists(migration_path):
-            with open(migration_path) as f:
-                sql = f.read()
-            async with self.pool.acquire() as conn:
-                await conn.execute(sql)
+
+        # List of migration files in order
+        migration_files = [
+            "001_news_tables.sql",
+            "002_trading_tables.sql",
+        ]
+
+        for migration_file in migration_files:
+            migration_path = os.path.join(migrations_dir, migration_file)
+            if os.path.exists(migration_path):
+                with open(migration_path) as f:
+                    sql = f.read()
+                async with self.pool.acquire() as conn:
+                    await conn.execute(sql)
+                    print(f"✅ Applied migration: {migration_file}")
 
 
 db = Database()

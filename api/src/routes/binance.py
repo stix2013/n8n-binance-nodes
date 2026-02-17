@@ -306,7 +306,44 @@ async def place_binance_order(
                 )
 
                 if response.status_code == 200:
-                    return OrderResponse(**response.json())
+                    response_data = response.json()
+
+                    # Persist OTOCO order to database
+                    try:
+                        try:
+                            from ..services.trading_service import trading_service
+                        except ImportError:
+                            from services.trading_service import trading_service
+
+                        await trading_service._persist_spot_order(
+                            {
+                                "order_id": response_data.get("orderId"),
+                                "client_order_id": response_data.get("clientOrderId"),
+                                "symbol": order.symbol.upper(),
+                                "side": order.side.value,
+                                "order_type": order.type.value,
+                                "status": response_data.get("status", "NEW"),
+                                "price": float(response_data.get("price", 0))
+                                or order.price,
+                                "quantity": float(
+                                    response_data.get("origQty", order.quantity)
+                                ),
+                                "executed_qty": float(
+                                    response_data.get("executedQty", 0)
+                                ),
+                                "time_in_force": "GTC",
+                                "binance_response": response_data,
+                            }
+                        )
+                        logger.debug(
+                            f"OTOCO spot order {response_data.get('orderId')} persisted to database"
+                        )
+                    except Exception as db_error:
+                        logger.error(
+                            f"Failed to persist OTOCO spot order to database: {db_error}"
+                        )
+
+                    return OrderResponse(**response_data)
                 else:
                     raise_binance_error(response)
 
@@ -377,6 +414,39 @@ async def place_binance_order(
                     oco_data = resp_oco.json()
                     entry_data["orderListId"] = oco_data.get("orderListId")
                     entry_data["contingencyType"] = "OCO"
+
+                    # Persist Market entry order to database
+                    try:
+                        try:
+                            from ..services.trading_service import trading_service
+                        except ImportError:
+                            from services.trading_service import trading_service
+
+                        await trading_service._persist_spot_order(
+                            {
+                                "order_id": entry_data.get("orderId"),
+                                "client_order_id": entry_data.get("clientOrderId"),
+                                "symbol": order.symbol.upper(),
+                                "side": order.side.value,
+                                "order_type": "MARKET",
+                                "status": entry_data.get("status", "NEW"),
+                                "price": float(entry_data.get("price", 0)),
+                                "quantity": float(
+                                    entry_data.get("origQty", order.quantity)
+                                ),
+                                "executed_qty": float(entry_data.get("executedQty", 0)),
+                                "time_in_force": None,
+                                "binance_response": entry_data,
+                            }
+                        )
+                        logger.debug(
+                            f"Market+OCO spot order {entry_data.get('orderId')} persisted to database"
+                        )
+                    except Exception as db_error:
+                        logger.error(
+                            f"Failed to persist Market+OCO spot order to database: {db_error}"
+                        )
+
                     return OrderResponse(**entry_data)
                 else:
                     # If OCO fails, we have an open position!
@@ -421,7 +491,67 @@ async def place_binance_order(
                 )
 
                 if response.status_code == 200:
-                    return OrderResponse(**response.json())
+                    response_data = response.json()
+
+                    # Persist to database (non-blocking - don't fail if DB insert fails)
+                    try:
+                        try:
+                            from ..services.trading_service import trading_service
+                            from ..models.trading_models import (
+                                SpotOrderRequest,
+                                OrderSideEnum,
+                                OrderTypeEnum,
+                            )
+                        except ImportError:
+                            from services.trading_service import trading_service
+                            from models.trading_models import (
+                                SpotOrderRequest,
+                                OrderSideEnum,
+                                OrderTypeEnum,
+                            )
+
+                        # Create order request for persistence
+                        order_request = SpotOrderRequest(
+                            symbol=order.symbol,
+                            side=OrderSideEnum(order.side.value),
+                            order_type=OrderTypeEnum(order.type.value),
+                            quantity=order.quantity,
+                            price=order.price,
+                            time_in_force="GTC" if order.type != "MARKET" else None,
+                        )
+
+                        # Persist order (logs error if fails, doesn't block response)
+                        await trading_service._persist_spot_order(
+                            {
+                                "order_id": response_data.get("orderId"),
+                                "client_order_id": response_data.get("clientOrderId"),
+                                "symbol": order.symbol.upper(),
+                                "side": order.side.value,
+                                "order_type": order.type.value,
+                                "status": response_data.get("status", "NEW"),
+                                "price": float(response_data.get("price", 0))
+                                or order.price,
+                                "quantity": float(
+                                    response_data.get("origQty", order.quantity)
+                                ),
+                                "executed_qty": float(
+                                    response_data.get("executedQty", 0)
+                                ),
+                                "time_in_force": "GTC"
+                                if order.type != "MARKET"
+                                else None,
+                                "binance_response": response_data,
+                            }
+                        )
+                        logger.debug(
+                            f"Spot order {response_data.get('orderId')} persisted to database"
+                        )
+                    except Exception as db_error:
+                        logger.error(
+                            f"Failed to persist spot order to database: {db_error}"
+                        )
+
+                    return OrderResponse(**response_data)
                 else:
                     raise_binance_error(response)
 

@@ -36,6 +36,38 @@ export class BinanceApi implements ICredentialType {
       placeholder: 'BTCUSDT, ETHUSDT, SOLUSDT',
       description: 'Comma-separated list of your favorite crypto pairs for quick access',
     },
+    {
+      displayName: 'Base URL',
+      name: 'baseUrl',
+      type: 'string',
+      default: 'https://api.binance.com',
+      placeholder: 'https://api.binance.com',
+      description: 'Binance API base URL. Use for custom endpoints or proxies.',
+    },
+    {
+      displayName: 'API Path',
+      name: 'apiPath',
+      type: 'string',
+      default: '/api/v3/',
+      placeholder: '/api/v3/',
+      description: 'Binance API path prefix for spot market',
+    },
+    {
+      displayName: 'Futures Base URL',
+      name: 'futuresBaseUrl',
+      type: 'string',
+      default: 'https://fapi.binance.com',
+      placeholder: 'https://fapi.binance.com',
+      description: 'Binance USD-M Futures API base URL',
+    },
+    {
+      displayName: 'Futures API Path',
+      name: 'futuresApiPath',
+      type: 'string',
+      default: '/fapi/v1/',
+      placeholder: '/fapi/v1/',
+      description: 'Binance USD-M Futures API path prefix',
+    },
   ];
 
   authenticate: IAuthenticateGeneric = {
@@ -49,7 +81,7 @@ export class BinanceApi implements ICredentialType {
 
   test: ICredentialTestRequest = {
     request: {
-      url: 'https://api.binance.com/api/v3/account',
+      url: '={{$credentials.baseUrl}}{{$credentials.apiPath}}ping',
       method: 'GET',
     },
   };
