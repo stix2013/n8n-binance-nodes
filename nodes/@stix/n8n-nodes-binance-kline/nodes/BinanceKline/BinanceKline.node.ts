@@ -135,6 +135,31 @@ export class BinanceKline implements INodeType {
 				description: 'Choose spot or futures market',
 			},
 			{
+				displayName: 'Futures Market Type',
+				name: 'futuresMarketType',
+				type: 'options',
+				displayOptions: {
+					show: {
+						marketType: ['futures'],
+						apiSource: ['proxy'],
+					},
+				},
+				options: [
+					{
+						name: 'USD-M Futures',
+						value: 'usd_m',
+						description: 'USD-Margined Futures (fapi.binance.com)',
+					},
+					{
+						name: 'COIN-M Futures',
+						value: 'coin_m',
+						description: 'COIN-Margined Futures (dapi.binance.com)',
+					},
+				],
+				default: 'usd_m',
+				description: 'Choose USD-M or COIN-M futures market',
+			},
+			{
 				displayName: 'Futures Data Type',
 				name: 'futuresDataType',
 				type: 'options',
@@ -341,10 +366,13 @@ export class BinanceKline implements INodeType {
 					if (marketType === 'futures') {
 						dataType = this.getNodeParameter('futuresDataType', itemIndex, 'kline') as string;
 						const interval = this.getNodeParameter('interval', itemIndex, '1h') as string;
+						// Get market type (usd_m or coin_m) - default to usd_m for proxy
+						const futuresMarketType = this.getNodeParameter('futuresMarketType', itemIndex, 'usd_m') as string;
 
 						if (apiSource === 'proxy') {
 							const proxyBaseUrl = 'http://api:8000';
 							url = `${proxyBaseUrl}/api/binance/futures/${dataType}`;
+							qs.market_type = futuresMarketType;
 							if (dataType !== 'openInterest') {
 								qs.interval = interval;
 								qs.limit = limit;
