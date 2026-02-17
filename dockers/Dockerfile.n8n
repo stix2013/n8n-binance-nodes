@@ -1,0 +1,27 @@
+ARG N8N_VERSION=2.7.5-amd64
+FROM n8nio/n8n:${N8N_VERSION}
+
+USER root
+
+ENV NODE_NO_WARNINGS=1
+
+WORKDIR /tmp/nodes/@stix
+
+COPY nodes/@stix/n8n-nodes-binance-kline/dist /tmp/nodes/@stix/n8n-nodes-binance-kline/dist
+COPY nodes/@stix/n8n-nodes-binance-kline/package.json /tmp/nodes/@stix/n8n-nodes-binance-kline/package.json
+
+RUN mkdir -p /home/node/custom-extensions/@stix/n8n-nodes-binance-kline && \
+    cp -r /tmp/nodes/@stix/n8n-nodes-binance-kline /home/node/custom-extensions/@stix/ && \
+    cd /home/node/custom-extensions/@stix/n8n-nodes-binance-kline && npm install --omit=dev --no-audit --no-fund
+
+COPY nodes/@stix/n8n-nodes-markdown-saver/dist /tmp/nodes/@stix/n8n-nodes-markdown-saver/dist
+COPY nodes/@stix/n8n-nodes-markdown-saver/package.json /tmp/nodes/@stix/n8n-nodes-markdown-saver/package.json
+
+RUN mkdir -p /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver && \
+    cp -r /tmp/nodes/@stix/n8n-nodes-markdown-saver /home/node/custom-extensions/@stix/ && \
+    cd /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver && npm install --omit=dev --no-audit --no-fund && \
+    rm -rf /tmp/nodes
+
+RUN chown -R node:node /home/node
+
+USER node
