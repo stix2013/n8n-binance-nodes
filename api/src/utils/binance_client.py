@@ -32,7 +32,7 @@ class BinanceClient:
     def __init__(self, api_key: str = None, api_secret: str = None):
         """Initialize client with API credentials."""
         self.api_key = api_key or os.getenv("BINANCE_API_KEY")
-        self.api_secret = api_secret or os.getenv("BINANCE_API_SECRET")
+        self.api_secret = api_secret or os.getenv("BINANCE_SECRET_KEY")
 
         if not self.api_key or not self.api_secret:
             raise BinanceAuthError("API key and secret are required")
