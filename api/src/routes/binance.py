@@ -310,7 +310,10 @@ async def place_binance_order(
 
                     # Persist OTOCO order to database
                     try:
-                        from ..services.trading_service import trading_service
+                        try:
+                            from ..services.trading_service import trading_service
+                        except ImportError:
+                            from services.trading_service import trading_service
 
                         await trading_service._persist_spot_order(
                             {
@@ -414,7 +417,10 @@ async def place_binance_order(
 
                     # Persist Market entry order to database
                     try:
-                        from ..services.trading_service import trading_service
+                        try:
+                            from ..services.trading_service import trading_service
+                        except ImportError:
+                            from services.trading_service import trading_service
 
                         await trading_service._persist_spot_order(
                             {
@@ -489,12 +495,20 @@ async def place_binance_order(
 
                     # Persist to database (non-blocking - don't fail if DB insert fails)
                     try:
-                        from ..services.trading_service import trading_service
-                        from ..models.trading_models import (
-                            SpotOrderRequest,
-                            OrderSideEnum,
-                            OrderTypeEnum,
-                        )
+                        try:
+                            from ..services.trading_service import trading_service
+                            from ..models.trading_models import (
+                                SpotOrderRequest,
+                                OrderSideEnum,
+                                OrderTypeEnum,
+                            )
+                        except ImportError:
+                            from services.trading_service import trading_service
+                            from models.trading_models import (
+                                SpotOrderRequest,
+                                OrderSideEnum,
+                                OrderTypeEnum,
+                            )
 
                         # Create order request for persistence
                         order_request = SpotOrderRequest(

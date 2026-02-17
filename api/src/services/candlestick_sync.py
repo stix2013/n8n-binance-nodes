@@ -6,10 +6,17 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import os
 
-from ..models.trading_models import MarketTypeEnum, IntervalEnum, CandlestickData
-from ..utils.binance_client import BinanceClient
-from ..utils.exceptions import BinanceAPIError, SyncError
-from .database import db
+# Import with fallback for both relative and absolute imports
+try:
+    from ..models.trading_models import MarketTypeEnum, IntervalEnum, CandlestickData
+    from ..utils.binance_client import BinanceClient
+    from ..utils.exceptions import BinanceAPIError, SyncError
+    from .database import db
+except ImportError:
+    from models.trading_models import MarketTypeEnum, IntervalEnum, CandlestickData
+    from utils.binance_client import BinanceClient
+    from utils.exceptions import BinanceAPIError, SyncError
+    from services.database import db
 
 logger = logging.getLogger(__name__)
 

@@ -4,18 +4,33 @@ import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
-from ..models.trading_models import (
-    SpotOrder,
-    FuturesOrder,
-    SpotOrderRequest,
-    FuturesOrderRequest,
-    OrderResponse,
-    MarketTypeEnum,
-    OrderStatusEnum,
-)
-from ..utils.binance_client import BinanceClient
-from ..utils.exceptions import BinanceAPIError, DatabaseError
-from .database import db
+# Import with fallback for both relative and absolute imports
+try:
+    from ..models.trading_models import (
+        SpotOrder,
+        FuturesOrder,
+        SpotOrderRequest,
+        FuturesOrderRequest,
+        OrderResponse,
+        MarketTypeEnum,
+        OrderStatusEnum,
+    )
+    from ..utils.binance_client import BinanceClient
+    from ..utils.exceptions import BinanceAPIError, DatabaseError
+    from .database import db
+except ImportError:
+    from models.trading_models import (
+        SpotOrder,
+        FuturesOrder,
+        SpotOrderRequest,
+        FuturesOrderRequest,
+        OrderResponse,
+        MarketTypeEnum,
+        OrderStatusEnum,
+    )
+    from utils.binance_client import BinanceClient
+    from utils.exceptions import BinanceAPIError, DatabaseError
+    from services.database import db
 
 logger = logging.getLogger(__name__)
 
