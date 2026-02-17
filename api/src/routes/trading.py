@@ -16,12 +16,10 @@ try:
         CandlestickResponse,
         MarkPriceResponse,
         OpenInterestResponse,
-        SyncStatusResponse,
         IntervalEnum,
         MarketTypeEnum,
     )
     from ..services.trading_service import trading_service
-    from ..services.candlestick_sync import candlestick_sync
     from ..utils.exceptions import BinanceAPIError, DatabaseError
 except ImportError:
     from models.trading_models import (
@@ -33,12 +31,10 @@ except ImportError:
         CandlestickResponse,
         MarkPriceResponse,
         OpenInterestResponse,
-        SyncStatusResponse,
         IntervalEnum,
         MarketTypeEnum,
     )
     from services.trading_service import trading_service
-    from services.candlestick_sync import candlestick_sync
     from utils.exceptions import BinanceAPIError, DatabaseError
 
 logger = logging.getLogger(__name__)
@@ -176,7 +172,7 @@ async def get_recent_futures_orders(
     "/futures/kline",
     response_model=CandlestickResponse,
     summary="Get futures klines",
-    description="Get cached futures candlestick data from database",
+    description="Get futures candlestick data directly from Binance",
 )
 async def get_futures_klines(
     symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
@@ -189,15 +185,44 @@ async def get_futures_klines(
     limit: int = Query(default=100, ge=1, le=1000, description="Number of candles"),
 ):
     """
-    Get cached futures kline data.
-
-    Returns candlestick data from the database cache.
-    If data is not cached, it will be fetched from Binance.
+    Get futures kline data directly from Binance API.
     """
     try:
-        candles = await candlestick_sync.get_cached_candles(
+        try:
+            from ..utils.binance_client import BinanceClient
+        except ImportError:
+            from utils.binance_client import BinanceClient
+
+        client = BinanceClient()
+
+        # Fetch klines directly from Binance
+        klines = await client.get_klines(
             symbol=symbol, market_type=market_type, interval=interval.value, limit=limit
         )
+
+        await client.close()
+
+        # Transform to CandlestickData format
+        candles = []
+        for kline in klines:
+            candles.append(
+                CandlestickData(
+                    symbol=symbol.upper(),
+                    market_type=market_type.lower(),
+                    interval=interval.value,
+                    open_time=datetime.fromtimestamp(kline[0] / 1000),
+                    open_price=float(kline[1]),
+                    high_price=float(kline[2]),
+                    low_price=float(kline[3]),
+                    close_price=float(kline[4]),
+                    volume=float(kline[5]),
+                    close_time=datetime.fromtimestamp(kline[6] / 1000),
+                    quote_volume=float(kline[7]),
+                    trades=int(kline[8]),
+                    taker_buy_base_volume=float(kline[9]),
+                    taker_buy_quote_volume=float(kline[10]),
+                )
+            )
 
         return CandlestickResponse(
             success=True,
@@ -208,6 +233,9 @@ async def get_futures_klines(
             count=len(candles),
         )
 
+    except BinanceAPIError as e:
+        logger.error(f"Binance API error in get_futures_klines: {e}")
+        raise HTTPException(status_code=e.status_code or 400, detail=str(e))
     except Exception as e:
         logger.error(f"Error fetching futures klines: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch klines: {str(e)}")
@@ -503,73 +531,6 @@ async def get_open_interest_history(
     except Exception as e:
         logger.error(f"Unexpected error in get_open_interest_history: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-
-# ==================== ADMIN/SYNC ENDPOINTS ====================
-
-
-@router.post(
-    "/admin/sync/now",
-    summary="Trigger immediate candlestick sync",
-    description="Manually trigger candlestick sync for all configured symbols",
-)
-async def trigger_sync_now():
-    """
-    Trigger an immediate candlestick synchronization.
-
-    This will fetch the latest candlestick data for all configured
-    symbols, intervals, and market types.
-    """
-    try:
-        # Run sync in background to not block the response
-        asyncio.create_task(candlestick_sync.trigger_sync_now())
-
-        return {
-            "success": True,
-            "message": "Sync triggered successfully",
-            "timestamp": datetime.now().isoformat(),
-        }
-
-    except Exception as e:
-        logger.error(f"Error triggering sync: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to trigger sync: {str(e)}")
-
-
-@router.get(
-    "/admin/sync/status",
-    response_model=SyncStatusResponse,
-    summary="Get sync status",
-    description="Get current candlestick sync service status",
-)
-async def get_sync_status():
-    """
-    Get the current status of the candlestick sync service.
-
-    Returns information about last sync, next sync, configured symbols,
-    intervals, and market types.
-    """
-    try:
-        status = candlestick_sync.get_status()
-        return SyncStatusResponse(
-            success=True,
-            is_running=status["is_running"],
-            last_sync=datetime.fromisoformat(status["last_sync"])
-            if status["last_sync"]
-            else None,
-            next_sync=datetime.fromisoformat(status["next_sync"])
-            if status["next_sync"]
-            else None,
-            symbols=status["symbols"],
-            intervals=status["intervals"],
-            market_types=status["market_types"],
-            message="Sync service status retrieved successfully",
-        )
-
-    except Exception as e:
-        logger.error(f"Error getting sync status: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get sync status: {str(e)}"
-        )
 
 
 # Import asyncio for background tasks
