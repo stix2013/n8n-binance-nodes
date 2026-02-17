@@ -180,7 +180,9 @@ async def get_recent_futures_orders(
 )
 async def get_futures_klines(
     symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
-    market_type: str = Query(..., description="Market type (usd_m or coin_m)"),
+    market_type: str = Query(
+        default="usd_m", description="Market type (usd_m or coin_m)"
+    ),
     interval: IntervalEnum = Query(
         default=IntervalEnum.ONE_HOUR, description="Kline interval"
     ),
@@ -219,7 +221,9 @@ async def get_futures_klines(
 )
 async def get_mark_price(
     symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
-    market_type: str = Query(..., description="Market type (usd_m or coin_m)"),
+    market_type: str = Query(
+        default="usd_m", description="Market type (usd_m or coin_m)"
+    ),
 ):
     """
     Get current mark price for a futures symbol.
@@ -282,7 +286,9 @@ async def get_mark_price(
 )
 async def get_mark_price(
     symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
-    market_type: str = Query(..., description="Market type (usd_m or coin_m)"),
+    market_type: str = Query(
+        default="usd_m", description="Market type (usd_m or coin_m)"
+    ),
 ):
     """
     Get current mark price for a futures symbol.
@@ -348,7 +354,9 @@ async def get_mark_price(
 )
 async def get_mark_price_klines(
     symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
-    market_type: str = Query(..., description="Market type (usd_m or coin_m)"),
+    market_type: str = Query(
+        default="usd_m", description="Market type (usd_m or coin_m)"
+    ),
     interval: IntervalEnum = Query(
         default=IntervalEnum.ONE_HOUR, description="Kline interval"
     ),
@@ -429,7 +437,9 @@ async def get_mark_price_klines(
 )
 async def get_open_interest_history(
     symbol: str = Query(..., description="Trading pair symbol (e.g., BTCUSDT)"),
-    market_type: str = Query(..., description="Market type (usd_m only for now)"),
+    market_type: str = Query(
+        default="usd_m", description="Market type (usd_m only for now)"
+    ),
     period: str = Query(
         default="1h", description="Time period (5m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 1d)"
     ),
