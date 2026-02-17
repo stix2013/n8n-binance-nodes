@@ -19,7 +19,6 @@ N8N_API_URL="https://your-zrok-url.share.zrok.io"
 N8N_BINANCE_API_URL="http://api:8000"
 
 # N8N Runners
-N8N_RUNNERS_ENABLED=true
 N8N_RUNNERS_MODE=external
 N8N_RUNNERS_BROKER_LISTEN_ADDRESS="0.0.0.0"
 N8N_RUNNERS_AUTH_TOKEN="your_runners_auth_token"
