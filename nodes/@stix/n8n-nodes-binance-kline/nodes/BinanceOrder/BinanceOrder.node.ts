@@ -4,8 +4,10 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 	IHttpRequestMethods,
+	IDataObject,
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
+import { createHmac } from 'crypto';
 
 export class BinanceOrder implements INodeType {
 	description: INodeTypeDescription = {
@@ -14,6 +16,7 @@ export class BinanceOrder implements INodeType {
 		icon: { light: 'file:../../icons/binance-kline.svg', dark: 'file:../../icons/binance-kline.dark.svg' },
 		group: ['transform'],
 		version: 1,
+		usableAsTool: true,
 		subtitle: '={{$parameter["side"]}} {{$parameter["symbol"]}}',
 		description: 'Place an order on Binance API',
 		defaults: {
@@ -28,6 +31,56 @@ export class BinanceOrder implements INodeType {
 			},
 		],
 		properties: [
+			{
+				displayName: 'API Source',
+				name: 'apiSource',
+				type: 'options',
+				options: [
+					{
+						name: 'Proxy API',
+						value: 'proxy',
+						description: 'Use the FastAPI proxy (default: http://api:8000)',
+					},
+					{
+						name: 'Direct Binance',
+						value: 'direct',
+						description: 'Call Binance API directly with HMAC signing',
+					},
+					{
+						name: 'Custom URL',
+						value: 'custom',
+						description: 'Use a custom URL',
+					},
+				],
+				default: 'proxy',
+				description: 'Choose how to place orders on Binance',
+			},
+			{
+				displayName: 'Custom URL',
+				name: 'customUrl',
+				type: 'string',
+				default: '',
+				placeholder: 'https://api.binance.com',
+				description: 'Custom API base URL',
+				displayOptions: {
+					show: {
+						apiSource: ['custom'],
+					},
+				},
+			},
+			{
+				displayName: 'Custom Path',
+				name: 'customPath',
+				type: 'string',
+				default: '/api/v3/order',
+				placeholder: '/api/v3/order',
+				description: 'Custom API endpoint path',
+				displayOptions: {
+					show: {
+						apiSource: ['custom'],
+					},
+				},
+			},
 			{
 				displayName: 'Symbol',
 				name: 'symbol',
@@ -55,12 +108,12 @@ export class BinanceOrder implements INodeType {
 				type: 'options',
 				options: [
 					{ name: 'Limit', value: 'LIMIT' },
+					{ name: 'Limit Maker', value: 'LIMIT_MAKER' },
 					{ name: 'Market', value: 'MARKET' },
 					{ name: 'Stop Loss', value: 'STOP_LOSS' },
 					{ name: 'Stop Loss Limit', value: 'STOP_LOSS_LIMIT' },
 					{ name: 'Take Profit', value: 'TAKE_PROFIT' },
 					{ name: 'Take Profit Limit', value: 'TAKE_PROFIT_LIMIT' },
-					{ name: 'Limit Maker', value: 'LIMIT_MAKER' },
 				],
 				default: 'MARKET',
 				description: 'The type of order to place',
@@ -172,16 +225,20 @@ export class BinanceOrder implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
+		const credentials = await this.getCredentials('binanceApi');
+		const apiKey = credentials.apiKey as string;
+		const apiSecret = credentials.apiSecret as string;
+
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
+				const apiSource = this.getNodeParameter('apiSource', itemIndex, 'proxy') as string;
 				const symbol = this.getNodeParameter('symbol', itemIndex) as string;
 				const side = this.getNodeParameter('side', itemIndex) as string;
 				const type = this.getNodeParameter('type', itemIndex) as string;
 				const quantity = this.getNodeParameter('quantity', itemIndex) as number;
-				const price = this.getNodeParameter('price', itemIndex, undefined) as number | undefined;
-				const stopPrice = this.getNodeParameter('stopPrice', itemIndex, undefined) as number | undefined;
+				const price = this.getNodeParameter('price', itemIndex, 0) as number;
+				const stopPrice = this.getNodeParameter('stopPrice', itemIndex, 0) as number;
 				
-				// Bracket params
 				const useBracket = this.getNodeParameter('useBracket', itemIndex, false) as boolean;
 				let takeProfitPrice: number | undefined;
 				let stopLossPrice: number | undefined;
@@ -197,40 +254,167 @@ export class BinanceOrder implements INodeType {
 					}
 				}
 
-				const body: any = {
-					symbol: symbol.toUpperCase(),
-					side,
-					type,
-					quantity,
-				};
+				if (apiSource === 'proxy') {
+					const proxyBaseUrl = 'http://api:8000';
+					const url = `${proxyBaseUrl}/api/binance/order`;
+					
+					const body: Record<string, unknown> = {
+						symbol: symbol.toUpperCase(),
+						side,
+						type,
+						quantity,
+					};
 
-				if (price !== undefined && price !== 0) {
-					body.price = price;
+					if (price !== undefined && price !== 0) {
+						body.price = price;
+					}
+
+					if (stopPrice !== undefined && stopPrice !== 0) {
+						body.stopPrice = stopPrice;
+					}
+					
+					if (useBracket) {
+						if (takeProfitPrice) body.takeProfitPrice = takeProfitPrice;
+						if (stopLossPrice) body.stopLossPrice = stopLossPrice;
+						if (stopLossType) body.stopLossType = stopLossType;
+						if (stopLossLimitPrice) body.stopLossLimitPrice = stopLossLimitPrice;
+					}
+
+					const response = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'binanceApi',
+						{
+							method: 'POST' as IHttpRequestMethods,
+							url,
+							body,
+							timeout: 30000,
+						},
+					);
+
+					returnData.push({
+						json: response as IDataObject,
+						pairedItem: { item: itemIndex },
+					});
+				} else if (apiSource === 'custom') {
+					const customUrl = this.getNodeParameter('customUrl', itemIndex) as string;
+					const customPath = this.getNodeParameter('customPath', itemIndex) as string;
+					const url = `${customUrl}${customPath}`;
+					
+					const body: Record<string, unknown> = {
+						symbol: symbol.toUpperCase(),
+						side,
+						type,
+						quantity,
+					};
+
+					if (price !== 0) body.price = price;
+					if (stopPrice !== 0) body.stopPrice = stopPrice;
+					
+					if (useBracket) {
+						if (takeProfitPrice) body.takeProfitPrice = takeProfitPrice;
+						if (stopLossPrice) body.stopLossPrice = stopLossPrice;
+						if (stopLossType) body.stopLossType = stopLossType;
+						if (stopLossLimitPrice) body.stopLossLimitPrice = stopLossLimitPrice;
+					}
+
+					const response = await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						'binanceApi',
+						{
+							method: 'POST' as IHttpRequestMethods,
+							url,
+							body,
+							timeout: 30000,
+						},
+					);
+
+					returnData.push({
+						json: response as IDataObject,
+						pairedItem: { item: itemIndex },
+					});
+				} else {
+					// Direct Binance API with HMAC signing
+					const timestamp = Date.now();
+					
+					const params = new URLSearchParams();
+					params.append('symbol', symbol.toUpperCase());
+					params.append('side', side);
+					params.append('type', type);
+					params.append('quantity', quantity.toString());
+					params.append('timestamp', timestamp.toString());
+
+					if (price !== 0) {
+						params.append('price', price.toString());
+					}
+					
+					if (stopPrice !== 0) {
+						params.append('stopPrice', stopPrice.toString());
+					}
+
+					const queryString = params.toString();
+					const signature = createHmac('sha256', apiSecret)
+						.update(queryString)
+						.digest('hex');
+
+					const baseUrl = (credentials.baseUrl as string) || 'https://api.binance.com';
+					const apiPath = (credentials.apiPath as string) || '/api/v3/';
+					const url = `${baseUrl}${apiPath}order`;
+
+					const response = await this.helpers.httpRequest({
+						method: 'POST' as IHttpRequestMethods,
+						url,
+						body: `${queryString}&signature=${signature}`,
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
+							'X-MBX-APIKEY': apiKey,
+						},
+						timeout: 30000,
+					});
+
+					returnData.push({
+						json: response as IDataObject,
+						pairedItem: { item: itemIndex },
+					});
+
+					// Handle bracket orders (OCO) for direct Binance
+					if (useBracket && takeProfitPrice && stopLossPrice) {
+						const ocoTimestamp = Date.now();
+						const ocoParams = new URLSearchParams();
+						ocoParams.append('symbol', symbol.toUpperCase());
+						ocoParams.append('side', side === 'BUY' ? 'SELL' : 'BUY');
+						ocoParams.append('quantity', quantity.toString());
+						ocoParams.append('price', takeProfitPrice.toString());
+						ocoParams.append('stopPrice', stopLossPrice.toString());
+						ocoParams.append('stopLimitPrice', stopLossLimitPrice ? stopLossLimitPrice.toString() : stopLossPrice.toString());
+						ocoParams.append('stopLimitTimeInForce', 'GTE_GTC');
+						ocoParams.append('timestamp', ocoTimestamp.toString());
+
+						const ocoQueryString = ocoParams.toString();
+						const ocoSignature = createHmac('sha256', apiSecret)
+							.update(ocoQueryString)
+							.digest('hex');
+
+						const ocoUrl = `${baseUrl}${apiPath}order/oco`;
+
+						const ocoResponse = await this.helpers.httpRequest({
+							method: 'POST' as IHttpRequestMethods,
+							url: ocoUrl,
+							body: `${ocoQueryString}&signature=${ocoSignature}`,
+							headers: {
+								'Content-Type': 'application/x-www-form-urlencoded',
+								'X-MBX-APIKEY': apiKey,
+							},
+							timeout: 30000,
+						});
+
+						returnData.push({
+							json: {
+								ocoOrder: ocoResponse as Record<string, unknown>,
+							},
+							pairedItem: { item: itemIndex },
+						});
+					}
 				}
-
-				if (stopPrice !== undefined && stopPrice !== 0) {
-					body.stopPrice = stopPrice;
-				}
-				
-				if (useBracket) {
-					if (takeProfitPrice) body.takeProfitPrice = takeProfitPrice;
-					if (stopLossPrice) body.stopLossPrice = stopLossPrice;
-					if (stopLossType) body.stopLossType = stopLossType;
-					if (stopLossLimitPrice) body.stopLossLimitPrice = stopLossLimitPrice;
-				}
-
-				const baseUrl = process.env.N8N_BINANCE_API_URL || 'http://api:8000';
-				const response = await this.helpers.httpRequest({
-					method: 'POST' as IHttpRequestMethods,
-					url: `${baseUrl}/api/binance/order`,
-					body,
-					timeout: 30000,
-				});
-
-				returnData.push({
-					json: response as any,
-					pairedItem: { item: itemIndex },
-				});
 			} catch (error) {
 				if (this.continueOnFail()) {
 					returnData.push({

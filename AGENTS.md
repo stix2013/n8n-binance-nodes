@@ -62,3 +62,4 @@ docker compose logs -f api      # View API logs
 ## Troubleshooting
 - Integration testing: [docs/problems/2026-02-04-integration-testing-architecture.md](docs/problems/2026-02-04-integration-testing-architecture.md)
 - File permissions: [docs/problems/2026-02-13-n8n-file-write-permissions.md](docs/problems/2026-02-13-n8n-file-write-permissions.md)
+- Binance URL option node build issue: [docs/problems/2026-02-17-binance-url-option.md](docs/problems/2026-02-17-binance-url-option.md)
