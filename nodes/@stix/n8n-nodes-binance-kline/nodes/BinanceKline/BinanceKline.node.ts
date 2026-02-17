@@ -25,16 +25,17 @@ interface ParsedKline {
 
 interface ProxyPriceDataPoint {
 	open_time: string;
-	open_price: string;
-	high_price: string;
-	low_price: string;
-	close_price: string;
-	volume: string;
+	open_price: number;
+	high_price: number;
+	low_price: number;
+	close_price: number;
+	volume: number;
 	close_time: string;
-	quote_volume: string;
-	trades: number;
-	taker_buy_base_volume: string;
-	taker_buy_quote_volume: string;
+	quote_asset_volume: number;
+	number_of_trades: number;
+	taker_buy_base_asset_volume: number;
+	taker_buy_quote_asset_volume: number;
+	ignore?: string;
 }
 
 interface ProxyPriceResponse {
@@ -477,16 +478,16 @@ export class BinanceKline implements INodeType {
 							const priceResponse = response as ProxyPriceResponse;
 							klines = priceResponse.data.map((k) => ({
 								openTime: new Date(k.open_time).getTime(),
-								open: k.open_price,
-								high: k.high_price,
-								low: k.low_price,
-								close: k.close_price,
-								volume: k.volume,
+								open: String(k.open_price),
+								high: String(k.high_price),
+								low: String(k.low_price),
+								close: String(k.close_price),
+								volume: String(k.volume),
 								closeTime: new Date(k.close_time).getTime(),
-								quoteVolume: k.quote_volume,
-								trades: k.trades,
-								takerBuyBaseVolume: k.taker_buy_base_volume,
-								takerBuyQuoteVolume: k.taker_buy_quote_volume,
+								quoteVolume: String(k.quote_asset_volume),
+								trades: k.number_of_trades,
+								takerBuyBaseVolume: String(k.taker_buy_base_asset_volume),
+								takerBuyQuoteVolume: String(k.taker_buy_quote_asset_volume),
 							}));
 						} else if (apiSource === 'proxy' && marketType === 'futures' && dataType === 'kline') {
 							// Proxy futures response format: {success, symbol, market_type, interval, data: [{open_time, ...}], count}
