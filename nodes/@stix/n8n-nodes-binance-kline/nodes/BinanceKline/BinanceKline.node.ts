@@ -473,6 +473,7 @@ export class BinanceKline implements INodeType {
 						let klines: ParsedKline[];
 
 						if (apiSource === 'proxy' && marketType === 'spot') {
+							// Proxy spot response format: {symbol, data: [{open_time, open_price, ...}]}
 							const priceResponse = response as ProxyPriceResponse;
 							klines = priceResponse.data.map((k) => ({
 								openTime: new Date(k.open_time).getTime(),
@@ -487,7 +488,36 @@ export class BinanceKline implements INodeType {
 								takerBuyBaseVolume: k.taker_buy_base_volume,
 								takerBuyQuoteVolume: k.taker_buy_quote_volume,
 							}));
+						} else if (apiSource === 'proxy' && marketType === 'futures' && dataType === 'kline') {
+							// Proxy futures response format: {success, symbol, market_type, interval, data: [{open_time, ...}], count}
+							const candleResponse = response as { data: Array<{
+								open_time: string;
+								open_price: number;
+								high_price: number;
+								low_price: number;
+								close_price: number;
+								volume: number;
+								close_time: string;
+								quote_volume: number;
+								trades: number;
+								taker_buy_base_volume: number;
+								taker_buy_quote_volume: number;
+							}> };
+							klines = candleResponse.data.map((k) => ({
+								openTime: new Date(k.open_time).getTime(),
+								open: String(k.open_price),
+								high: String(k.high_price),
+								low: String(k.low_price),
+								close: String(k.close_price),
+								volume: String(k.volume),
+								closeTime: new Date(k.close_time).getTime(),
+								quoteVolume: String(k.quote_volume),
+								trades: k.trades,
+								takerBuyBaseVolume: String(k.taker_buy_base_volume),
+								takerBuyQuoteVolume: String(k.taker_buy_quote_volume),
+							}));
 						} else {
+							// Direct Binance API response format: [[openTime, open, high, low, close, volume, closeTime, ...]]
 							const rawKlines = response as unknown[][];
 							klines = rawKlines.map((k: unknown[]) => ({
 								openTime: Number(k[0]),
