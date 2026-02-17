@@ -33,12 +33,13 @@ logger = logging.getLogger(__name__)
 # Global service instances
 news_service = None
 news_scheduler = None
+candlestick_sync_task = None
 
 
 @asynccontextmanager
 async def lifespan(app):
     """Lifespan context manager for startup/shutdown events."""
-    global news_service, news_scheduler
+    global news_service, news_scheduler, candlestick_sync_task
 
     logger.info(
         "API starting up",
@@ -53,6 +54,7 @@ async def lifespan(app):
         from services.database import db
         from services.news_service import NewsService
         from scheduler.news_scheduler import NewsScheduler
+        from services.candlestick_sync import candlestick_sync
 
         # Connect to database
         await db.connect()
@@ -74,12 +76,22 @@ async def lifespan(app):
         await news_service.fetch_active_sources()
         await news_service.refresh_materialized_view()
 
+        # Start candlestick sync service
+        import asyncio
+
+        candlestick_sync_task = asyncio.create_task(candlestick_sync.start_sync_loop())
+        logger.info("Candlestick sync service started")
+
     except Exception as e:
-        logger.error(f"Failed to initialize news service: {e}")
+        logger.error(f"Failed to initialize services: {e}")
 
     yield
 
     # Shutdown
+    if candlestick_sync_task:
+        from services.candlestick_sync import candlestick_sync
+
+        await candlestick_sync.stop()
     if news_scheduler:
         news_scheduler.shutdown()
     if db.pool:
@@ -103,16 +115,17 @@ app.add_middleware(ErrorLoggingMiddleware)
 # Import and include routers
 try:
     # Try relative import first
-    from .routes import binance, indicators, ingest, news
+    from .routes import binance, indicators, ingest, news, trading
 except ImportError:
     # Fall back to absolute import for direct execution
-    from routes import binance, indicators, ingest, news
+    from routes import binance, indicators, ingest, news, trading
 
 # Include routers
 app.include_router(binance.router)
 app.include_router(indicators.router)
 app.include_router(ingest.router)
 app.include_router(news.router)
+app.include_router(trading.router)
 
 
 @app.get("/", response_model=RootResponse)
