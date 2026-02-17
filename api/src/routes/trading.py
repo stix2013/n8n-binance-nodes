@@ -5,22 +5,41 @@ from typing import List, Optional
 from datetime import datetime
 import logging
 
-from ..models.trading_models import (
-    SpotOrderRequest,
-    FuturesOrderRequest,
-    OrderResponse,
-    SpotOrder,
-    FuturesOrder,
-    CandlestickResponse,
-    MarkPriceResponse,
-    OpenInterestResponse,
-    SyncStatusResponse,
-    IntervalEnum,
-    MarketTypeEnum,
-)
-from ..services.trading_service import trading_service
-from ..services.candlestick_sync import candlestick_sync
-from ..utils.exceptions import BinanceAPIError, DatabaseError
+# Import utilities with fallback for both relative and absolute imports
+try:
+    from ..models.trading_models import (
+        SpotOrderRequest,
+        FuturesOrderRequest,
+        OrderResponse,
+        SpotOrder,
+        FuturesOrder,
+        CandlestickResponse,
+        MarkPriceResponse,
+        OpenInterestResponse,
+        SyncStatusResponse,
+        IntervalEnum,
+        MarketTypeEnum,
+    )
+    from ..services.trading_service import trading_service
+    from ..services.candlestick_sync import candlestick_sync
+    from ..utils.exceptions import BinanceAPIError, DatabaseError
+except ImportError:
+    from models.trading_models import (
+        SpotOrderRequest,
+        FuturesOrderRequest,
+        OrderResponse,
+        SpotOrder,
+        FuturesOrder,
+        CandlestickResponse,
+        MarkPriceResponse,
+        OpenInterestResponse,
+        SyncStatusResponse,
+        IntervalEnum,
+        MarketTypeEnum,
+    )
+    from services.trading_service import trading_service
+    from services.candlestick_sync import candlestick_sync
+    from utils.exceptions import BinanceAPIError, DatabaseError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/binance", tags=["trading"])
@@ -271,7 +290,10 @@ async def get_open_interest(
     Open interest represents the total number of outstanding derivative contracts.
     """
     try:
-        from ..utils.binance_client import BinanceClient
+        try:
+            from ..utils.binance_client import BinanceClient
+        except ImportError:
+            from utils.binance_client import BinanceClient
 
         client = BinanceClient()
 
@@ -324,7 +346,10 @@ async def get_open_interest_history(
     Only USD-M futures supports historical open interest data via API.
     """
     try:
-        from ..utils.binance_client import BinanceClient
+        try:
+            from ..utils.binance_client import BinanceClient
+        except ImportError:
+            from utils.binance_client import BinanceClient
 
         client = BinanceClient()
 
