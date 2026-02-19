@@ -274,7 +274,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const coin = $input.first().json.chatInput || $input.first().json.message.text ;\n\nconst symbol = (coin).toUpperCase() + 'USDT'; \nconst limit = 500;\n\nconst intervals = [\n  '15m', // for 15 minutes timeframe\n  '1h', // for 1 hour timeframe\n  '4h', // for 4 hours timeframe\n];\n\nconst currentCandles = {\n  interval: '1m',\n  limit: 100\n}\n\nreturn [{\n    coin,\n    symbol,\n    limit,\n    intervals,\n    currentCandles\n  }];\n"
+        "jsCode": "const rawInput = $input.first().json.chatInput || $input.first().json.message.text || '';\n\n// Basic sanitization: trim, uppercase, remove common suffixes/prefixes\nconst coin = rawInput.trim().toUpperCase().replace(/USDT$/, '').replace(/[^A-Z0-9]/g, '');\n\nconst symbol = coin + 'USDT'; \nconst limit = 500;\n\nconst intervals = [\n  '15m', // for 15 minutes timeframe\n  '1h', // for 1 hour timeframe\n  '4h', // for 4 hours timeframe\n];\n\nconst currentCandles = {\n  interval: '1m',\n  limit: 100\n}\n\nreturn [{\n    coin,\n    symbol,\n    limit,\n    intervals,\n    currentCandles\n  }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -312,6 +312,27 @@
       ],
       "id": "3b4412db-149d-4be9-ba73-e78ce96948b7",
       "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "chatId": "5572228344",
+        "text": "=✅ Analysis for {{ $json.dataIndicators[0].symbol }} completed successfully.\n\nReport generated: AI-{{ $json.dataIndicators[0].symbol }}-{{ $now.format('yyyyMMddHHmm') }}.md",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2352,
+        240
+      ],
+      "id": "success-telegram-msg",
+      "name": "Notify Success",
+      "credentials": {
+        "telegramApi": {
+          "id": "O5JL1UG87JJ1GySx",
+          "name": "stix_crypto_freak_bot"
+        }
+      }
     },
     {
       "parameters": {
@@ -669,6 +690,11 @@
           },
           {
             "node": "Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Success",
             "type": "main",
             "index": 0
           }
