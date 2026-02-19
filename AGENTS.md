@@ -4,7 +4,7 @@ Essential guidelines for agentic coding agents in the `n8n-binance-nodes` reposi
 
 ## Environment
 - **API (Python)**: >=3.14, FastAPI, Pydantic v2, `uv` or `pip` in `.venv`
-- **Nodes (TS)**: n8n 2.7.5, BunJS 1.3.6
+- **Nodes (TS)**: n8n 2.8.3, BunJS 1.3.6
 - **Docker**: n8n, PostgreSQL 16, API
 - **AI Models**: 
   - Local: Ollama (`glm-4`, `phi-4`)

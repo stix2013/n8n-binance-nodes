@@ -314,6 +314,7 @@ docker compose logs api | jq
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version information.
 
+- **v1.6.0** (2026-02-19) - Upgrade to n8n 2.8.3 and API 1.6.0
 - **v1.5.0** (2026-02-14) - News Sentiment Analysis, MarkdownSaver Node, n8n 2.7.5
 - **v1.4.0** (2026-02-10) - SMA Indicator, API response enhancement, Python 3.14
 - **v1.3.0** (2026-02-10) - Interval field, troubleshooting guide
