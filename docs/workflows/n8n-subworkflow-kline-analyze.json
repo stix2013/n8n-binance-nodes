@@ -1,0 +1,114 @@
+{
+  "name": "Sub-workflow: Binance Kline Analyze",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "apiSource": "direct",
+        "marketType": "futures",
+        "symbol": "={{ $json.symbol }}",
+        "interval": "={{ $json.interval }}",
+        "limit": "={{ $json.limit }}"
+      },
+      "id": "binance-kline",
+      "name": "Binance Kline",
+      "type": "CUSTOM.binanceKline",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "credentials": {
+        "binanceApi": {
+          "id": "tmVGRcPSpJIYsaeS",
+          "name": "Binance account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Transform BinanceKline output to IngestRequest\nconst data = $input.item.json;\n\nif (!data.symbol) {\n  return { json: { error: 'No data returned from Binance' } };\n}\n\nreturn {\n  data: {\n    symbol: data.symbol,\n    interval: data.interval,\n    limit: data.limit,\n    currentPrice: data.currentPrice,\n    klineCount: data.klineCount,\n    klines: data.klines,\n    fetchedAt: data.fetchedAt\n  },\n  parameters: {\n    rsi_period: 14,\n    macd_fast: 12,\n    macd_slow: 26,\n    macd_signal: 9\n  }\n};"
+      },
+      "id": "transform-data",
+      "name": "Transform Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/ingest/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.item.json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "api-analyze",
+      "name": "API Analyze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        660,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Binance Kline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Binance Kline": {
+      "main": [
+        [
+          {
+            "node": "Transform Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Data": {
+      "main": [
+        [
+          {
+            "node": "API Analyze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
