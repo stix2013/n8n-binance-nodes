@@ -1,0 +1,890 @@
+{
+  "name": "Binance Future Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "={{ $('Translate to Symbol').item.json.chatId }}",
+        "text": "=🔍 Analysing {{ $json.symbol }}...\n\nTimeframes: {{ $json.intervals.join(', ') }}\nProcessing market data and indicators. Please wait.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3024,
+        -160
+      ],
+      "id": "620fd88a-44fc-41fc-ba16-e4371c6329b0",
+      "name": "Notify Analysis Start",
+      "webhookId": "0c768786-24a4-4aa5-81f3-8d8213ea7895",
+      "credentials": {
+        "telegramApi": {
+          "id": "O5JL1UG87JJ1GySx",
+          "name": "stix_crypto_freak_bot"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conversionOptions": {
+          "format": "auto"
+        },
+        "characterFiltering": {},
+        "outputOptions": {
+          "outputMode": "binary"
+        }
+      },
+      "type": "CUSTOM.markdownSaver",
+      "typeVersion": 1,
+      "position": [
+        5520,
+        424
+      ],
+      "id": "e2d1fecc-9418-4866-933b-79bc262fc21e",
+      "name": "Markdown Binary"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/analyse/AI-{{ $('Translate to Symbol').item.json.symbol }}-{{ $now.format('yyyyMMddHHmm') }}.md",
+        "dataPropertyName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        5744,
+        328
+      ],
+      "id": "44395e5b-76e9-4018-9533-c9eeabd46d16",
+      "name": "Write to docs/analyse",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "availableInChat": true,
+        "agentName": "Crypto Analyse",
+        "agentDescription": "This is day trader expert for crypto",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        2576,
+        256
+      ],
+      "id": "736614b6-901a-4f74-a491-f9670dfacd6e",
+      "name": "When chat message received",
+      "webhookId": "5d8f37da-b2bf-4901-b817-8ca02788f59f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = ($input.first().json.chatInput || $input.first().json.message?.text || '').trim();\nif (!raw) throw new Error('No coin symbol provided. Send a symbol like BTC, ETH, or SOL.');\n\n// Strip common suffixes if user already typed full pair\nconst coin = raw.toUpperCase().replace(/USDT$/, '').replace(/[^A-Z0-9]/g, '');\nif (!coin) throw new Error('Invalid symbol. Send a coin like BTC, ETH, or SOL.');\n\nconst symbol = coin + 'USDT';\nconst chatId = $input.first().json.message?.chat?.id || '5572228344';\nconst limit = 500;\n\nconst intervals = [\n  '15m', // for 15 minutes timeframe\n  '1h', // for 1 hour timeframe\n  '4h', // for 4 hours timeframe\n];\n\nreturn [{\n    coin,\n    symbol,\n    limit,\n    intervals,\n    chatId\n  }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        128
+      ],
+      "id": "1f86824e-8385-4d27-abcb-fded70840394",
+      "name": "Translate to Symbol"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3472,
+        176
+      ],
+      "id": "fe108dfa-474a-459d-9e28-f3fd83750fab",
+      "name": "Merge Indicators"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "dataIndicators",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        192
+      ],
+      "id": "58241991-87f5-4f7c-a29e-405c57585fa9",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        2576,
+        64
+      ],
+      "id": "a89e1b50-19dd-491d-93ee-849fe09d26c6",
+      "name": "My Telegram Channel",
+      "webhookId": "1474d42e-9084-48ef-ac45-a4b21168d942",
+      "executeOnce": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "O5JL1UG87JJ1GySx",
+          "name": "stix_crypto_freak_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('Translate to Symbol').item.json.chatId }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5744,
+        520
+      ],
+      "id": "693b2fcc-0d32-4f1e-a971-b5ba372b4b94",
+      "name": "Send a document",
+      "webhookId": "68cabebe-d0d8-41b1-8719-f51a48bbd02b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "O5JL1UG87JJ1GySx",
+          "name": "stix_crypto_freak_bot"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const order = ['15m', '1h', '4h'];\nconst items = $input.all();\nitems.sort((a, b) => order.indexOf(a.json.interval) - order.indexOf(b.json.interval));\nreturn items;"
+      },
+      "id": "c75cf4a9-f3bd-4717-a4a7-ec9a5de26cf3",
+      "name": "Sort by Interval",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3696,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1X1ODf4tA0Vi8SsT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1X1ODf4tA0Vi8SsT",
+          "cachedResultName": "Sub-workflow: Binance Kline Analyze"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3248,
+        32
+      ],
+      "id": "c8f92399-7461-4b14-b2c6-fdc9567f5f5e",
+      "name": "Analyze 15m"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1X1ODf4tA0Vi8SsT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1X1ODf4tA0Vi8SsT",
+          "cachedResultName": "Sub-workflow: Binance Kline Analyze"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3248,
+        224
+      ],
+      "id": "cf194f25-cfcd-4ece-8326-404d715abf1e",
+      "name": "Analyze 1h",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1X1ODf4tA0Vi8SsT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1X1ODf4tA0Vi8SsT",
+          "cachedResultName": "Sub-workflow: Binance Kline Analyze"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3248,
+        416
+      ],
+      "id": "ed43bfec-702f-45de-805d-9875ee26569b",
+      "name": "Analyze 4h",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  coin: $input.first().json.coin,\n  symbol: $input.first().json.symbol,\n  limit: $input.first().json.limit,\n  interval: $input.first().json.intervals[0]\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3024,
+        32
+      ],
+      "id": "d71d25f3-18df-4ef5-9a9f-c7553fb8dfbe",
+      "name": "Interval 15m"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  coin: $input.first().json.coin,\n  symbol: $input.first().json.symbol,\n  limit: $input.first().json.limit,\n  interval: $input.first().json.intervals[2]\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3024,
+        416
+      ],
+      "id": "4c42308b-9a5a-4870-8658-82a2989cfb09",
+      "name": "Interval 4h"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  coin: $input.first().json.coin,\n  symbol: $input.first().json.symbol,\n  limit: $input.first().json.limit,\n  interval: $input.first().json.intervals[1]\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3024,
+        224
+      ],
+      "id": "61dd932f-235a-4f54-a9c6-d83d7d2d5043",
+      "name": "Interval 1h"
+    },
+    {
+      "parameters": {
+        "model": "minimax-m2.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        4208,
+        312
+      ],
+      "id": "f449745f-e05d-4818-a126-7e5e19418687",
+      "name": "TA Ollama Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "URvt83r3fqd9q5Z7",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"market_regime\": \"bullish\", \"regime_confidence\": 75, \"trend_analysis\": {\"short_term_15m\": \"bullish\", \"medium_term_1h\": \"neutral\", \"long_term_4h\": \"bearish\", \"alignment\": \"mixed\"}, \"key_levels\": {\"support\": [1950.0], \"resistance\": [2050.0]}, \"indicator_signals\": {\"rsi_assessment\": \"RSI at 65 shows moderate bullish momentum but approaching overbought territory\", \"macd_assessment\": \"MACD histogram turning positive with recent bullish crossover\", \"sma_assessment\": \"Price above SMA 20 but below SMA 50 on 15m - neutral\"}, \"confluence_score\": \"moderate\", \"risk_factors\": [\"Diverging timeframes\", \"RSI approaching overbought\"]}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4336,
+        312
+      ],
+      "id": "30b8c10e-78ab-497a-985b-0eedf673cfa0",
+      "name": "TA Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "## TECHNICAL ANALYSIS REQUEST\n**Symbol:** {{ $json.dataIndicators[0].symbol }}\n**Analysis Time:** {{ $now.format('yyyy-MM-dd HH:mm') }}\n\n---\n\n### Timeframe 1 ({{ $json.dataIndicators[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.dataIndicators[0].rsi.value }}\n- Signal: {{ $json.dataIndicators[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[0].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[0].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[0].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[0].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[0].macd.crossover }}\n\n** SMA:**\n- SMA 10: {{ $json.dataIndicators[0].sma.sma_10 }}\n- SMA 20: {{ $json.dataIndicators[0].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[0].sma.sma_50 }}\n- Signal: {{ $json.dataIndicators[0].sma.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.dataIndicators[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.dataIndicators[1].rsi.value }}\n- Signal: {{ $json.dataIndicators[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[1].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[1].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[1].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[1].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[1].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[1].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[1].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[1].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[1].sma.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.dataIndicators[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.dataIndicators[2].rsi.value }}\n- Signal: {{ $json.dataIndicators[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[2].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[2].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[2].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[2].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[2].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[2].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[2].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[2].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[2].sma.signal }}\n\n---\n\nProvide your structured technical analysis in JSON format.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert cryptocurrency technical analyst specializing in multi-timeframe analysis.\n\n## Your Task\nAnalyze the provided technical indicator data for multiple timeframes and produce a structured analysis.\n\n## Timeframe Hierarchy\n- **15m (Short-term)**: Entry timing, immediate momentum\n- **1h (Medium-term)**: Trend direction, swing setups\n- **4h (Long-term)**: Market bias, structural levels\n\n## Analysis Rules\n1. **Timeframe Alignment**: Higher timeframes take precedence for trend direction\n2. **Confluence**: Require at least 2-3 confirming indicators before signaling\n3. **RSI Interpretation**:\n   - <30 = oversold (potential long)\n   - >70 = overbought (potential short)\n   - 30-70 = neutral\n4. **MACD Signals**:\n   - Bullish: Histogram crosses above zero OR bullish divergence\n   - Bearish: Histogram crosses below zero OR bearish divergence\n5. **SMA Analysis**:\n   - Price above SMA = bullish structure\n   - Price below SMA = bearish structure\n   - Golden cross (SMA 50 crosses above SMA 200) = bullish\n   - Death cross (SMA 50 crosses below SMA 200) = bearish\n\n## Output Requirements\nProvide a JSON object with:\n- market_regime: \"bullish\" | \"bearish\" | \"neutral\" | \"mixed\"\n- regime_confidence: 0-100\n- trend_analysis: Breakdown per timeframe\n- key_levels: Support and resistance zones\n- indicator_signals: Your interpretation of RSI, MACD, SMA\n- confluence_score: \"strong\" | \"moderate\" | \"weak\"\n- risk_factors: List of potential risks or conflicting signals\n\nBe precise and data-driven. Use the exact values from the input.",
+          "maxIterations": 10,
+          "returnIntermediateSteps": false,
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4200,
+        88
+      ],
+      "id": "7f12903e-a267-428a-a635-f9080981781d",
+      "name": "TA Agent"
+    },
+    {
+      "parameters": {
+        "model": "kimi-k2.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        4144,
+        816
+      ],
+      "id": "a661dc67-1725-426f-be46-8deebe1cb22d",
+      "name": "News Ollama Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "URvt83r3fqd9q5Z7",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"overall_sentiment\": \"bullish\", \"sentiment_score\": 0.65, \"bullish_count\": 5, \"bearish_count\": 2, \"neutral_count\": 3, \"key_headlines\": [\"Bitcoin ETF inflows hit $500M in single day\", \"Major bank announces crypto custody service\"], \"market_impact\": \"medium\", \"sentiment_trend\": \"improving\", \"summary\": \"Positive news momentum with institutional adoption themes dominating\"}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4400,
+        816
+      ],
+      "id": "0b9c9c44-cf90-473f-aed0-5cbf409a049e",
+      "name": "News Output Parser"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Given the list of articles about crypto coin like BTC, ETH, SOL, etc. The articles are with their sentiment.\n",
+        "url": "=http://api:8000/api/news/sentiment/{{ $('Translate to Symbol').item.json.coin }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        4272,
+        816
+      ],
+      "id": "665e6dac-c84f-410e-a508-c281ff551261",
+      "name": "News Sentiment Tool"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "## NEWS SENTIMENT ANALYSIS REQUEST\n**Coin:** {{ $json.coin }}\n**Symbol:** {{ $json.symbol }}\n**Analysis Time:** {{ $now.format('yyyy-MM-dd HH:mm') }}\n\nAnalyze the news sentiment data for {{ $json.coin }} ({{ $json.symbol }}).\n\nUse the News Sentiment Tool to fetch the latest news articles and their sentiment.\n\nProvide your structured sentiment analysis in JSON format.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert cryptocurrency news analyst specializing in sentiment analysis and market impact assessment.\n\n## Your Task\nAnalyze the provided news articles and sentiment data for a given cryptocurrency and produce a structured assessment.\n\n## Analysis Framework\n1. **Sentiment Classification**:\n   - bullish: Positive price-moving news (partnerships, adoption, institutional interest, buy signals)\n   - bearish: Negative price-moving news (regulatory concerns, hacks, selling pressure)\n   - neutral: Informational news without clear price impact\n\n2. **Scoring**:\n   - sentiment_score: -1 (very bearish) to +1 (very bullish)\n   - Use weighted average based on source credibility and recency\n\n3. **Market Impact Assessment**:\n   - high: Major announcements, regulatory news, large-scale adoption\n   - medium: Product launches, partnerships, market updates\n   - low: General news, social media discussions\n\n4. **Trend Analysis**:\n   - improving: More positive news than negative recently\n   - declining: More negative news than positive recently\n   - stable: Balanced news flow\n\n## Output Requirements\nProvide a JSON object with:\n- overall_sentiment: \"bullish\" | \"bearish\" | \"neutral\"\n- sentiment_score: -1.0 to 1.0\n- bullish_count: number of bullish articles\n- bearish_count: number of bearish articles\n- neutral_count: number of neutral articles\n- key_headlines: Most impactful headlines (up to 5)\n- market_impact: \"high\" | \"medium\" | \"low\"\n- sentiment_trend: \"improving\" | \"declining\" | \"stable\"\n- summary: 1-2 sentence overview\n\nBe precise and base your analysis on the actual data provided.",
+          "maxIterations": 10,
+          "returnIntermediateSteps": false,
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4200,
+        592
+      ],
+      "id": "fa30992b-455a-4d79-8fc0-0f266ba200ea",
+      "name": "News Agent"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        4608,
+        424
+      ],
+      "id": "8d0ae321-fc3b-40f1-9db0-d0b72bfe2187",
+      "name": "Merge Analyses"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare combined input for Supervisor Agent\nconst allItems = $input.all();\n\nconst taItem = allItems.find(item => item.json.ta_analysis);\nconst newsItem = allItems.find(item => item.json.news_analysis);\n\nconst ta = taItem?.json;\nconst news = newsItem?.json;\n\n// Extract symbol from various possible locations\nconst symbol = ta?.symbol || \n               ta?.dataIndicators?.[0]?.symbol || \n               news?.symbol || \n               \"\";\n\nreturn {\n  json: {\n    symbol: symbol,\n    coin: symbol.replace('USDT', ''),\n    ta_analysis: ta || {},\n    news_analysis: news || {}\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4832,
+        424
+      ],
+      "id": "89101a0a-be92-4c11-b105-245856d4232e",
+      "name": "Prepare Supervisor Input"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        5056,
+        648
+      ],
+      "id": "acb97b16-271c-4bad-9708-b9c3b81b07fe",
+      "name": "Supervisor Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yQBvEEzQX2TcmaLh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "## TRADING STRATEGY SYNTHESIS\n\nAnalyze the following combined data and produce a comprehensive trading report:\n\n{{ JSON.stringify($json, null, 2) }}\n\nFollow the output format exactly. Produce the final Markdown report.",
+        "options": {
+          "systemMessage": "You are a Senior Cryptocurrency Trading Strategist with elite expertise in multi-timeframe analysis, sentiment integration, and risk management.\n\n## Your Role\nSynthesize technical analysis and news sentiment into a coherent, actionable trading recommendation.\n\n## Input Data\nYou will receive:\n1. **Technical Analysis** (from TA Agent): Multi-timeframe indicator data with RSI, MACD, SMA analysis\n2. **News Sentiment** (from News Agent): Market sentiment, key headlines, impact assessment\n\n## Output Format\nProduce a comprehensive Markdown report in this exact format:\n\n```\nAnalyse for {SYMBOL} at {TIMESTAMP}\n\n📊 MARKET STRUCTURE: [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n📋 TECHNICAL SUMMARY:\n- Timeframe Alignment: [describe how 15m, 1h, 4h align]\n- Key Levels: Support [list], Resistance [list]\n- RSI: [value] - [signal]\n- MACD: [signal type] - [crossover status]\n- SMA: [price relative to SMAs]\n\n📰 SENTIMENT OVERVIEW:\n- Overall: [bullish/bearish/neutral] (score: X.X)\n- Trend: [improving/declining/stable]\n- Key Headlines:\n  - [headline 1]\n  - [headline 2]\n\n🎯 TRADING RECOMMENDATION: \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n💡 SIGNAL BREAKDOWN:\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List 2-3]\n- Key Bearish Factors: [List 2-3]\n- Primary Risk: [Main concern]\n\n⚠️ RISK WARNING:\n[Specific conditions that could invalidate the setup]\n\n📌 CONTEXT NOTES:\n[Crypto-specific: volatility, 24/7 market, news sensitivity]\n```\n\n## Guidelines\n1. **No Trade is Better Than a Bad Trade**: If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy**: Respect 4h trend, use 1h for entries, 15m for timing\n3. **Sentiment Integration**: Weight news impact appropriately - major news can override technicals\n4. **Risk Management**: Always specify stop loss and risk/reward ratios\n5. **Confirmation**: Require at least 2-3 confirming factors before signaling a trade",
+          "maxIterations": 10,
+          "returnIntermediateSteps": false,
+          "enableStreaming": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5112,
+        424
+      ],
+      "id": "ba81c7e0-3eed-484b-afa2-4e2ff1732251",
+      "name": "Supervisor Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetch current price of a cryto symbol (example: BTCUSDT, ETHUSDT, etc.). \n\nExample Output with input ETHUSDT:\n\n [\n  {\n    \"symbol\": \"ETHUSDT\",\n    \"marketType\": \"futures\",\n    \"dataType\": \"markPriceKline\",\n    \"interval\": \"1m\",\n    \"limit\": 1,\n    \"currentPrice\": \"1980.80000000\",\n    \"klineCount\": 1,\n    \"klines\": [\n      {\n        \"openTime\": 1771413360000,\n        \"open\": \"1981.56000000\",\n        \"high\": \"1981.95000000\",\n        \"low\": \"1980.44558140\",\n        \"close\": \"1980.80000000\",\n        \"volume\": \"0\",\n        \"closeTime\": 1771413419999,\n        \"quoteVolume\": \"0\",\n        \"trades\": 32,\n        \"takerBuyBaseVolume\": \"0\",\n        \"takerBuyQuoteVolume\": \"0\"\n      }\n    ],\n    \"fetchedAt\": \"2026-02-18T11:16:41.224Z\"\n  }\n]\n\nAnd the curren price is 1980.80000000",
+        "apiSource": "direct",
+        "marketType": "futures",
+        "symbol": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Symbol', ``, 'string') }}",
+        "interval": "1m",
+        "limit": 1
+      },
+      "type": "CUSTOM.binanceKlineTool",
+      "typeVersion": 1,
+      "position": [
+        5184,
+        648
+      ],
+      "id": "b1b24637-d206-45c1-81df-115af5e5f7c7",
+      "name": "Current Price",
+      "credentials": {
+        "binanceApi": {
+          "id": "tmVGRcPSpJIYsaeS",
+          "name": "Binance account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetch candlestick/kline data from Binance Spot or USD-M Futures API.\nExample Input: BTCUSDT, ETHUSDT, etc.",
+        "apiSource": "direct",
+        "marketType": "futures",
+        "symbol": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Symbol', ``, 'string') }}",
+        "interval": "1m",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}"
+      },
+      "type": "CUSTOM.binanceKlineTool",
+      "typeVersion": 1,
+      "position": [
+        5312,
+        648
+      ],
+      "id": "4b534b77-3387-4f03-bd92-fcb2389efa32",
+      "name": "Klines Tool",
+      "credentials": {
+        "binanceApi": {
+          "id": "tmVGRcPSpJIYsaeS",
+          "name": "Binance account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Translate to Symbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "My Telegram Channel": {
+      "main": [
+        [
+          {
+            "node": "Translate to Symbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate to Symbol": {
+      "main": [
+        [
+          {
+            "node": "Interval 15m",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Analysis Start",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Interval 1h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Interval 4h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "News Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval 15m": {
+      "main": [
+        [
+          {
+            "node": "Analyze 15m",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval 1h": {
+      "main": [
+        [
+          {
+            "node": "Analyze 1h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval 4h": {
+      "main": [
+        [
+          {
+            "node": "Analyze 4h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze 15m": {
+      "main": [
+        [
+          {
+            "node": "Merge Indicators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze 1h": {
+      "main": [
+        [
+          {
+            "node": "Merge Indicators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze 4h": {
+      "main": [
+        [
+          {
+            "node": "Merge Indicators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Indicators": {
+      "main": [
+        [
+          {
+            "node": "Sort by Interval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort by Interval": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "TA Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TA Ollama Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "TA Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TA Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "TA Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News Ollama Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "News Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "News Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News Sentiment Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "News Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TA Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge Analyses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge Analyses",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Analyses": {
+      "main": [
+        [
+          {
+            "node": "Prepare Supervisor Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Supervisor Input": {
+      "main": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supervisor Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Current Price": {
+      "ai_tool": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Klines Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supervisor Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown Binary": {
+      "main": [
+        [
+          {
+            "node": "Write to docs/analyse",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "44620d0c-dceb-4ff5-aabe-f0ed963ee7bb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c5132ea42f91439834dd110c2ce2f5a137182faaae992ba119ae691d81f22581"
+  },
+  "id": "CY4ti5jamR6imk4E",
+  "tags": [
+    {
+      "updatedAt": "2025-12-23T03:07:33.206Z",
+      "createdAt": "2025-12-23T03:07:33.206Z",
+      "id": "060QEUlc6EGuPlso",
+      "name": "fetch"
+    },
+    {
+      "updatedAt": "2025-12-12T09:00:55.594Z",
+      "createdAt": "2025-12-12T09:00:55.594Z",
+      "id": "4ykO1QsLPSkpVsfq",
+      "name": "crypto"
+    },
+    {
+      "updatedAt": "2025-12-12T09:00:43.685Z",
+      "createdAt": "2025-12-12T09:00:43.685Z",
+      "id": "A7qGk2uBcD5zKvhs",
+      "name": "analysis"
+    }
+  ]
+}

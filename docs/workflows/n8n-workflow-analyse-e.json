@@ -4,16 +4,16 @@
     {
       "parameters": {
         "chatId": "={{ $('Translate to Symbol').item.json.chatId }}",
-        "text": "=\ud83d\udd0d Analysing {{ $json.symbol }}...\n\nTimeframes: {{ $json.intervals.join(', ') }}\nProcessing market data and indicators. Please wait.",
+        "text": "=🔍 Analysing {{ $json.symbol }}...\n\nTimeframes: {{ $json.intervals.join(', ') }}\nProcessing market data and indicators. Please wait.",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
         0,
-        0
+        -160
       ],
-      "id": "df5b70da-0985-44d4-8640-55a864485d06",
+      "id": "ad29e1be-b0dc-4ee0-a0b2-b0b7b02f26f2",
       "name": "Notify Analysis Start",
       "webhookId": "0c768786-24a4-4aa5-81f3-8d8213ea7895",
       "credentials": {
@@ -34,9 +34,9 @@
       "typeVersion": 4.4,
       "position": [
         1120,
-        756
+        608
       ],
-      "id": "dbdb5b36-9983-43e0-9974-0c1ba314783b",
+      "id": "b6e26ade-6678-4072-8417-43306e41a4a5",
       "name": "News Sentiment"
     },
     {
@@ -53,9 +53,9 @@
       "typeVersion": 1,
       "position": [
         1584,
-        532
+        384
       ],
-      "id": "b2437cf0-213b-4c17-9ed5-f1a0225312f4",
+      "id": "e2a9902c-eb97-49c0-bd3d-1c5893e036ce",
       "name": "Markdown Binary"
     },
     {
@@ -69,9 +69,9 @@
       "typeVersion": 1.1,
       "position": [
         1808,
-        436
+        288
       ],
-      "id": "e7245101-2007-4cec-8ca9-daab5d90877d",
+      "id": "57dd4fb1-f0a6-40de-88c5-060a69b26923",
       "name": "Write to docs/analyse",
       "onError": "continueRegularOutput"
     },
@@ -86,9 +86,9 @@
       "typeVersion": 1.4,
       "position": [
         -448,
-        384
+        224
       ],
-      "id": "b967f8de-798f-4245-82d9-86231319005f",
+      "id": "0721980d-4bf6-4006-af91-fbb093605833",
       "name": "When chat message received",
       "webhookId": "5d8f37da-b2bf-4901-b817-8ca02788f59f"
     },
@@ -100,9 +100,9 @@
       "typeVersion": 2,
       "position": [
         -224,
-        288
+        128
       ],
-      "id": "71d4ec3a-50c1-4898-becf-379c39df3148",
+      "id": "a7026d7d-d328-4274-842b-222d40558467",
       "name": "Translate to Symbol"
     },
     {
@@ -112,10 +112,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        672,
-        368
+        448,
+        208
       ],
-      "id": "5bfe664f-df7b-4143-83fb-b253fa5b691e",
+      "id": "c022d3e3-40cc-4df7-826e-3e21ffe5443e",
       "name": "Merge Indicators"
     },
     {
@@ -128,9 +128,9 @@
       "typeVersion": 1,
       "position": [
         896,
-        384
+        224
       ],
-      "id": "06b39c50-a6ba-42f3-a706-52ef36c1efd7",
+      "id": "5a465049-c765-4012-b597-3a043aa23d47",
       "name": "Aggregate"
     },
     {
@@ -144,9 +144,9 @@
       "typeVersion": 1.2,
       "position": [
         -448,
-        192
+        32
       ],
-      "id": "da58b3b4-6e6a-47c6-80c5-62fed7f0c0cc",
+      "id": "7e816fc9-71ad-44ab-9aa1-b8cbeca97a8f",
       "name": "My Telegram Channel",
       "webhookId": "1474d42e-9084-48ef-ac45-a4b21168d942",
       "executeOnce": false,
@@ -168,23 +168,22 @@
         "messages": {
           "values": [
             {
-              "content": "=## INPUT DATA\n**Symbol:** {{ $json.dataIndicators[0].symbol }}\n\n---\n\n### Timeframe 1 ({{ $json.dataIndicators[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.dataIndicators[0].rsi.value }}\n- Signal: {{ $json.dataIndicators[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[0].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[0].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[0].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[0].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[0].macd.crossover }}\n\n** SMA:**\n- SMA 10: {{ $json.dataIndicators[0].sma.sma_10 }}\n- SMA 20: {{ $json.dataIndicators[0].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[0].sma.sma_50 }}\n- Signal: {{ $json.dataIndicators[0].sma.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.dataIndicators[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.dataIndicators[1].rsi.value }}\n- Signal: {{ $json.dataIndicators[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[1].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[1].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[1].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[1].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[1].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[1].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[1].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[1].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[1].sma.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.dataIndicators[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.dataIndicators[2].rsi.value }}\n- Signal: {{ $json.dataIndicators[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[2].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[2].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[2].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[2].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[2].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[2].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[2].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[2].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[2].sma.signal }}\n\n---\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\nAnalyse for {{ $json.dataIndicators[0].symbol }} at {{ $now.format('yyyy-MM-dd HH:mm')}}\n\n**\ud83d\udcca MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**\ud83c\udfaf TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**\ud83d\udcc8 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**\u26a0\ufe0f RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**\ud83d\udca1 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following"
+              "content": "=## INPUT DATA\n**Symbol:** {{ $json.dataIndicators[0].symbol }}\n\n---\n\n### Timeframe 1 ({{ $json.dataIndicators[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.dataIndicators[0].rsi.value }}\n- Signal: {{ $json.dataIndicators[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[0].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[0].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[0].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[0].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[0].macd.crossover }}\n\n** SMA:**\n- SMA 10: {{ $json.dataIndicators[0].sma.sma_10 }}\n- SMA 20: {{ $json.dataIndicators[0].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[0].sma.sma_50 }}\n- Signal: {{ $json.dataIndicators[0].sma.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.dataIndicators[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.dataIndicators[1].rsi.value }}\n- Signal: {{ $json.dataIndicators[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[1].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[1].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[1].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[1].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[1].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[1].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[1].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[1].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[1].sma.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.dataIndicators[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.dataIndicators[2].rsi.value }}\n- Signal: {{ $json.dataIndicators[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[2].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[2].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[2].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[2].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[2].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[2].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[2].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[2].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[2].sma.signal }}\n\n---\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\nAnalyse for {{ $json.dataIndicators[0].symbol }} at {{ $now.format('yyyy-MM-dd HH:mm')}}\n\n**📊 MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**🎯 TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**📈 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**⚠️ RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**💡 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following"
             }
           ]
         },
         "options": {
           "system": "=You are an expert cryptocurrency day trader with deep expertise in technical analysis, risk management, and multi-timeframe strategy. Analyze the following data for {{ $json.dataIndicators[0].symbol }} and provide actionable trading insights. There are tools available:\n1. Tool to get the news sentiment for {{ $json.dataIndicators[0].symbol }} from the `News Sentiment` tool. \n2. Tool to get the current price in USDT.\n3. Tool to get klines or candle-sticks with interval 1 minute. You can limit how much data that you will fetch.",
-          "temperature": 0.1,
-          "timeout": 120000
+          "temperature": 0.1
         }
       },
       "type": "@n8n/n8n-nodes-langchain.ollama",
       "typeVersion": 1,
       "position": [
-        1176,
-        532
+        1184,
+        384
       ],
-      "id": "b034ce81-e63f-40d8-bea4-940cd77bf5b6",
+      "id": "4d16c57a-e0b9-445c-8cbd-69c435fa17f6",
       "name": "Message a model",
       "credentials": {
         "ollamaApi": {
@@ -198,16 +197,15 @@
         "operation": "sendDocument",
         "chatId": "={{ $('Translate to Symbol').item.json.chatId }}",
         "binaryData": true,
-        "additionalFields": {},
-        "caption": "={{ 'Analysis complete for ' + $('Translate to Symbol').item.json.symbol + ' at ' + $now.format('HH:mm') }}"
+        "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
         1808,
-        628
+        480
       ],
-      "id": "44dcf04d-0d75-47a0-b71e-0a344f53d1df",
+      "id": "4fd04aed-20ea-4165-a60f-527993e68fda",
       "name": "Send a document",
       "webhookId": "68cabebe-d0d8-41b1-8719-f51a48bbd02b",
       "alwaysOutputData": true,
@@ -228,10 +226,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1240,
-        236
+        1248,
+        80
       ],
-      "id": "c3b48643-c289-4c46-8466-0a977f5e4933",
+      "id": "49e9969b-cb8d-42e4-b931-e312670af235",
       "name": "Send a text message",
       "webhookId": "058cd607-dd62-4cb4-80c4-7fd0459ac9a9",
       "credentials": {
@@ -255,9 +253,9 @@
       "typeVersion": 1,
       "position": [
         1248,
-        756
+        608
       ],
-      "id": "536ac489-90b0-4df6-842c-5117ea621bd5",
+      "id": "a618636b-3e5b-45b9-9406-9c781dc419f4",
       "name": "Klines Tool",
       "credentials": {
         "binanceApi": {
@@ -279,9 +277,9 @@
       "typeVersion": 1,
       "position": [
         1376,
-        756
+        608
       ],
-      "id": "ac079f5d-85a3-408e-b4d1-85bceccfd125",
+      "id": "fda781e8-3020-4071-9100-8100374efd22",
       "name": "Current Price",
       "credentials": {
         "binanceApi": {
@@ -292,67 +290,141 @@
     },
     {
       "parameters": {
-        "jsCode": "const order = ['15m', '1h', '4h'];\nconst items = .all();\nitems.sort((a, b) => order.indexOf(a.json.interval) - order.indexOf(b.json.interval));\nreturn items;"
+        "jsCode": "const order = ['15m', '1h', '4h'];\nconst items = $input.all();\nitems.sort((a, b) => order.indexOf(a.json.interval) - order.indexOf(b.json.interval));\nreturn items;"
       },
-      "id": "41f3b13c-0b78-42d7-9b55-0648acea839a",
+      "id": "dcf56e24-f8f5-40f1-8444-aabe1a15a616",
       "name": "Sort by Interval",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        784,
-        384
+        672,
+        224
       ]
     },
     {
       "parameters": {
-        "workflowId": "SUBWORKFLOW_ID_HERE",
-        "mode": "each",
-        "data": "define",
-        "jsonData": "={{ { symbol: $json.symbol, interval: $json.intervals[0], limit: $json.limit } }}"
+        "workflowId": {
+          "__rl": true,
+          "value": "1X1ODf4tA0Vi8SsT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1X1ODf4tA0Vi8SsT",
+          "cachedResultName": "Sub-workflow: Binance Kline Analyze"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
       },
-      "id": "46908015-bdb5-49dc-87dd-20ac6af921ba",
-      "name": "Analyze 15m",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
       "position": [
-        0,
-        192
+        224,
+        32
       ],
-      "onError": "continueRegularOutput"
+      "id": "9e509ebf-7393-46ec-900c-633b5f1f0636",
+      "name": "Analyze 15m"
     },
     {
       "parameters": {
-        "workflowId": "SUBWORKFLOW_ID_HERE",
-        "mode": "each",
-        "data": "define",
-        "jsonData": "={{ { symbol: $json.symbol, interval: $json.intervals[1], limit: $json.limit } }}"
+        "workflowId": {
+          "__rl": true,
+          "value": "1X1ODf4tA0Vi8SsT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1X1ODf4tA0Vi8SsT",
+          "cachedResultName": "Sub-workflow: Binance Kline Analyze"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
       },
-      "id": "34da6fe9-4335-4130-a2aa-777431b0e889",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        224
+      ],
+      "id": "3f825469-ffb0-4880-8f4c-49096ab88bd8",
       "name": "Analyze 1h",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        0,
-        384
-      ],
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "workflowId": "SUBWORKFLOW_ID_HERE",
-        "mode": "each",
-        "data": "define",
-        "jsonData": "={{ { symbol: $json.symbol, interval: $json.intervals[2], limit: $json.limit } }}"
+        "workflowId": {
+          "__rl": true,
+          "value": "1X1ODf4tA0Vi8SsT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1X1ODf4tA0Vi8SsT",
+          "cachedResultName": "Sub-workflow: Binance Kline Analyze"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
       },
-      "id": "8212f489-d7af-4868-957f-96a25959e890",
-      "name": "Analyze 4h",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        416
+      ],
+      "id": "0f537c59-e6ae-40f6-912b-bb02a3d653f2",
+      "name": "Analyze 4h",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  coin: $input.first().json.coin,\n  symbol: $input.first().json.symbol,\n  limit: $input.first().json.limit,\n  interval: $input.first().json.intervals[0]\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         0,
-        576
+        32
       ],
-      "onError": "continueRegularOutput"
+      "id": "d3e99083-13da-4458-b0fd-45e3795e6a04",
+      "name": "Interval 15m"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  coin: $input.first().json.coin,\n  symbol: $input.first().json.symbol,\n  limit: $input.first().json.limit,\n  interval: $input.first().json.intervals[2]\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        416
+      ],
+      "id": "fc804b6f-f491-47ad-9d28-e57564a9141e",
+      "name": "Interval 4h"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  coin: $input.first().json.coin,\n  symbol: $input.first().json.symbol,\n  limit: $input.first().json.limit,\n  interval: $input.first().json.intervals[1]\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        224
+      ],
+      "id": "ae42e6ca-3416-47b2-beb9-45b065b2956f",
+      "name": "Interval 1h"
     }
   ],
   "pinData": {},
@@ -399,22 +471,22 @@
       "main": [
         [
           {
+            "node": "Interval 15m",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Interval 1h",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "Notify Analysis Start",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Analyze 15m",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Analyze 1h",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Analyze 4h",
+            "node": "Interval 4h",
             "type": "main",
             "index": 0
           }
@@ -535,19 +607,52 @@
           }
         ]
       ]
+    },
+    "Interval 15m": {
+      "main": [
+        [
+          {
+            "node": "Analyze 15m",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval 4h": {
+      "main": [
+        [
+          {
+            "node": "Analyze 4h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval 1h": {
+      "main": [
+        [
+          {
+            "node": "Analyze 1h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "0f3fb5eb-da0a-4f3d-ba54-55ab0c874f9b",
+  "versionId": "bd4af902-c0eb-44ab-9210-9dcf01e46f3a",
   "meta": {
     "instanceId": "c5132ea42f91439834dd110c2ce2f5a137182faaae992ba119ae691d81f22581"
   },
-  "id": "2zPjVelWUJwcCYeo",
+  "id": "U9TjbJahvt3E4XQn",
   "tags": [
     {
       "updatedAt": "2025-12-23T03:07:33.206Z",
