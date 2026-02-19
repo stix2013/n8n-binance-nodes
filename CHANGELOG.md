@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-02-19
+
+### Added
+- **Multi-Agent AI Workflow**: Introduced `analyse-f` workflow using Parallel Agents + Supervisor pattern.
+  - **Technical Analysis Agent**: Specialized agent for indicator interpretation.
+  - **News Sentiment Agent**: Specialized agent for market sentiment analysis.
+  - **Supervisor Agent**: Synthesis agent (Gemini 2.5 Flash) for final report generation.
+- **Workflow Automation**: Added `scripts/build_analyse_f.py` to programmatically generate complex multi-agent workflows.
+- **Futures Trading Routes**: Added USD-M and COIN-M futures support to the API and nodes.
+- **Order Persistence**: Implemented database persistence for spot and futures orders with auto-pruning.
+
+### Changed
+- **n8n Version**: Upgraded n8n from `2.7.5` to `2.8.3`.
+- **API Version**: Upgraded API to `1.6.0`.
+- **Docker Architecture**: Custom n8n nodes are now baked into the Docker image for improved deployment consistency.
+- **API Refactoring**: Removed legacy candlestick sync module in favor of direct Binance API integration for futures.
+- **Guidelines**: Optimized `AGENTS.md` with multi-agent design patterns and environment standards.
+
+### Fixed
+- **Workflow Stability**: Repaired corrupted JSON and added global error handling to `analyse-d` workflow.
+- **Node Response Parsing**: Fixed response mapping for proxy + futures kline formats.
+- **Import Compatibility**: Fixed relative import issues in API for Docker container compatibility.
+
 ## [1.5.0] - 2026-02-14
 
 ### Added
