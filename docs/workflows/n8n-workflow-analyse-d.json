@@ -4,7 +4,7 @@
     {
       "parameters": {
         "chatId": "5572228344",
-        "text": "=🔍 Analysing {{ $json.symbol }}...\n\nTimeframes: {{ $json.intervals.join(', ') }}\nProcessing market data and indicators. Please wait.",
+        "text": "=\ud83d\udd0d Analysing {{ $json.symbol }}...\n\nTimeframes: {{ $json.intervals.join(', ') }}\nProcessing market data and indicators. Please wait.",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
@@ -274,7 +274,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rawInput = $input.first().json.chatInput || $input.first().json.message.text || '';\n\n// Basic sanitization: trim, uppercase, remove common suffixes/prefixes\nconst coin = rawInput.trim().toUpperCase().replace(/USDT$/, '').replace(/[^A-Z0-9]/g, '');\n\nconst symbol = coin + 'USDT'; \nconst limit = 500;\n\nconst intervals = [\n  '15m', // for 15 minutes timeframe\n  '1h', // for 1 hour timeframe\n  '4h', // for 4 hours timeframe\n];\n\nconst currentCandles = {\n  interval: '1m',\n  limit: 100\n}\n\nreturn [{\n    coin,\n    symbol,\n    limit,\n    intervals,\n    currentCandles\n  }];\n"
+        "jsCode": "const coin = $input.first().json.chatInput || $input.first().json.message.text ;\n\nconst symbol = (coin).toUpperCase() + 'USDT'; \nconst limit = 500;\n\nconst intervals = [\n  '15m', // for 15 minutes timeframe\n  '1h', // for 1 hour timeframe\n  '4h', // for 4 hours timeframe\n];\n\nconst currentCandles = {\n  interval: '1m',\n  limit: 100\n}\n\nreturn [{\n    coin,\n    symbol,\n    limit,\n    intervals,\n    currentCandles\n  }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -315,74 +315,9 @@
     },
     {
       "parameters": {
-        "chatId": "5572228344",
-        "text": "=✅ Analysis for {{ $json.dataIndicators[0].symbol }} completed successfully.\n\nReport generated: AI-{{ $json.dataIndicators[0].symbol }}-{{ $now.format('yyyyMMddHHmm') }}.md",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        2352,
-        240
-      ],
-      "id": "success-telegram-msg",
-      "name": "Notify Success",
-      "credentials": {
-        "telegramApi": {
-          "id": "O5JL1UG87JJ1GySx",
-          "name": "stix_crypto_freak_bot"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        2112,
-        -304
-      ],
-      "id": "2c9f6a41-c761-434c-ae2e-34f7e91ff232",
-      "name": "Aggregate2"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.errorTrigger",
-      "typeVersion": 1,
-      "position": [
-        208,
-        480
-      ],
-      "id": "global-error-trigger",
-      "name": "Error Trigger"
-    },
-    {
-      "parameters": {
-        "chatId": "5572228344",
-        "text": "=⚠️ *Workflow Error: Binance Future Analysis*\n\n*Node:* {{ $json.execution.error.nodeName }}\n*Message:* `{{ $json.execution.error.message }}`\n\n🕒 {{ $now.format('yyyy-MM-dd HH:mm:ss') }}",
-        "additionalFields": {
-          "parse_mode": "Markdown"
-        }
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        432,
-        480
-      ],
-      "id": "error-telegram-msg",
-      "name": "Notify Error",
-      "credentials": {
-        "telegramApi": {
-          "id": "O5JL1UG87JJ1GySx",
-          "name": "stix_crypto_freak_bot"
-        }
-      }
-    }
-  ],
+        "updates": [
+          "message"
+        ],
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegramTrigger",
@@ -413,17 +348,7 @@
         "messages": {
           "values": [
             {
-              "content": "=## INPUT DATA\n**Symbol:** {{ $json.dataIndicators[0].symbol }}\n\n---\n\n### Timeframe 1 ({{ $json.dataIndicators[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.dataIndicators[0].rsi.value }}\n- Signal: {{ $json.dataIndicators[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[0].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[0].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[0].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[0].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[0].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[0].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[0].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[0].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[0].sma.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.dataIndicators[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.dataIndicators[1].rsi.value }}\n- Signal: {{ $json.dataIndicators[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[1].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[1].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[1].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[1].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[1].macd.crossover }}\n\n** SMA:**\n- SMA 10: {{ $json.dataIndicators[1].sma.sma_10 }}\n- SMA 20: {{ $json.dataIndicators[1].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[1].sma.sma_50 }}\n- Signal: {{ $json.dataIndicators[1].sma.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.dataIndicators[2].interval }}) - [Long-term/Market Bias]
-** RSI:**
-- Value: {{ $json.dataIndicators[2].rsi.value }}
-- Signal: {{ $json.dataIndicators[2].rsi.signal }}
-
-** MACD:**
-- Line: {{ $json.dataIndicators[2].macd.macd_line }}
-- Signal Line: {{ $json.dataIndicators[2].macd.signal_line }}
-- Histogram: {{ $json.dataIndicators[2].macd.histogram }}
-- Signal Type: {{ $json.dataIndicators[2].macd.signal_type }}
-- Crossover: {{ $json.dataIndicators[2].macd.crossover }}dataIndicators[1].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[1].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[1].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[1].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[1].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[1].sma.signal }}\n\n---\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\nAnalyse for {{ $json.dataIndicators[0].symbol }} at {{ $now.format('yyyy-MM-dd HH:mm')}}\n\n**📊 MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**🎯 TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**📈 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**⚠️ RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**💡 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following"
+              "content": "=## INPUT DATA\n**Symbol:** {{ $json.dataIndicators[0].symbol }}\n\n---\n\n### Timeframe 1 ({{ $json.dataIndicators[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.dataIndicators[0].rsi.value }}\n- Signal: {{ $json.dataIndicators[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[0].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[0].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[0].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[0].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[0].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[0].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[0].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[0].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[0].sma.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.dataIndicators[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.dataIndicators[1].rsi.value }}\n- Signal: {{ $json.dataIndicators[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[1].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[1].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[1].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[1].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[1].macd.crossover }}\n\n** SMA:**\n- SMA 10: {{ $json.dataIndicators[1].sma.sma_10 }}\n- SMA 20: {{ $json.dataIndicators[1].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[1].sma.sma_50 }}\n- Signal: {{ $json.dataIndicators[1].sma.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.dataIndicators[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.dataIndicators[2].rsi.value }}\n- Signal: {{ $json.dataIndicators[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[2].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[2].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[2].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[2].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[2].macd.crossover }}dataIndicators[1].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[1].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[1].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[1].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[1].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[1].sma.signal }}\n\n---\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\nAnalyse for {{ $json.dataIndicators[0].symbol }} at {{ $now.format('yyyy-MM-dd HH:mm')}}\n\n**\ud83d\udcca MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**\ud83c\udfaf TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**\ud83d\udcc8 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**\u26a0\ufe0f RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**\ud83d\udca1 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following"
             }
           ]
         },
@@ -736,11 +661,6 @@
             "node": "Message a model",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Notify Success",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -784,17 +704,6 @@
           {
             "node": "Message a model",
             "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Error Trigger": {
-      "main": [
-        [
-          {
-            "node": "Notify Error",
-            "type": "main",
             "index": 0
           }
         ]
