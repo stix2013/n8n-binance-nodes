@@ -336,9 +336,53 @@
     },
     {
       "parameters": {
-        "updates": [
-          "message"
-        ],
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        -304
+      ],
+      "id": "2c9f6a41-c761-434c-ae2e-34f7e91ff232",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        480
+      ],
+      "id": "global-error-trigger",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "5572228344",
+        "text": "=⚠️ *Workflow Error: Binance Future Analysis*\n\n*Node:* {{ $json.execution.error.nodeName }}\n*Message:* `{{ $json.execution.error.message }}`\n\n🕒 {{ $now.format('yyyy-MM-dd HH:mm:ss') }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        480
+      ],
+      "id": "error-telegram-msg",
+      "name": "Notify Error",
+      "credentials": {
+        "telegramApi": {
+          "id": "O5JL1UG87JJ1GySx",
+          "name": "stix_crypto_freak_bot"
+        }
+      }
+    }
+  ],
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegramTrigger",
@@ -740,6 +784,17 @@
           {
             "node": "Message a model",
             "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Notify Error",
+            "type": "main",
             "index": 0
           }
         ]
