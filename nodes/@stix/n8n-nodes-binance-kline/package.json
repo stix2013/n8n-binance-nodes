@@ -39,7 +39,8 @@
         ],
         "nodes": [
             "dist/nodes/BinanceKline/BinanceKline.node.js",
-            "dist/nodes/BinanceOrder/BinanceOrder.node.js"
+            "dist/nodes/BinanceOrder/BinanceOrder.node.js",
+            "dist/nodes/BinanceKlineIndicators/BinanceKlineIndicators.node.js"
         ]
     },
     "devDependencies": {
