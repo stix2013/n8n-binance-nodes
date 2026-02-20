@@ -1,0 +1,314 @@
+{
+  "updatedAt": "2026-02-20T04:36:46.900Z",
+  "createdAt": "2026-02-19T03:06:30.944Z",
+  "id": "1X1ODf4tA0Vi8SsT",
+  "name": "Sub-workflow--Binance-Kline-Analyze",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "062c5c25-bb7b-4ae9-ac52-3ce6d8738759",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "apiSource": "direct",
+        "marketType": "futures",
+        "symbol": "={{ $json.symbol }}",
+        "interval": "={{ $json.interval }}",
+        "limit": "={{ $json.limit }}"
+      },
+      "id": "bde7774c-6ca1-4493-9433-597410559016",
+      "name": "Binance Kline",
+      "type": "CUSTOM.binanceKline",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "binanceApi": {
+          "id": "tmVGRcPSpJIYsaeS",
+          "name": "Binance account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Transform BinanceKline output to IngestRequest\nconst data = $input.item.json;\n\nif (!data.symbol) {\n  return { json: { error: 'No data returned from Binance' } };\n}\n\nreturn {\n  data: {\n    symbol: data.symbol,\n    interval: data.interval,\
+    limit: data.limit,\
+    currentPrice: data.currentPrice,\
+    klineCount: data.klineCount,\
+    klines: data.klines,\
+    fetchedAt: data.fetchedAt\n  },\n  parameters: {\n    rsi_period: 14,\
+    macd_fast: 12,\
+    macd_slow: 26,\
+    macd_signal: 9\n  }\n};"
+      },
+      "id": "800b7b3b-c07a-430f-8d19-19dceb884c41",
+      "name": "Transform Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/ingest/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.item.json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "6d73da52-705a-43ef-ac02-2ac2cccf9837",
+      "name": "API Analyze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        672,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Binance Kline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Binance Kline": {
+      "main": [
+        [
+          {
+            "node": "Transform Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Data": {
+      "main": [
+        [
+          {
+            "node": "API Analyze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "52a27914-69f5-4a3a-ba8c-8c8533d0182b",
+  "activeVersionId": "52a27914-69f5-4a3a-ba8c-8c8533d0182b",
+  "versionCounter": 20,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-19T03:06:30.948Z",
+      "createdAt": "2026-02-19T03:06:30.948Z",
+      "role": "workflow:owner",
+      "workflowId": "1X1ODf4tA0Vi8SsT",
+      "projectId": "6BNyPaZsY8ll5UXG",
+      "project": {
+        "updatedAt": "2025-12-16T04:15:56.682Z",
+        "createdAt": "2025-11-29T11:55:22.287Z",
+        "id": "6BNyPaZsY8ll5UXG",
+        "name": "Stevan Moeladi <stevan.moeladi@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "f8c32da9-3f33-474a-a9ce-f3923720b9bc"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-02-20T04:36:31.000Z",
+    "createdAt": "2026-02-19T03:06:30.950Z",
+    "versionId": "52a27914-69f5-4a3a-ba8c-8c8533d0182b",
+    "workflowId": "1X1ODf4tA0Vi8SsT",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "062c5c25-bb7b-4ae9-ac52-3ce6d8738759",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "apiSource": "direct",
+          "marketType": "futures",
+          "symbol": "={{ $json.symbol }}",
+          "interval": "={{ $json.interval }}",
+          "limit": "={{ $json.limit }}"
+        },
+        "id": "bde7774c-6ca1-4493-9433-597410559016",
+        "name": "Binance Kline",
+        "type": "CUSTOM.binanceKline",
+        "typeVersion": 1,
+        "position": [
+          224,
+          0
+        ],
+        "credentials": {
+          "binanceApi": {
+            "id": "tmVGRcPSpJIYsaeS",
+            "name": "Binance account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "// Transform BinanceKline output to IngestRequest\nconst data = $input.item.json;\n\nif (!data.symbol) {\n  return { json: { error: 'No data returned from Binance' } };\n}\n\nreturn {\n  data: {\n    symbol: data.symbol,\n    interval: data.interval,\
+    limit: data.limit,\
+    currentPrice: data.currentPrice,\
+    klineCount: data.klineCount,\
+    klines: data.klines,\
+    fetchedAt: data.fetchedAt\n  },\n  parameters: {\n    rsi_period: 14,\
+    macd_fast: 12,\
+    macd_slow: 26,\
+    macd_signal: 9\n  }\n};"
+      },
+      "id": "800b7b3b-c07a-430f-8d19-19dceb884c41",
+      "name": "Transform Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/ingest/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.item.json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "6d73da52-705a-43ef-ac02-2ac2cccf9837",
+      "name": "API Analyze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        672,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Binance Kline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Binance Kline": {
+      "main": [
+        [
+          {
+            "node": "Transform Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Data": {
+      "main": [
+        [
+          {
+            "node": "API Analyze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "authors": "Stevan Moeladi",
+  "name": "Version 52a27914",
+  "description": "",
+  "autosaved": true,
+  "workflowPublishHistory": [
+    {
+      "createdAt": "2026-02-19T03:07:13.307Z",
+      "id": 108,
+      "workflowId": "1X1ODf4tA0Vi8SsT",
+      "versionId": "52a27914-69f5-4a3a-ba8c-8c8533d0182b",
+      "event": "activated",
+      "userId": "f8c32da9-3f33-474a-a9ce-f3923720b9bc"
+    },
+    {
+      "createdAt": "2026-02-20T04:36:31.092Z",
+      "id": 126,
+      "workflowId": "1X1ODf4tA0Vi8SsT",
+      "versionId": "52a27914-69f5-4a3a-ba8c-8c8533d0182b",
+      "event": "activated",
+      "userId": "f8c32da9-3f33-474a-a9ce-f3923720b9bc"
+    },
+    {
+      "createdAt": "2026-02-20T04:29:20.005Z",
+      "id": 125,
+      "workflowId": "1X1ODf4tA0Vi8SsT",
+      "versionId": "52a27914-69f5-4a3a-ba8c-8c8533d0182b",
+      "event": "deactivated",
+      "userId": "f8c32da9-3f33-474a-a9ce-f3923720b9bc"
+    }
+  ]
+}
