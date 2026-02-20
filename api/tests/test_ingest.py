@@ -82,9 +82,17 @@ class TestIngestAPI:
         assert result["interval"] == "15m"
         assert "rsi" in result
         assert "macd" in result
+        assert "sma" in result
+        assert "ema" in result
         assert "recommendation" in result
         assert "current_price" in result
         assert "analysis_timestamp" in result
+
+        # Check EMA structure
+        assert "ema_12" in result["ema"]
+        assert "ema_26" in result["ema"]
+        assert "signal" in result["ema"]
+        assert result["ema"]["signal"] in ["BULLISH", "BEARISH", "NEUTRAL"]
 
         # Check RSI structure
         assert "value" in result["rsi"]

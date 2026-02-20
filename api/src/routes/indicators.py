@@ -23,6 +23,7 @@ try:
         MACDResult,
         MACDSignal,
         SMAResult,
+        EMAResult,
         SingleIndicatorRequest,
         SingleIndicatorResponse,
         IndicatorType,
@@ -45,6 +46,7 @@ except ImportError:
         MACDResult,
         MACDSignal,
         SMAResult,
+        EMAResult,
         SingleIndicatorRequest,
         SingleIndicatorResponse,
         IndicatorType,
@@ -62,6 +64,16 @@ INTERVAL_SMA_WINDOWS = {
     "4h": [20, 50, 200],
 }
 
+# EMA window configuration based on interval (matches strategy document)
+INTERVAL_EMA_WINDOWS = {
+    "1m": [9, 21],
+    "5m": [5, 8],
+    "15m": [12, 26],
+    "1h": [20, 50],
+    "4h": [50, 200],
+    "1d": [50, 200],
+}
+
 
 def get_sma_windows(interval: str) -> list[int]:
     """
@@ -74,6 +86,21 @@ def get_sma_windows(interval: str) -> list[int]:
         List of SMA windows to calculate
     """
     return INTERVAL_SMA_WINDOWS.get(
+        interval, [20, 50]
+    )  # Default to [20, 50] if interval not found
+
+
+def get_ema_windows(interval: str) -> list[int]:
+    """
+    Get appropriate EMA windows based on the candle interval.
+
+    Args:
+        interval: Candle interval (e.g., "1m", "15m", "1h", "4h")
+
+    Returns:
+        List of EMA windows to calculate
+    """
+    return INTERVAL_EMA_WINDOWS.get(
         interval, [20, 50]
     )  # Default to [20, 50] if interval not found
 
@@ -188,7 +215,7 @@ async def get_technical_analysis(
     api_key: str = Depends(get_binance_api_key),
 ) -> TechnicalAnalysisResponse:
     """
-    Get comprehensive RSI, MACD, and SMA analysis for a trading pair.
+    Get comprehensive RSI, MACD, SMA, and EMA analysis for a trading pair.
 
     - **symbol**: Trading pair symbol (required) - e.g., BTCUSDT, ETHUSDT
     - **interval**: Candle interval (required)
@@ -198,6 +225,7 @@ async def get_technical_analysis(
     - **macd_signal**: MACD signal line period (default: 9, range: 2-50)
     - **limit**: Number of candles to analyze (default: 100, range: 30-1000)
     - **SMA intervals**: 15m=[10,20,50], 1h/4h=[20,50,200]
+    - **EMA intervals**: 1m=[9,21], 15m=[12,26], 1h=[20,50], 4h=[50,200]
     """
 
     # Validate symbol format
@@ -241,6 +269,11 @@ async def get_technical_analysis(
         sma_values = TechnicalIndicators.calculate_sma(closing_prices, sma_windows)
         sma_signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
 
+        # Calculate EMA based on interval
+        ema_windows = get_ema_windows(interval)
+        ema_values = TechnicalIndicators.calculate_emas(closing_prices, ema_windows)
+        ema_signal = TechnicalIndicators.generate_ema_signal(current_price, ema_values)
+
         # Generate overall recommendation
         overall_recommendation = TechnicalIndicators.generate_overall_recommendation(
             rsi_signal, macd_signal_type, macd_crossover
@@ -265,6 +298,18 @@ async def get_technical_analysis(
                 sma_50=sma_values.get(50),
                 sma_200=sma_values.get(200),
                 signal=sma_signal,
+            ),
+            ema=EMAResult(
+                ema_5=ema_values.get(5),
+                ema_8=ema_values.get(8),
+                ema_9=ema_values.get(9),
+                ema_12=ema_values.get(12),
+                ema_20=ema_values.get(20),
+                ema_21=ema_values.get(21),
+                ema_26=ema_values.get(26),
+                ema_50=ema_values.get(50),
+                ema_200=ema_values.get(200),
+                signal=ema_signal,
             ),
             overall_recommendation=overall_recommendation,
             analysis_timestamp=timestamp_to_iso(last_timestamp)
@@ -356,6 +401,83 @@ async def get_sma_indicator(
 
 
 @router.get(
+    "/ema",
+    response_model=EMAResult,
+    responses={
+        400: {"model": IndicatorsErrorResponse},
+        422: {"model": IndicatorsErrorResponse},
+        500: {"model": IndicatorsErrorResponse},
+        503: {"model": IndicatorsErrorResponse},
+    },
+)
+async def get_ema_indicator(
+    symbol: str = Query(
+        ...,
+        min_length=1,
+        max_length=20,
+        description="Trading pair symbol (e.g., BTCUSDT)",
+    ),
+    interval: str = Query(
+        ...,
+        description="Candle interval (1m, 5m, 15m, 1h, 4h, etc.)",
+    ),
+    limit: int = Query(100, ge=30, le=1000, description="Number of candles to analyze"),
+    api_key: str = Depends(get_binance_api_key),
+) -> EMAResult:
+    """
+    Get Exponential Moving Average (EMA) indicator values.
+
+    - **symbol**: Trading pair symbol (required) - e.g., BTCUSDT, ETHUSDT
+    - **interval**: Candle interval (required)
+    - **limit**: Number of candles to analyze (default: 100, range: 30-1000)
+    - **EMA intervals**: 1m=[9,21], 15m=[12,26], 1h=[20,50], 4h=[50,200]
+    """
+
+    # Validate symbol format
+    if not symbol.isalnum():
+        raise HTTPException(
+            status_code=422, detail="Symbol must contain only alphanumeric characters"
+        )
+
+    try:
+        # Fetch price data from Binance
+        closing_prices, last_timestamp = await get_price_data(
+            symbol, interval, limit, api_key
+        )
+
+        # Validate price data
+        TechnicalIndicators.validate_price_data(closing_prices, min_candles=30)
+
+        # Calculate EMA based on interval
+        ema_windows = get_ema_windows(interval)
+        ema_values = TechnicalIndicators.calculate_emas(closing_prices, ema_windows)
+        current_price = closing_prices[-1]
+        ema_signal = TechnicalIndicators.generate_ema_signal(current_price, ema_values)
+
+        return EMAResult(
+            ema_5=ema_values.get(5),
+            ema_8=ema_values.get(8),
+            ema_9=ema_values.get(9),
+            ema_12=ema_values.get(12),
+            ema_20=ema_values.get(20),
+            ema_21=ema_values.get(21),
+            ema_26=ema_values.get(26),
+            ema_50=ema_values.get(50),
+            ema_200=ema_values.get(200),
+            signal=ema_signal,
+        )
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        # Re-raise HTTPException instances without logging them as errors
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in EMA calculation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get(
     "/{indicator_name}",
     responses={
         400: {"model": IndicatorsErrorResponse},
@@ -377,7 +499,7 @@ async def get_single_indicator(
     """
     Get a single technical indicator calculation.
 
-    - **indicator_name**: Indicator to calculate ("rsi" or "macd")
+    - **indicator_name**: Indicator to calculate ("rsi", "macd", "sma", "ema")
     - **symbol**: Trading pair symbol (required)
     - **interval**: Candle interval (required)
     - **period**: Calculation period (optional, defaults to standard values)
@@ -386,9 +508,9 @@ async def get_single_indicator(
 
     # Validate indicator name
     indicator_name = indicator_name.lower()
-    if indicator_name not in ["rsi", "macd", "sma"]:
+    if indicator_name not in ["rsi", "macd", "sma", "ema"]:
         raise HTTPException(
-            status_code=400, detail="Supported indicators: 'rsi', 'macd', 'sma'"
+            status_code=400, detail="Supported indicators: 'rsi', 'macd', 'sma', 'ema'"
         )
 
     # Set default periods
@@ -419,7 +541,7 @@ async def get_single_indicator(
             value = macd_data["macd_line"]
             signal_type, _ = TechnicalIndicators.generate_macd_signal(macd_data)
             signal = signal_type
-        else:  # sma
+        elif indicator_name == "sma":
             # For SMA, we'll return the longest available SMA as the primary value
             sma_windows = get_sma_windows(interval)
             sma_values = TechnicalIndicators.calculate_sma(closing_prices, sma_windows)
@@ -427,6 +549,14 @@ async def get_single_indicator(
             longest_window = max(sma_windows)
             value = sma_values[longest_window]
             signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
+        else:  # ema
+            # For EMA, we'll return the longest available EMA as the primary value
+            ema_windows = get_ema_windows(interval)
+            ema_values = TechnicalIndicators.calculate_emas(closing_prices, ema_windows)
+            # Return the longest EMA period as the primary value
+            longest_window = max(ema_windows)
+            value = ema_values[longest_window]
+            signal = TechnicalIndicators.generate_ema_signal(current_price, ema_values)
 
         return SingleIndicatorResponse(
             symbol=symbol.upper(),

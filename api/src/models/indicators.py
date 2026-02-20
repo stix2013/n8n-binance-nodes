@@ -71,8 +71,25 @@ class SMAResult(BaseModel):
     )
 
 
+class EMAResult(BaseModel):
+    """EMA calculation result."""
+
+    ema_5: Optional[float] = Field(None, description="5-period EMA (Scalping)")
+    ema_8: Optional[float] = Field(None, description="8-period EMA (Scalping)")
+    ema_9: Optional[float] = Field(None, description="9-period EMA (1m)")
+    ema_12: Optional[float] = Field(None, description="12-period EMA (15m)")
+    ema_20: Optional[float] = Field(None, description="20-period EMA (1h)")
+    ema_21: Optional[float] = Field(None, description="21-period EMA (1m)")
+    ema_26: Optional[float] = Field(None, description="26-period EMA (15m)")
+    ema_50: Optional[float] = Field(None, description="50-period EMA (1h/4h)")
+    ema_200: Optional[float] = Field(None, description="200-period EMA (4h)")
+    signal: Literal["BULLISH", "BEARISH", "NEUTRAL"] = Field(
+        description="EMA trend signal"
+    )
+
+
 class TechnicalAnalysisResponse(BaseModel):
-    """Response with RSI, MACD, and SMA analysis."""
+    """Response with RSI, MACD, SMA, and EMA analysis."""
 
     symbol: str = Field(description="Trading pair symbol")
     interval: str = Field(description="Candle interval used for analysis")
@@ -81,6 +98,7 @@ class TechnicalAnalysisResponse(BaseModel):
     macd: MACDResult = Field(description="MACD calculation result")
     macd_interpretation: MACDSignal = Field(description="MACD signal interpretation")
     sma: SMAResult = Field(description="SMA analysis result")
+    ema: EMAResult = Field(description="EMA analysis result")
     overall_recommendation: Literal[
         "STRONG_BUY", "BUY", "HOLD", "SELL", "STRONG_SELL"
     ] = Field(description="Overall trading recommendation")
@@ -96,6 +114,7 @@ class IndicatorType(str, Enum):
     RSI = "rsi"
     MACD = "macd"
     SMA = "sma"
+    EMA = "ema"
 
 
 class SingleIndicatorRequest(BaseModel):
