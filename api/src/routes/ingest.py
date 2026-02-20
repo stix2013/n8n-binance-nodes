@@ -74,7 +74,9 @@ def get_ema_windows(interval: str) -> list[int]:
     )  # Default to [20, 50] if interval not found
 
 
-@router.post("/analyze", response_model=IngestResponse)
+@router.post(
+    "/analyze", response_model=IngestResponse, response_model_exclude_none=True
+)
 async def analyze_n8n_data(request: IngestRequest):
     """
     Analyze kline data received from n8n Binance node.
@@ -112,15 +114,33 @@ async def analyze_n8n_data(request: IngestRequest):
         # Get current price
         current_price = prices[-1]
 
-        # Calculate SMA based on interval
-        sma_windows = get_sma_windows(request.data.interval)
-        sma_values = TechnicalIndicators.calculate_sma(prices, sma_windows)
-        sma_signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
+        # Calculate SMA based on interval, filtering out windows larger than available data
+        sma_values = {}
+        sma_signal = "NEUTRAL"
+        if params.sma_enabled:
+            sma_windows = get_sma_windows(request.data.interval)
+            valid_sma_windows = [w for w in sma_windows if w <= len(prices)]
+            if valid_sma_windows:
+                sma_values = TechnicalIndicators.calculate_sma(
+                    prices, valid_sma_windows
+                )
+                sma_signal = TechnicalIndicators.generate_sma_signal(
+                    current_price, sma_values
+                )
 
-        # Calculate EMA based on interval
-        ema_windows = get_ema_windows(request.data.interval)
-        ema_values = TechnicalIndicators.calculate_emas(prices, ema_windows)
-        ema_signal = TechnicalIndicators.generate_ema_signal(current_price, ema_values)
+        # Calculate EMA based on interval, filtering out windows larger than available data
+        ema_values = {}
+        ema_signal = "NEUTRAL"
+        if params.ema_enabled:
+            ema_windows = get_ema_windows(request.data.interval)
+            valid_ema_windows = [w for w in ema_windows if w <= len(prices)]
+            if valid_ema_windows:
+                ema_values = TechnicalIndicators.calculate_emas(
+                    prices, valid_ema_windows
+                )
+                ema_signal = TechnicalIndicators.generate_ema_signal(
+                    current_price, ema_values
+                )
 
         # Generate Recommendation (considering RSI, MACD, SMA, and EMA)
         recommendation = TechnicalIndicators.generate_overall_recommendation(
@@ -128,6 +148,31 @@ async def analyze_n8n_data(request: IngestRequest):
         )
         last_close_time_ms = sorted_klines[-1].closeTime
         analysis_timestamp = datetime.fromtimestamp(last_close_time_ms / 1000.0)
+
+        sma_result = None
+        if params.sma_enabled:
+            sma_result = SMAResult(
+                sma_10=sma_values.get(10),
+                sma_20=sma_values.get(20),
+                sma_50=sma_values.get(50),
+                sma_200=sma_values.get(200),
+                signal=sma_signal,
+            )
+
+        ema_result = None
+        if params.ema_enabled:
+            ema_result = EMAResult(
+                ema_5=ema_values.get(5),
+                ema_8=ema_values.get(8),
+                ema_9=ema_values.get(9),
+                ema_12=ema_values.get(12),
+                ema_20=ema_values.get(20),
+                ema_21=ema_values.get(21),
+                ema_26=ema_values.get(26),
+                ema_50=ema_values.get(50),
+                ema_200=ema_values.get(200),
+                signal=ema_signal,
+            )
 
         return IngestResponse(
             symbol=request.data.symbol,
@@ -142,25 +187,8 @@ async def analyze_n8n_data(request: IngestRequest):
                 signal_type=macd_signal_type,
                 crossover=macd_crossover,
             ),
-            sma=SMAResult(
-                sma_10=sma_values.get(10),
-                sma_20=sma_values.get(20),
-                sma_50=sma_values.get(50),
-                sma_200=sma_values.get(200),
-                signal=sma_signal,
-            ),
-            ema=EMAResult(
-                ema_5=ema_values.get(5),
-                ema_8=ema_values.get(8),
-                ema_9=ema_values.get(9),
-                ema_12=ema_values.get(12),
-                ema_20=ema_values.get(20),
-                ema_21=ema_values.get(21),
-                ema_26=ema_values.get(26),
-                ema_50=ema_values.get(50),
-                ema_200=ema_values.get(200),
-                signal=ema_signal,
-            ),
+            sma=sma_result,
+            ema=ema_result,
             recommendation=recommendation,
         )
 
