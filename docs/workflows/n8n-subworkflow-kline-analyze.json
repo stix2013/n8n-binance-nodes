@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "start-trigger",
+      "id": "062c5c25-bb7b-4ae9-ac52-3ce6d8738759",
       "name": "Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1,
@@ -20,12 +20,12 @@
         "interval": "={{ $json.interval }}",
         "limit": "={{ $json.limit }}"
       },
-      "id": "binance-kline",
+      "id": "bde7774c-6ca1-4493-9433-597410559016",
       "name": "Binance Kline",
       "type": "CUSTOM.binanceKline",
       "typeVersion": 1,
       "position": [
-        220,
+        224,
         0
       ],
       "credentials": {
@@ -41,12 +41,12 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// Transform BinanceKline output to IngestRequest\nconst data = $input.item.json;\n\nif (!data.symbol) {\n  return { json: { error: 'No data returned from Binance' } };\n}\n\nreturn {\n  data: {\n    symbol: data.symbol,\n    interval: data.interval,\n    limit: data.limit,\n    currentPrice: data.currentPrice,\n    klineCount: data.klineCount,\n    klines: data.klines,\n    fetchedAt: data.fetchedAt\n  },\n  parameters: {\n    rsi_period: 14,\n    macd_fast: 12,\n    macd_slow: 26,\n    macd_signal: 9\n  }\n};"
       },
-      "id": "transform-data",
+      "id": "800b7b3b-c07a-430f-8d19-19dceb884c41",
       "name": "Transform Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        448,
         0
       ]
     },
@@ -65,17 +65,18 @@
           }
         }
       },
-      "id": "api-analyze",
+      "id": "6d73da52-705a-43ef-ac02-2ac2cccf9837",
       "name": "API Analyze",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        660,
+        672,
         0
       ],
       "onError": "continueRegularOutput"
     }
   ],
+  "pinData": {},
   "connections": {
     "Execute Workflow Trigger": {
       "main": [
@@ -110,5 +111,17 @@
         ]
       ]
     }
-  }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "52a27914-69f5-4a3a-ba8c-8c8533d0182b",
+  "meta": {
+    "instanceId": "c5132ea42f91439834dd110c2ce2f5a137182faaae992ba119ae691d81f22581"
+  },
+  "id": "1X1ODf4tA0Vi8SsT",
+  "tags": []
 }

@@ -364,3 +364,80 @@ class TechnicalIndicators:
             return "BEARISH"
         else:
             return "NEUTRAL"
+
+    @staticmethod
+    def calculate_emas(prices: List[float], windows: List[int]) -> Dict[int, float]:
+        """
+        Calculate Exponential Moving Average (EMA) for multiple windows using pandas.
+
+        Args:
+            prices: List of closing prices
+            windows: List of EMA periods to calculate (e.g., [9, 21])
+
+        Returns:
+            Dictionary mapping window size to EMA value for the latest price
+
+        Raises:
+            ValueError: If insufficient data or invalid inputs
+        """
+        if not prices:
+            raise ValueError("Price data cannot be empty for EMA calculation")
+
+        if not windows:
+            raise ValueError("Windows list cannot be empty")
+
+        # Validate windows
+        max_window = max(windows)
+        if len(prices) < max_window:
+            raise ValueError(
+                f"Insufficient data for EMA calculation. Need at least {max_window} prices, got {len(prices)}"
+            )
+
+        if any(w < 1 for w in windows):
+            raise ValueError(f"EMA windows must be at least 1, got {windows}")
+
+        # Use pandas for efficient EMA calculation
+        prices_series = pd.Series(prices)
+
+        ema_values = {}
+        for window in windows:
+            ema = prices_series.ewm(
+                span=window, adjust=False, min_periods=window
+            ).mean()
+            # Get the last valid value
+            ema_values[window] = round(ema.iloc[-1], 6)
+
+        return ema_values
+
+    @staticmethod
+    def generate_ema_signal(current_price: float, ema_values: Dict[int, float]) -> str:
+        """
+        Generate trading signal based on EMA values.
+
+        Args:
+            current_price: Current closing price
+            ema_values: Dictionary of EMA values by window
+
+        Returns:
+            Signal string: "BULLISH", "BEARISH", or "NEUTRAL"
+        """
+        if not ema_values:
+            return "NEUTRAL"
+
+        # Sort windows from smallest to largest
+        sorted_windows = sorted(ema_values.keys())
+
+        # Get EMA values
+        short_ema = ema_values[sorted_windows[0]]
+        long_ema = ema_values[sorted_windows[-1]]
+
+        # Price above long-term EMA suggests uptrend
+        # Short-term EMA above long-term EMA confirms bullish
+        if current_price > long_ema and short_ema > long_ema:
+            return "BULLISH"
+        # Price below long-term EMA suggests downtrend
+        # Short-term EMA below long-term EMA confirms bearish
+        elif current_price < long_ema and short_ema < long_ema:
+            return "BEARISH"
+        else:
+            return "NEUTRAL"

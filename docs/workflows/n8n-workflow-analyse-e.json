@@ -10,7 +10,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        0,
+        64,
         -160
       ],
       "id": "ad29e1be-b0dc-4ee0-a0b2-b0b7b02f26f2",
@@ -26,21 +26,6 @@
     },
     {
       "parameters": {
-        "toolDescription": "Given the list of articles about crypto coin like BTC, ETH, SOL, etc. The articles are with their sentiment.\n",
-        "url": "=http://api:8000/api/news/sentiment/{{ $('Translate to Symbol').item.json.coin }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequestTool",
-      "typeVersion": 4.4,
-      "position": [
-        1120,
-        608
-      ],
-      "id": "b6e26ade-6678-4072-8417-43306e41a4a5",
-      "name": "News Sentiment"
-    },
-    {
-      "parameters": {
         "conversionOptions": {
           "format": "auto"
         },
@@ -52,8 +37,8 @@
       "type": "CUSTOM.markdownSaver",
       "typeVersion": 1,
       "position": [
-        1584,
-        384
+        1776,
+        480
       ],
       "id": "e2a9902c-eb97-49c0-bd3d-1c5893e036ce",
       "name": "Markdown Binary"
@@ -68,8 +53,8 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        1808,
-        288
+        -384,
+        832
       ],
       "id": "57dd4fb1-f0a6-40de-88c5-060a69b26923",
       "name": "Write to docs/analyse",
@@ -85,8 +70,8 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -448,
-        224
+        -384,
+        320
       ],
       "id": "0721980d-4bf6-4006-af91-fbb093605833",
       "name": "When chat message received",
@@ -94,44 +79,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const raw = ($input.first().json.chatInput || $input.first().json.message?.text || '').trim();\nif (!raw) throw new Error('No coin symbol provided. Send a symbol like BTC, ETH, or SOL.');\n\n// Strip common suffixes if user already typed full pair\nconst coin = raw.toUpperCase().replace(/USDT$/, '').replace(/[^A-Z0-9]/g, '');\nif (!coin) throw new Error('Invalid symbol. Send a coin like BTC, ETH, or SOL.');\n\nconst symbol = coin + 'USDT';\nconst chatId = $input.first().json.message?.chat?.id || '5572228344';\nconst limit = 500;\n\nconst intervals = [\n  '15m', // for 15 minutes timeframe\n  '1h', // for 1 hour timeframe\n  '4h', // for 4 hours timeframe\n];\n\nreturn [{\n    coin,\n    symbol,\n    limit,\n    intervals,\n    chatId\n  }];\n"
+        "jsCode": "const raw = ($input.first().json.chatInput || $input.first().json.message?.text || '').trim();\nif (!raw) throw new Error('No coin symbol provided. Send a symbol like BTC, ETH, or SOL.');\n\n// Strip common suffixes if user already typed full pair\nconst coin = raw.toUpperCase().replace(/USDT$/, '').replace(/[^A-Z0-9]/g, '');\nif (!coin) throw new Error('Invalid symbol. Send a coin like BTC, ETH, or SOL.');\n\nconst symbol = coin + 'USDT';\nconst chatId = $input.first().json.message?.chat?.id || '5572228344';\nconst limit = 500;\n\nconst intervals = [\n  '15m', // for 15 minutes timeframe\n  '1h', // for 1 hour timeframe\n  '4h', // for 4 hours timeframe\n  '1m', // for 1 minute timeframe\n];\n\nreturn [{\n    chatId,\n    coin,\n    symbol,\n    limit,\n    intervals,\n  }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -224,
-        128
+        -160,
+        224
       ],
       "id": "a7026d7d-d328-4274-842b-222d40558467",
       "name": "Translate to Symbol"
     },
     {
       "parameters": {
-        "numberInputs": 3
+        "numberInputs": 4
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        448,
-        208
+        512,
+        288
       ],
       "id": "c022d3e3-40cc-4df7-826e-3e21ffe5443e",
       "name": "Merge Indicators"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "dataIndicators",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        896,
-        224
-      ],
-      "id": "5a465049-c765-4012-b597-3a043aa23d47",
-      "name": "Aggregate"
     },
     {
       "parameters": {
@@ -143,8 +113,8 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [
-        -448,
-        32
+        -384,
+        128
       ],
       "id": "7e816fc9-71ad-44ab-9aa1-b8cbeca97a8f",
       "name": "My Telegram Channel",
@@ -161,27 +131,27 @@
       "parameters": {
         "modelId": {
           "__rl": true,
-          "value": "glm-5",
+          "value": "minimax-m2.5",
           "mode": "list",
-          "cachedResultName": "glm-5"
+          "cachedResultName": "minimax-m2.5"
         },
         "messages": {
           "values": [
             {
-              "content": "=## INPUT DATA\n**Symbol:** {{ $json.dataIndicators[0].symbol }}\n\n---\n\n### Timeframe 1 ({{ $json.dataIndicators[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.dataIndicators[0].rsi.value }}\n- Signal: {{ $json.dataIndicators[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[0].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[0].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[0].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[0].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[0].macd.crossover }}\n\n** SMA:**\n- SMA 10: {{ $json.dataIndicators[0].sma.sma_10 }}\n- SMA 20: {{ $json.dataIndicators[0].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[0].sma.sma_50 }}\n- Signal: {{ $json.dataIndicators[0].sma.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.dataIndicators[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.dataIndicators[1].rsi.value }}\n- Signal: {{ $json.dataIndicators[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[1].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[1].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[1].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[1].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[1].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[1].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[1].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[1].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[1].sma.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.dataIndicators[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.dataIndicators[2].rsi.value }}\n- Signal: {{ $json.dataIndicators[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.dataIndicators[2].macd.macd_line }}\n- Signal Line: {{ $json.dataIndicators[2].macd.signal_line }}\n- Histogram: {{ $json.dataIndicators[2].macd.histogram }}\n- Signal Type: {{ $json.dataIndicators[2].macd.signal_type }}\n- Crossover: {{ $json.dataIndicators[2].macd.crossover }}\n\n** SMA:**\n- SMA 20: {{ $json.dataIndicators[2].sma.sma_20 }}\n- SMA 50: {{ $json.dataIndicators[2].sma.sma_50 }}\n- SMA 200: {{ $json.dataIndicators[2].sma.sma_200 }}\n- Signal: {{ $json.dataIndicators[2].sma.signal }}\n\n---\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\nAnalyse for {{ $json.dataIndicators[0].symbol }} at {{ $now.format('yyyy-MM-dd HH:mm')}}\n\n**📊 MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**🎯 TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**📈 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**⚠️ RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**💡 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following"
+              "content": "=## INPUT DATA\n**Symbol:** {{ $json.indicators[0].symbol }}\n\n---\n\n### Timeframe 1 ({{ $json.indicators[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.indicators[0].rsi.value }}\n- Signal: {{ $json.indicators[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.indicators[0].macd.macd_line }}\n- Signal Line: {{ $json.indicators[0].macd.signal_line }}\n- Histogram: {{ $json.indicators[0].macd.histogram }}\n- Signal Type: {{ $json.indicators[0].macd.signal_type }}\n- Crossover: {{ $json.indicators[0].macd.crossover }}\n\n** EMA:**\n- EMA 09: {{ $json.indicators[0].ema.ema_9 }}\n- EMA 21: {{ $json.indicators[0].ema.ema_21 }}\n- Signal: {{ $json.indicators[0].ema.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.indicators[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.indicators[1].rsi.value }}\n- Signal: {{ $json.indicators[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.indicators[1].macd.macd_line }}\n- Signal Line: {{ $json.indicators[1].macd.signal_line }}\n- Histogram: {{ $json.indicators[1].macd.histogram }}\n- Signal Type: {{ $json.indicators[1].macd.signal_type }}\n- Crossover: {{ $json.indicators[1].macd.crossover }}\n\n** EMA:**\n- EMA 12: {{ $json.indicators[1].ema.ema_12 }}\n- EMA 26: {{ $json.indicators[1].ema.ema_26 }}\n- Signal: {{ $json.indicators[1].ema.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.indicators[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.indicators[2].rsi.value }}\n- Signal: {{ $json.indicators[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.indicators[2].macd.macd_line }}\n- Signal Line: {{ $json.indicators[2].macd.signal_line }}\n- Histogram: {{ $json.indicators[2].macd.histogram }}\n- Signal Type: {{ $json.indicators[2].macd.signal_type }}\n- Crossover: {{ $json.indicators[2].macd.crossover }}\n\n** EMA:**\n- EMA 20: {{ $json.indicators[2].ema.ema_20 }}\n- EMA 50: {{ $json.indicators[2].ema.ema_50 }}\n- Signal: {{ $json.indicators[2].ema.signal }}\n\n---\n\n### Timeframe 4 ({{ $json.indicators[3].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.indicators[3].rsi.value }}\n- Signal: {{ $json.indicators[3].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.indicators[3].macd.macd_line }}\n- Signal Line: {{ $json.indicators[3].macd.signal_line }}\n- Histogram: {{ $json.indicators[3].macd.histogram }}\n- Signal Type: {{ $json.indicators[3].macd.signal_type }}\n- Crossover: {{ $json.indicators[3].macd.crossover }}\n\n** EMA:**\n- EMA 50: {{ $json.indicators[3].ema.ema_50 }}\n- EMA 200: {{ $json.indicators[3].ema.ema_200 }}\n- Signal: {{ $json.indicators[3].ema.signal }}\n\n---\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\nAnalyse for {{ $json.indicators[0].symbol }} at {{ $now.format('yyyy-MM-dd HH:mm')}}\n"
             }
           ]
         },
         "options": {
-          "system": "=You are an expert cryptocurrency day trader with deep expertise in technical analysis, risk management, and multi-timeframe strategy. Analyze the following data for {{ $json.dataIndicators[0].symbol }} and provide actionable trading insights. There are tools available:\n1. Tool to get the news sentiment for {{ $json.dataIndicators[0].symbol }} from the `News Sentiment` tool. \n2. Tool to get the current price in USDT.\n3. Tool to get klines or candle-sticks with interval 1 minute. You can limit how much data that you will fetch.",
+          "system": "=You are an expert cryptocurrency day trader with deep expertise in technical analysis, risk management, and multi-timeframe strategy using RSI, MACD and EMA indicators. Analyze the following data for {{ $json.indicators[0].symbol }} and provide actionable trading insights. There are tools available:\n1. Tool to get the news sentiment for {{ $json.indicators[0].symbol }} from the `News Sentiment` tool. \n2. Tool to get the current price in USDT.\n3. Tool to get klines or candle-sticks with interval 1 minute. You can limit how much data that you will fetch.\n\n**📊 MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**🎯 TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**📈 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**⚠️ RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**💡 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following",
           "temperature": 0.1
         }
       },
       "type": "@n8n/n8n-nodes-langchain.ollama",
       "typeVersion": 1,
       "position": [
-        1184,
-        384
+        -384,
+        1056
       ],
       "id": "4d16c57a-e0b9-445c-8cbd-69c435fa17f6",
       "name": "Message a model",
@@ -197,12 +167,14 @@
         "operation": "sendDocument",
         "chatId": "={{ $('Translate to Symbol').item.json.chatId }}",
         "binaryData": true,
-        "additionalFields": {}
+        "additionalFields": {
+          "fileName": "={{ $('Translate to Symbol').item.json.symbol }}-analyse.md"
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1808,
+        2000,
         480
       ],
       "id": "4fd04aed-20ea-4165-a60f-527993e68fda",
@@ -220,14 +192,16 @@
     {
       "parameters": {
         "chatId": "={{ $('Translate to Symbol').item.json.chatId }}",
-        "text": "Calculate Indicators finished",
-        "additionalFields": {}
+        "text": "=Calculate Indicators finished for symbol {{ $('Translate to Symbol').item.json.symbol }}",
+        "additionalFields": {
+          "parse_mode": "MarkdownV2"
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1248,
-        80
+        1376,
+        176
       ],
       "id": "49e9969b-cb8d-42e4-b931-e312670af235",
       "name": "Send a text message",
@@ -242,7 +216,7 @@
     },
     {
       "parameters": {
-        "toolDescription": "Fetch candlestick/kline data from Binance Spot or USD-M Futures API.\nExample Input: BTCUSDT, ETHUSDT, etc.",
+        "toolDescription": "Fetch candlestick/kline data from Binance Spot or USD-M Futures API.\n\n---\n\n** Example Input: \n- symbol: BTCUSDT\n- limit: 100\n",
         "apiSource": "direct",
         "marketType": "futures",
         "symbol": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Symbol', ``, 'string') }}",
@@ -252,8 +226,8 @@
       "type": "CUSTOM.binanceKlineTool",
       "typeVersion": 1,
       "position": [
-        1248,
-        608
+        1312,
+        704
       ],
       "id": "a618636b-3e5b-45b9-9406-9c781dc419f4",
       "name": "Klines Tool",
@@ -266,7 +240,7 @@
     },
     {
       "parameters": {
-        "toolDescription": "Fetch current price of a cryto symbol (example: BTCUSDT, ETHUSDT, etc.). \n\nExample Output with input ETHUSDT:\n\n [\n  {\n    \"symbol\": \"ETHUSDT\",\n    \"marketType\": \"futures\",\n    \"dataType\": \"markPriceKline\",\n    \"interval\": \"1m\",\n    \"limit\": 1,\n    \"currentPrice\": \"1980.80000000\",\n    \"klineCount\": 1,\n    \"klines\": [\n      {\n        \"openTime\": 1771413360000,\n        \"open\": \"1981.56000000\",\n        \"high\": \"1981.95000000\",\n        \"low\": \"1980.44558140\",\n        \"close\": \"1980.80000000\",\n        \"volume\": \"0\",\n        \"closeTime\": 1771413419999,\n        \"quoteVolume\": \"0\",\n        \"trades\": 32,\n        \"takerBuyBaseVolume\": \"0\",\n        \"takerBuyQuoteVolume\": \"0\"\n      }\n    ],\n    \"fetchedAt\": \"2026-02-18T11:16:41.224Z\"\n  }\n]\n\nAnd the curren price is 1980.80000000",
+        "toolDescription": "Fetch current price of a cryto symbol (example: BTCUSDT, ETHUSDT, etc.). \n\n---\n\n** Example Input: \n- symbol: ETHUSDT\n\n---\n\n** Example Output with input ETHUSDT:\n\n [\n  {\n    \"symbol\": \"ETHUSDT\",\n    \"marketType\": \"futures\",\n    \"dataType\": \"markPriceKline\",\n    \"interval\": \"1m\",\n    \"limit\": 1,\n    \"currentPrice\": \"1980.80000000\",\n    \"klineCount\": 1,\n    \"klines\": [\n      {\n        \"openTime\": 1771413360000,\n        \"open\": \"1981.56000000\",\n        \"high\": \"1981.95000000\",\n        \"low\": \"1980.44558140\",\n        \"close\": \"1980.80000000\",\n        \"volume\": \"0\",\n        \"closeTime\": 1771413419999,\n        \"quoteVolume\": \"0\",\n        \"trades\": 32,\n        \"takerBuyBaseVolume\": \"0\",\n        \"takerBuyQuoteVolume\": \"0\"\n      }\n    ],\n    \"fetchedAt\": \"2026-02-18T11:16:41.224Z\"\n  }\n]\n\nAnd the current price is 1980.80000000",
         "apiSource": "direct",
         "marketType": "futures",
         "symbol": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Symbol', ``, 'string') }}",
@@ -276,8 +250,8 @@
       "type": "CUSTOM.binanceKlineTool",
       "typeVersion": 1,
       "position": [
-        1376,
-        608
+        1440,
+        704
       ],
       "id": "fda781e8-3020-4071-9100-8100374efd22",
       "name": "Current Price",
@@ -290,15 +264,15 @@
     },
     {
       "parameters": {
-        "jsCode": "const order = ['15m', '1h', '4h'];\nconst items = $input.all();\nitems.sort((a, b) => order.indexOf(a.json.interval) - order.indexOf(b.json.interval));\nreturn items;"
+        "jsCode": "const order = ['1m','15m', '1h', '4h'];\nconst items = $input.all();\nitems.sort((a, b) => order.indexOf(a.json.interval) - order.indexOf(b.json.interval));\nreturn items;"
       },
       "id": "dcf56e24-f8f5-40f1-8444-aabe1a15a616",
       "name": "Sort by Interval",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        672,
-        224
+        736,
+        320
       ]
     },
     {
@@ -323,11 +297,12 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        224,
+        288,
         32
       ],
       "id": "9e509ebf-7393-46ec-900c-633b5f1f0636",
-      "name": "Analyze 15m"
+      "name": "Analyze 15m",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -351,7 +326,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        224,
+        288,
         224
       ],
       "id": "3f825469-ffb0-4880-8f4c-49096ab88bd8",
@@ -380,7 +355,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        224,
+        288,
         416
       ],
       "id": "0f537c59-e6ae-40f6-912b-bb02a3d653f2",
@@ -394,7 +369,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        0,
+        64,
         32
       ],
       "id": "d3e99083-13da-4458-b0fd-45e3795e6a04",
@@ -407,7 +382,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        0,
+        64,
         416
       ],
       "id": "fc804b6f-f491-47ad-9d28-e57564a9141e",
@@ -420,34 +395,128 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        0,
+        64,
         224
       ],
       "id": "ae42e6ca-3416-47b2-beb9-45b065b2956f",
       "name": "Interval 1h"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  coin: $input.first().json.coin,\n  symbol: $input.first().json.symbol,\n  limit: $input.first().json.limit,\n  interval: $input.first().json.intervals[3]\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        608
+      ],
+      "id": "4c5bc787-afb9-47fb-a9d7-fd7d737bd065",
+      "name": "Interval 1m"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1X1ODf4tA0Vi8SsT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1X1ODf4tA0Vi8SsT",
+          "cachedResultName": "Sub-workflow: Binance Kline Analyze"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        608
+      ],
+      "id": "1b940233-e48c-4d19-897b-add759f68d0c",
+      "name": "Analyze 1m",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "indicators",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        960,
+        320
+      ],
+      "id": "5a465049-c765-4012-b597-3a043aa23d47",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert cryptocurrency day trader with deep expertise in technical analysis, risk management, and multi-timeframe strategy using RSI, MACD and EMA indicators. Analyze the following data for {{ $json.indicators[0].symbol }} and provide actionable trading insights. There are tools available:\n1. Tool to get the news sentiment for {{ $json.indicators[0].symbol }} from the `News Sentiment` tool. \n2. Tool to get the current price in USDT.\n3. Tool to get klines or candle-sticks with interval 1 minute. You can limit how much data that you will fetch.\n\n**📊 MARKET STRUCTURE:** [Bullish/Bearish/Neutral/Mixed with confidence %]\n\n**🎯 TRADING RECOMMENDATION:** \n- Action: [WAIT / LONG / SHORT / CLOSE POSITION]\n- Entry Zone: [Price range or \"Wait for trigger\"]\n- Stop Loss: [Price or percentage]\n- Target 1 (2:1 R:R): [Price]\n- Target 2 (3:1 R:R): [Price]\n\n**📈 SIGNAL BREAKDOWN:**\n- Confluence Score: [Strong/Moderate/Weak]\n- Key Bullish Factors: [List]\n- Key Bearish Factors: [List]\n- Primary Risk: [Main concern]\n\n**⚠️ RISK WARNING:**\n[Specific conditions that could invalidate the setup or increase risk]\n\n**💡 CONTEXT NOTES:**\n[Crypto-specific considerations: volatility, 24/7 market, news sensitivity, volume confirmation needs]\n\n---\n\n## IMPORTANT GUIDELINES\n\n1. **No Trade is Better Than a Bad Trade:** If signals conflict or confluence is weak, recommend WAITING\n2. **Timeframe Hierarchy:** Respect the trend of the higher timeframe; use lower timeframes only for entry timing\n3. **Crypto Volatility:** Account for 24/7 trading, sudden volatility spikes, and news-driven moves\n4. **Confirmation Required:** Never recommend a trade based on a single indicator; require at least 2-3 confirming factors\n5. **Dynamic Adaptation:** If RSI is extremely overbought (>75) or oversold (<25), prioritize mean reversion over trend following",
+        "options": {
+          "systemMessage": "=## INPUT DATA\n**Symbol:** {{ $json.indicators[0].symbol }}\n\n---\n\n### Timeframe 1 ({{ $json.indicators[0].interval }}) - [Short-term/Entry Timing]\n** RSI:**\n- Value: {{ $json.indicators[0].rsi.value }}\n- Signal: {{ $json.indicators[0].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.indicators[0].macd.macd_line }}\n- Signal Line: {{ $json.indicators[0].macd.signal_line }}\n- Histogram: {{ $json.indicators[0].macd.histogram }}\n- Signal Type: {{ $json.indicators[0].macd.signal_type }}\n- Crossover: {{ $json.indicators[0].macd.crossover }}\n\n** EMA:**\n- EMA 09: {{ $json.indicators[0].ema.ema_9 }}\n- EMA 21: {{ $json.indicators[0].ema.ema_21 }}\n- Signal: {{ $json.indicators[0].ema.signal }}\n\n---\n\n### Timeframe 2 ({{ $json.indicators[1].interval }}) - [Medium-term/Trend Direction]\n** RSI:**\n- Value: {{ $json.indicators[1].rsi.value }}\n- Signal: {{ $json.indicators[1].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.indicators[1].macd.macd_line }}\n- Signal Line: {{ $json.indicators[1].macd.signal_line }}\n- Histogram: {{ $json.indicators[1].macd.histogram }}\n- Signal Type: {{ $json.indicators[1].macd.signal_type }}\n- Crossover: {{ $json.indicators[1].macd.crossover }}\n\n** EMA:**\n- EMA 12: {{ $json.indicators[1].ema.ema_12 }}\n- EMA 26: {{ $json.indicators[1].ema.ema_26 }}\n- Signal: {{ $json.indicators[1].ema.signal }}\n\n---\n\n### Timeframe 3 ({{ $json.indicators[2].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.indicators[2].rsi.value }}\n- Signal: {{ $json.indicators[2].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.indicators[2].macd.macd_line }}\n- Signal Line: {{ $json.indicators[2].macd.signal_line }}\n- Histogram: {{ $json.indicators[2].macd.histogram }}\n- Signal Type: {{ $json.indicators[2].macd.signal_type }}\n- Crossover: {{ $json.indicators[2].macd.crossover }}\n\n** EMA:**\n- EMA 20: {{ $json.indicators[2].ema.ema_20 }}\n- EMA 50: {{ $json.indicators[2].ema.ema_50 }}\n- Signal: {{ $json.indicators[2].ema.signal }}\n\n---\n\n### Timeframe 4 ({{ $json.indicators[3].interval }}) - [Long-term/Market Bias]\n** RSI:**\n- Value: {{ $json.indicators[3].rsi.value }}\n- Signal: {{ $json.indicators[3].rsi.signal }}\n\n** MACD:**\n- Line: {{ $json.indicators[3].macd.macd_line }}\n- Signal Line: {{ $json.indicators[3].macd.signal_line }}\n- Histogram: {{ $json.indicators[3].macd.histogram }}\n- Signal Type: {{ $json.indicators[3].macd.signal_type }}\n- Crossover: {{ $json.indicators[3].macd.crossover }}\n\n** EMA:**\n- EMA 50: {{ $json.indicators[3].ema.ema_50 }}\n- EMA 200: {{ $json.indicators[3].ema.ema_200 }}\n- Signal: {{ $json.indicators[3].ema.signal }}\n\n---\n\n### 5. OUTPUT FORMAT\n\nProvide your analysis in this structure:\n\nAnalyse for {{ $json.indicators[0].symbol }} at {{ $now.format('yyyy-MM-dd HH:mm')}}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1312,
+        480
+      ],
+      "id": "e6f1ee02-bec3-4e27-89bc-28a60e8a7446",
+      "name": "Gemini Trader"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        704
+      ],
+      "id": "eedb37af-827c-4b94-9f28-c5f918aedcc8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yQBvEEzQX2TcmaLh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Given the list of articles about crypto coin like BTC, ETH, SOL, etc. The articles are with their sentiment.\n",
+        "url": "=http://api:8000/api/news/sentiment/{{ $('Translate to Symbol').item.json.coin }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1568,
+        704
+      ],
+      "id": "b6e26ade-6678-4072-8417-43306e41a4a5",
+      "name": "News Sentiment"
     }
   ],
   "pinData": {},
   "connections": {
-    "News Sentiment": {
-      "ai_tool": [
-        [
-          {
-            "node": "Message a model",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Markdown Binary": {
       "main": [
         [
-          {
-            "node": "Write to docs/analyse",
-            "type": "main",
-            "index": 0
-          },
           {
             "node": "Send a document",
             "type": "main",
@@ -489,6 +558,11 @@
             "node": "Interval 4h",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Interval 1m",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -498,22 +572,6 @@
         [
           {
             "node": "Sort by Interval",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Send a text message",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Message a model",
             "type": "main",
             "index": 0
           }
@@ -533,20 +591,14 @@
     },
     "Message a model": {
       "main": [
-        [
-          {
-            "node": "Markdown Binary",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Klines Tool": {
       "ai_tool": [
         [
           {
-            "node": "Message a model",
+            "node": "Gemini Trader",
             "type": "ai_tool",
             "index": 0
           }
@@ -557,7 +609,7 @@
       "ai_tool": [
         [
           {
-            "node": "Message a model",
+            "node": "Gemini Trader",
             "type": "ai_tool",
             "index": 0
           }
@@ -640,37 +692,93 @@
           }
         ]
       ]
+    },
+    "Interval 1m": {
+      "main": [
+        [
+          {
+            "node": "Analyze 1m",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze 1m": {
+      "main": [
+        [
+          {
+            "node": "Merge Indicators",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gemini Trader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gemini Trader",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Trader": {
+      "main": [
+        [
+          {
+            "node": "Markdown Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News Sentiment": {
+      "ai_tool": [
+        [
+          {
+            "node": "Gemini Trader",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Etc/UTC",
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "bd4af902-c0eb-44ab-9210-9dcf01e46f3a",
+  "versionId": "a1eb85ce-e805-4694-9308-7e70a1223175",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "c5132ea42f91439834dd110c2ce2f5a137182faaae992ba119ae691d81f22581"
   },
   "id": "U9TjbJahvt3E4XQn",
-  "tags": [
-    {
-      "updatedAt": "2025-12-23T03:07:33.206Z",
-      "createdAt": "2025-12-23T03:07:33.206Z",
-      "id": "060QEUlc6EGuPlso",
-      "name": "fetch"
-    },
-    {
-      "updatedAt": "2025-12-12T09:00:55.594Z",
-      "createdAt": "2025-12-12T09:00:55.594Z",
-      "id": "4ykO1QsLPSkpVsfq",
-      "name": "crypto"
-    },
-    {
-      "updatedAt": "2025-12-12T09:00:43.685Z",
-      "createdAt": "2025-12-12T09:00:43.685Z",
-      "id": "A7qGk2uBcD5zKvhs",
-      "name": "analysis"
-    }
-  ]
+  "tags": []
 }

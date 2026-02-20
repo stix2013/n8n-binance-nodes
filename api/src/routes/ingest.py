@@ -7,6 +7,7 @@ try:
         RSIResult,
         MACDResult,
         SMAResult,
+        EMAResult,
     )
     from ..utils.indicators import TechnicalIndicators
 except ImportError:
@@ -16,6 +17,7 @@ except ImportError:
         RSIResult,
         MACDResult,
         SMAResult,
+        EMAResult,
     )
     from utils.indicators import TechnicalIndicators
 from datetime import datetime
@@ -31,6 +33,16 @@ INTERVAL_SMA_WINDOWS = {
     "4h": [20, 50, 200],
 }
 
+# EMA window configuration based on interval (matches indicators route)
+INTERVAL_EMA_WINDOWS = {
+    "1m": [9, 21],
+    "5m": [5, 8],
+    "15m": [12, 26],
+    "1h": [20, 50],
+    "4h": [50, 200],
+    "1d": [50, 200],
+}
+
 
 def get_sma_windows(interval: str) -> list[int]:
     """
@@ -43,6 +55,21 @@ def get_sma_windows(interval: str) -> list[int]:
         List of SMA windows to calculate
     """
     return INTERVAL_SMA_WINDOWS.get(
+        interval, [20, 50]
+    )  # Default to [20, 50] if interval not found
+
+
+def get_ema_windows(interval: str) -> list[int]:
+    """
+    Get appropriate EMA windows based on the candle interval.
+
+    Args:
+        interval: Candle interval (e.g., "1m", "15m", "1h", "4h")
+
+    Returns:
+        List of EMA windows to calculate
+    """
+    return INTERVAL_EMA_WINDOWS.get(
         interval, [20, 50]
     )  # Default to [20, 50] if interval not found
 
@@ -90,7 +117,12 @@ async def analyze_n8n_data(request: IngestRequest):
         sma_values = TechnicalIndicators.calculate_sma(prices, sma_windows)
         sma_signal = TechnicalIndicators.generate_sma_signal(current_price, sma_values)
 
-        # Generate Recommendation (considering RSI, MACD, and SMA)
+        # Calculate EMA based on interval
+        ema_windows = get_ema_windows(request.data.interval)
+        ema_values = TechnicalIndicators.calculate_emas(prices, ema_windows)
+        ema_signal = TechnicalIndicators.generate_ema_signal(current_price, ema_values)
+
+        # Generate Recommendation (considering RSI, MACD, SMA, and EMA)
         recommendation = TechnicalIndicators.generate_overall_recommendation(
             rsi_signal, macd_signal_type, macd_crossover
         )
@@ -116,6 +148,18 @@ async def analyze_n8n_data(request: IngestRequest):
                 sma_50=sma_values.get(50),
                 sma_200=sma_values.get(200),
                 signal=sma_signal,
+            ),
+            ema=EMAResult(
+                ema_5=ema_values.get(5),
+                ema_8=ema_values.get(8),
+                ema_9=ema_values.get(9),
+                ema_12=ema_values.get(12),
+                ema_20=ema_values.get(20),
+                ema_21=ema_values.get(21),
+                ema_26=ema_values.get(26),
+                ema_50=ema_values.get(50),
+                ema_200=ema_values.get(200),
+                signal=ema_signal,
             ),
             recommendation=recommendation,
         )
