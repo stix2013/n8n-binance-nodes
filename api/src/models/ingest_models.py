@@ -96,6 +96,6 @@ class IngestResponse(BaseModel):
     analysis_timestamp: datetime
     rsi: RSIResult
     macd: MACDResult
-    sma: SMAResult
-    ema: EMAResult
+    sma: Optional[SMAResult] = None
+    ema: Optional[EMAResult] = None
     recommendation: str
