@@ -1,4 +1,4 @@
-N8N_VERSION="2.7.5"
+N8N_VERSION="2.8.3"
 # N8N
 N8N_HOST=localhost
 N8N_PORT=5678
@@ -17,6 +17,8 @@ N8N_API_URL="https://your-zrok-url.share.zrok.io"
 
 # N8N Binance Node Config
 N8N_BINANCE_API_URL="http://api:8000"
+N8N_BINANCE_API_SPOT_PATH="http://api:8000"
+N8N_BINANCE_API_FUTURE_PATH="http://api:8000"
 
 # N8N Runners
 N8N_RUNNERS_MODE=external
@@ -34,16 +36,14 @@ TZ="Asia/Jakarta"
 DB_SQLITE_POOL_SIZE=2
 
 # API
-API_VERSION=1.5.0
+API_VERSION=1.6.0
+API_PYTHON_VERSION=3.14
 API_HOST=0.0.0.0
 API_PORT=8000
 API_HOST_PORT=8000
 API_PROTOCOL=http
 API_LOG_LEVEL=INFO
 ENVIRONMENT=development
-
-# API Binance Config (Optional override for testing)
-# BINANCE_BASE_URL="https://api.binance.com"
 
 # Postgres
 POSTGRES_DB=n8n
@@ -56,6 +56,10 @@ WEBHOOK_URL="https://your-zrok-url.share.zrok.io"
 # Zrok Configuration
 ZROK_RESERVED_NAME="your-reserved-name"
 ZROK_PUBLIC_URL="https://your-zrok-url.share.zrok.io"
+
+# RabbitMQ
+RABBITMQ_USER=admin
+RABBITMQ_PASSWORD=your_rabbitmq_password
 
 # Binance API Credentials
 BINANCE_API_KEY="your_binance_api_key"

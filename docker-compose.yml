@@ -29,7 +29,11 @@ services:
       # File access
       - N8N_RESTRICT_FILE_ACCESS_TO=/home/node/analyse
       # Runners (N8N_RUNNERS_ENABLED removed - no longer needed)
-      - N8N_RUNNERS_MODE=${N8N_RUNNERS_MODE}
+      - N8N_RUNNERS_MODE=${N8N_RUNNERS_MODE:-queue}
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BROKER_TYPE=rabbitmq
+      - QUEUE_BROKER_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-rabbitmq}@rabbitmq:5672/
+      - QUEUE_PUBLISHER_PORT=5678
       - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=${N8N_RUNNERS_BROKER_LISTEN_ADDRESS}
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
       - N8N_NATIVE_PYTHON_RUNNER=${N8N_NATIVE_PYTHON_RUNNER}
@@ -99,7 +103,9 @@ services:
       - "developers.binance.com:18.172.242.31"
       - "fapi.binance.com:13.35.24.46"
     environment:
-      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n-main:5679
+      - N8N_RUNNERS_TASK_BROKER_URI=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-rabbitmq}@rabbitmq:5672/
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BROKER_TYPE=rabbitmq
       - N8N_RESTRICT_FILE_ACCESS_TO=/home/node/analyse
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
       - N8N_RUNNERS_LAUNCHER_LOG_LEVEL=${N8N_RUNNERS_LAUNCHER_LOG_LEVEL}
@@ -179,7 +185,31 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    container_name: rabbitmq
+    networks:
+      - n8n_network
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-rabbitmq}
+      - RABBITMQ_DEFAULT_VHOST=/
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 volumes:
+  rabbitmq_data:
+    external: true
+    name: rabbitmq_data
   n8n_data:
     external: true
     name: n8n_data
