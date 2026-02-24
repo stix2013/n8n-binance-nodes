@@ -57,6 +57,10 @@ WEBHOOK_URL="https://your-zrok-url.share.zrok.io"
 ZROK_RESERVED_NAME="your-reserved-name"
 ZROK_PUBLIC_URL="https://your-zrok-url.share.zrok.io"
 
+# RabbitMQ
+RABBITMQ_USER=admin
+RABBITMQ_PASSWORD=your_rabbitmq_password
+
 # Binance API Credentials
 BINANCE_API_KEY="your_binance_api_key"
 BINANCE_SECRET_KEY="your_binance_api_secret"
