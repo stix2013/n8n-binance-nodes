@@ -30,7 +30,7 @@ async function main() {
   // 3. Build n8n-runners
   await buildImage(
     `n8nio-runners:${n8nVersion}-local`,
-    "dockers/Dockerfile",
+    "dockers/Dockerfile.runners",
     "./dockers",
     { N8N_VERSION: n8nVersion }
   );

@@ -1,26 +1,32 @@
-ARG N8N_VERSION=2.7.5-amd64
+ARG N8N_VERSION=2.8.3
 FROM n8nio/n8n:${N8N_VERSION}
 
 USER root
 
-ENV NODE_NO_WARNINGS=1
+# ENV NODE_NO_WARNINGS=1
 
-WORKDIR /tmp/nodes/@stix
+WORKDIR /home/node
 
-COPY nodes/@stix/n8n-nodes-binance-kline/dist /tmp/nodes/@stix/n8n-nodes-binance-kline/dist
-COPY nodes/@stix/n8n-nodes-binance-kline/package.json /tmp/nodes/@stix/n8n-nodes-binance-kline/package.json
+RUN mkdir -p /home/node/custom-extensions/@stix/n8n-nodes-binance-kline
+COPY nodes/@stix/n8n-nodes-binance-kline/dist /home/node/custom-extensions/@stix/n8n-nodes-binance-kline/dist
+COPY nodes/@stix/n8n-nodes-binance-kline/package*.json /home/node/custom-extensions/@stix/n8n-nodes-binance-kline/package.json
 
-RUN mkdir -p /home/node/custom-extensions/@stix/n8n-nodes-binance-kline && \
-    cp -r /tmp/nodes/@stix/n8n-nodes-binance-kline /home/node/custom-extensions/@stix/ && \
-    cd /home/node/custom-extensions/@stix/n8n-nodes-binance-kline && npm install --omit=dev --no-audit --no-fund
+# RUN mkdir -p /home/node/custom-extensions/@stix/n8n-nodes-binance-kline
+# RUN cp -r /tmp/nodes/@stix/n8n-nodes-binance-kline/* /home/node/custom-extensions/@stix/n8n-nodes-binance-kline/
+RUN cd /home/node/custom-extensions/@stix/n8n-nodes-binance-kline && \
+    npm install --omit=dev --no-fund --legacy-peer-deps
 
-COPY nodes/@stix/n8n-nodes-markdown-saver/dist /tmp/nodes/@stix/n8n-nodes-markdown-saver/dist
-COPY nodes/@stix/n8n-nodes-markdown-saver/package.json /tmp/nodes/@stix/n8n-nodes-markdown-saver/package.json
+RUN mkdir -p /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver
+COPY nodes/@stix/n8n-nodes-markdown-saver/package.json /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver/package.json
+COPY nodes/@stix/n8n-nodes-markdown-saver/dist /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver/dist
 
-RUN mkdir -p /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver && \
-    cp -r /tmp/nodes/@stix/n8n-nodes-markdown-saver /home/node/custom-extensions/@stix/ && \
-    cd /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver && npm install --omit=dev --no-audit --no-fund && \
-    rm -rf /tmp/nodes
+# RUN mkdir -p /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver
+# RUN cp -r /tmp/nodes/@stix/n8n-nodes-markdown-saver /home/node/custom-extensions/@stix/
+RUN cd /home/node/custom-extensions/@stix/n8n-nodes-markdown-saver && \
+    npm install --omit=dev --no-fund --legacy-peer-deps
+
+# emptying /tmp/nodes
+# RUN rm -rf /tmp/nodes
 
 RUN chown -R node:node /home/node
 
