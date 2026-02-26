@@ -35,7 +35,7 @@ export class BinanceTicker implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Binance Ticker',
 		name: 'binanceTicker',
-		icon: { light: 'file:icons/binance-ticker.svg', dark: 'file:icons/binance-ticker.dark.svg' },
+		icon: { light: 'file:binance-ticker.svg', dark: 'file:binance-ticker.dark.svg' },
 		group: ['input'],
 		version: 1,
 		subtitle: '={{$parameter["marketType"] === "spot" ? "Spot" : $parameter["marketType"] === "futures_usd_m" ? "USD-M Futures" : "COIN-M Futures"}}',
