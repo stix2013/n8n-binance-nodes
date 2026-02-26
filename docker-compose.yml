@@ -37,31 +37,29 @@ services:
       - N8N_NATIVE_PYTHON_RUNNER=true
       - N8N_MIGRATE_FS_STORAGE_PATH=true
       - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
-
+      # DB 
+      - DB_TYPE=${N8N_DB_TYPE:-postgresdb}
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_NON_ROOT_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_NON_ROOT_PASSWORD}
+      
       # Queue Mode
+      # - EXECUTIONS_MODE=regular
+      # - EXECUTIONS_PROCESS=main
       - EXECUTIONS_MODE=queue
-      - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
+      - EXECUTIONS_PROCESS=worker
+      # - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
       - QUEUE_BULL_REDIS_HOST=redis
       - QUEUE_BULL_REDIS_PORT=6379
-
-      # RabbitMQ (for event bus)
-      - N8N_EVENT_BUS_RABBITMQ_HOST=rabbitmq
-      - N8N_EVENT_BUS_RABBITMQ_PORT=5672
-      - N8N_EVENT_BUS_RABBITMQ_USER=${RABBITMQ_USER:-guest}
-      - N8N_EVENT_BUS_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - QUEUE_HEALTH_CHECK_ACTIVE=true
 
     # Persist n8n data (workflows, credentials, etc.)
     volumes:
       - n8n_storage:/home/node/.n8n
       - ./docs/analyse:/home/node/analyse:rw
       - ./nodes/@stix:/home/node/.n8n/custom:rw
-    # extra_hosts:
-    #   - "api.binance.com:108.156.104.23"
-    #   - "fapi.binance.com:13.35.24.46"
-    # ulimits:
-    #   nofile:
-    #     soft: 20000
-    #     hard: 40000
     healthcheck:
       test:
         [
@@ -74,6 +72,16 @@ services:
       timeout: 5s
       retries: 10
       start_period: 3600s
+    depends_on:
+      # task-runners:
+      #   condition: service_healthy
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
   # n8n Tasks Runners
   task-runners:
     image: n8nio-runners:${N8N_VERSION:-2.7.5}-local
@@ -109,34 +117,14 @@ services:
     volumes:
       - ./config/n8n-task-runners.json:/etc/n8n-task-runners.json
       - ./docs/analyse:/home/node/analyse:rw
-    depends_on:
-      - n8n
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://n8n-main:5679/healthz || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 90s
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    container_name: postgres-db
-    ports:
-      - 5432:5432
-    networks:
-      - n8n_network
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-n8n}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+
+  # API Python
   api:
     image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.4.0}
     build:
@@ -164,6 +152,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -172,20 +163,33 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
-  rabbitmq:
-    image: rabbitmq:3.13-management
-    container_name: rabbitmq
+
+  # Postgres
+  postgres:
+    image: postgres:16-alpine
     restart: unless-stopped
+    container_name: postgres-db
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - 5432:5432
     networks:
       - n8n_network
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
     environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+      - POSTGRES_DB=${POSTGRES_DB:-n8n}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_NON_ROOT_USER=${POSTGRES_NON_ROOT_USER:-n8n}
+      - POSTGRES_NON_ROOT_PASSWORD=${POSTGRES_NON_ROOT_PASSWORD:-postgres}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # Redis for QUEUE
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -194,6 +198,13 @@ services:
       - n8n_network
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+# Volumes
 volumes:
   n8n_data:
     name: n8n_data
