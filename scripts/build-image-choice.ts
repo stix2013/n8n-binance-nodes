@@ -85,7 +85,7 @@ async function main() {
       execSync("cd nodes/@stix/n8n-nodes-binance-kline && bun install && bun run build", { stdio: "inherit" });
       execSync("cd nodes/@stix/n8n-nodes-markdown-saver && bun install && bun run build", { stdio: "inherit" });
       await buildImage(`n8n-custom:${n8nVersion}`, "dockers/Dockerfile.n8n", ".", { N8N_VERSION: n8nVersion });
-      await buildImage(`n8nio-runners:${n8nVersion}-local`, "dockers/Dockerfile", "./dockers", { N8N_VERSION: n8nVersion });
+      await buildImage(`n8nio-runners:${n8nVersion}-local`, "dockers/Dockerfile.runners", "./dockers", { N8N_VERSION: n8nVersion });
       await buildImage(`api-python${apiPythonVersion}:${apiVersion}`, "dockers/Dockerfile.python", ".", { API_VERSION: apiVersion });
       break;
     case "n8n":
@@ -95,7 +95,7 @@ async function main() {
       await buildImage(`n8n-custom:${n8nVersion}`, "dockers/Dockerfile.n8n", ".", { N8N_VERSION: n8nVersion });
       break;
     case "runners":
-      await buildImage(`n8nio-runners:${n8nVersion}-local`, "dockers/Dockerfile", "./dockers", { N8N_VERSION: n8nVersion });
+      await buildImage(`n8nio-runners:${n8nVersion}-local`, "dockers/Dockerfile.runners", "./dockers", { N8N_VERSION: n8nVersion });
       break;
     case "api":
       await buildImage(`api-python${apiPythonVersion}:${apiVersion}`, "dockers/Dockerfile.python", ".", { API_VERSION: apiVersion });

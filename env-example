@@ -1,4 +1,4 @@
-N8N_VERSION="2.8.3"
+N8N_VERSION="2.9.2"
 # N8N
 N8N_HOST=localhost
 N8N_PORT=5678
@@ -14,6 +14,10 @@ N8N_DEV_RELOAD=true
 N8N_COMMUNITY_PACKAGES_ENABLED=true
 N8N_API_KEY="your_n8n_api_key"
 N8N_API_URL="https://your-zrok-url.share.zrok.io"
+
+# N8N Deprecation Fixes
+N8N_MIGRATE_FS_STORAGE_PATH=true
+OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
 
 # N8N Binance Node Config
 N8N_BINANCE_API_URL="http://api:8000"
