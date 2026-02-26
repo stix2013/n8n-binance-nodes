@@ -1,0 +1,57 @@
+{
+    "name": "@stix/n8n-nodes-binance-ticker",
+    "version": "1.0.0",
+    "description": "Fetch current Binance crypto prices for Spot and Futures markets",
+    "license": "MIT",
+    "homepage": "",
+    "main": "dist/nodes/BinanceTicker/BinanceTicker.node.js",
+    "keywords": [
+        "n8n-community-node-package",
+        "binance",
+        "ticker",
+        "price",
+        "crypto"
+    ],
+    "author": {
+        "name": "Stevan H. Moeladi",
+        "email": "stevan.moeladi@gmail.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/stix2013/n8n-binance-nodes.git"
+    },
+    "scripts": {
+        "build": "n8n-node build",
+        "build:watch": "tsc --watch",
+        "dev": "n8n-node dev",
+        "lint": "n8n-node lint",
+        "lint:fix": "n8n-node lint --fix",
+        "release": "n8n-node release",
+        "prepublishOnly": "n8n-node prerelease"
+    },
+    "files": [
+        "dist"
+    ],
+    "n8n": {
+        "n8nNodesApiVersion": 1,
+        "strict": true,
+        "credentials": [
+            "dist/credentials/BinanceTickerApi.credentials.js"
+        ],
+        "nodes": [
+            "dist/nodes/BinanceTicker/BinanceTicker.node.js"
+        ]
+    },
+    "devDependencies": {
+        "@n8n/node-cli": "^0.21.0",
+        "@types/bun": "^1.3.9",
+        "@types/node": "^22.19.11",
+        "eslint": "9.32.0",
+        "prettier": "3.6.2",
+        "release-it": "^19.2.4",
+        "typescript": "5.9.2"
+    },
+    "peerDependencies": {
+        "n8n-workflow": "^2.10.0"
+    }
+}
