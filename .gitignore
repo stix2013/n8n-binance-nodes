@@ -14,3 +14,4 @@ docs/analyse
 # custom nodes
 nodes/**/dist
 worktrees/
+.worktrees/
