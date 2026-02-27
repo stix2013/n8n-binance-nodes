@@ -100,15 +100,18 @@ python scripts/build_analyse_f.py  # Generate multi-agent version F
 - [Integration Testing Architecture](docs/problems/2026-02-04-integration-testing-architecture.md)
 - [n8n File Write Permissions](docs/problems/2026-02-13-n8n-file-write-permissions.md)
 - [Binance URL Option Build Issue](docs/problems/2026-02-17-binance-url-option.md)
+- [n8n Behind Zrok Reverse Proxy](docs/problems/2026-02-27-n8n-zrok-proxy.md)
 
 ## Lessons Learned
 
 ### External Task Runners Configuration
+- **Simplified Architecture**: Use external runners without queue mode (no n8n-worker/redis)
 - **Runners Mode**: Use `N8N_RUNNERS_MODE=external` for separate task-runners container
 - **Broker Bind Address**: Must bind to `0.0.0.0` (not `127.0.0.1`) for external runners to connect - use `N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0`
 - **Dockerfile Naming**: Use `Dockerfile.runners` in `/dockers/` for clarity
 - **Build Context**: Task-runners build context must be `.` (project root), not `./dockers`
+- **Healthcheck Port**: Task-runners healthcheck uses port 5680 (not 5679)
 
 ### Deprecation Warnings Fix
 - Add `N8N_MIGRATE_FS_STORAGE_PATH=true` for binaryData → storage migration
-- Add `OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true` for scaling mode
+- **Do NOT add**: `OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true` - only needed for queue mode

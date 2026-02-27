@@ -21,7 +21,6 @@ N8N_CORS_ALLOW_ORIGINS="https://${ZROK_DOMAIN},http://localhost:5678"
 
 # N8N Deprecation Fixes
 N8N_MIGRATE_FS_STORAGE_PATH=true
-OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
 
 # N8N Binance Node Config
 N8N_BINANCE_API_URL="http://api:8000"
