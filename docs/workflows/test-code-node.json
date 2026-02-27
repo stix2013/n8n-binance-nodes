@@ -1,0 +1,55 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3104a4c0-d042-46f5-a3e6-d8f404ad5e0a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ok: true}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "29b1da4e-c728-425c-a125-2f23b7b2f33f",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "dcfdb011-533e-4bfc-85fc-f7a76488b066",
+  "meta": {
+    "instanceId": "5f2292d3daa2a56161826381ea5f0848169d29da34cdd4a16bfd17664e4cba50"
+  },
+  "id": "MBlxtYY7xvz68c18",
+  "tags": []
+}
