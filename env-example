@@ -1,6 +1,9 @@
 N8N_VERSION="2.9.2"
+# Zrok Domain (single source of truth)
+ZROK_DOMAIN=your-zrok-url.share.zrok.io
+
 # N8N
-N8N_HOST=localhost
+N8N_HOST=${ZROK_DOMAIN}
 N8N_PORT=5678
 N8N_HOST_PORT=5678
 N8N_PROTOCOL=http
@@ -13,7 +16,8 @@ N8N_GIT_NODE_DISABLE_BARE_REPOS=false
 N8N_DEV_RELOAD=true
 N8N_COMMUNITY_PACKAGES_ENABLED=true
 N8N_API_KEY="your_n8n_api_key"
-N8N_API_URL="https://your-zrok-url.share.zrok.io"
+N8N_API_URL="https://${ZROK_DOMAIN}"
+N8N_CORS_ALLOW_ORIGINS="https://${ZROK_DOMAIN},http://localhost:5678"
 
 # N8N Deprecation Fixes
 N8N_MIGRATE_FS_STORAGE_PATH=true
@@ -55,11 +59,11 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_postgres_password
 
 # Zrok (for webhooks)
-WEBHOOK_URL="https://your-zrok-url.share.zrok.io"
+WEBHOOK_URL="https://${ZROK_DOMAIN}"
 
 # Zrok Configuration
 ZROK_RESERVED_NAME="your-reserved-name"
-ZROK_PUBLIC_URL="https://your-zrok-url.share.zrok.io"
+ZROK_PUBLIC_URL="https://${ZROK_DOMAIN}"
 
 # RabbitMQ
 RABBITMQ_USER=admin
