@@ -79,19 +79,18 @@ python scripts/build_analyse_f.py  # Generate multi-agent version F
 6. **Capture Lessons**: Update `tasks/lessons.md` after any corrections
 
 ### Workflow Orchestration
+- **Worktree First**: ALWAYS create a git worktree before bug fixes or new features (never commit directly to main)
+- **Naming**: Use `fix/<issue>` or `feat/<feature>` branch names
 - **Plan Mode**: Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
 - **Subagent Strategy**: Use subagents for research, exploration, and parallel analysis
 - **Self-Improvement**: After ANY correction from user, update `tasks/lessons.md` with the pattern
 - **Verification**: Never mark complete without proving it works (run tests, check logs)
 - **Elegance**: For non-trivial changes, pause and ask "is there a more elegant way?"
-- **Bug Fixing**: When given a bug report, just fix it - go fix failing tests without being told how
+- **Bug Fixing**: Create worktree first, then fix - go fix failing tests without being told how
 
 ### Branching & Commits
-- **Branching**: Use `git worktree add ../worktrees/<branch>` (NEVER commit directly to main)
 - **Commits**: Prefixes `feat/`, `fix/`, `docs/`, `refactor/`
 - **Verification**: All changes via PR; build, lint, and tests must pass
-
-> **Tip**: Use the `using-git-worktrees` skill for feature work isolation
 
 ## Security
 - **Secrets**: No hardcoded keys. Use `.env` + `pydantic-settings`
