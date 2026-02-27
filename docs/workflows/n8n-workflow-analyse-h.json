@@ -2,6 +2,30 @@
   "name": "Binance Future Analysis",
   "nodes": [
     {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "353e6100-cd22-46bc-99af-ae5151812129",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ok: true}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d73e83ea-3318-4293-b4ed-44528aae09a1",
+      "name": "Code in JavaScript"
+    },
+    {
       "parameters": {
         "chatId": "=5572228344",
         "text": "=🔍 Analysing {{ $json.symbol }}...\n\nTimeframes: {{ $json.intervals.join(', ') }}\nProcessing market data and indicators. Please wait.",
@@ -10,15 +34,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -1600,
-        0
+        -1888,
+        -1280
       ],
-      "id": "12db6422-abc5-477c-ac45-0cff801957ec",
+      "id": "e8502565-4f51-439e-86f3-af7f6fc36ae7",
       "name": "Notify Analysis Start",
       "webhookId": "0c768786-24a4-4aa5-81f3-8d8213ea7895",
       "credentials": {
         "telegramApi": {
-          "id": "o1nn1kI7UNcYtaa0",
+          "id": "4OTRkAKDbO92IV26",
           "name": "Telegram account"
         }
       },
@@ -38,10 +62,10 @@
       "type": "CUSTOM.markdownSaver",
       "typeVersion": 1,
       "position": [
-        528,
-        480
+        256,
+        -800
       ],
-      "id": "3a44b6f7-122b-42a2-b6c4-86ab09ab5cc1",
+      "id": "284011e2-c0bc-4f79-ab5d-828f0f3940ec",
       "name": "Markdown Binary"
     },
     {
@@ -54,10 +78,10 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        816,
-        384
+        544,
+        -896
       ],
-      "id": "b1fe3147-1f61-4342-afb4-a04221ebce18",
+      "id": "dd6e19bd-23f7-437e-9659-53f80c10f2b2",
       "name": "Write to docs/analyse",
       "onError": "continueRegularOutput"
     },
@@ -71,10 +95,10 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -2048,
-        480
+        -2336,
+        -800
       ],
-      "id": "c2f8f122-a4ce-4391-ae85-48a21454add6",
+      "id": "137a7648-0223-4100-8ea2-36175b928845",
       "name": "When chat message received",
       "webhookId": "5d8f37da-b2bf-4901-b817-8ca02788f59f"
     },
@@ -85,10 +109,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1824,
-        384
+        -2112,
+        -896
       ],
-      "id": "3972e3c1-b7d8-4098-bc92-ace40f104067",
+      "id": "a26d184a-e4a1-448b-867b-6da3fc62a2d4",
       "name": "Translate to Symbol"
     },
     {
@@ -98,10 +122,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1152,
-        448
+        -1440,
+        -832
       ],
-      "id": "fe6a0e32-77d8-4c4f-832b-876c24f559d9",
+      "id": "c33588de-bc96-46be-9f54-a02457d6d3dd",
       "name": "Merge Indicators"
     },
     {
@@ -114,16 +138,16 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [
-        -2048,
-        288
+        -2336,
+        -992
       ],
-      "id": "cbc1111b-e276-4137-bb5d-b733460cafa0",
+      "id": "8c6ac3b2-a118-4da3-b1dc-1cf6011da896",
       "name": "My Telegram Channel",
       "webhookId": "1474d42e-9084-48ef-ac45-a4b21168d942",
       "executeOnce": false,
       "credentials": {
         "telegramApi": {
-          "id": "o1nn1kI7UNcYtaa0",
+          "id": "4OTRkAKDbO92IV26",
           "name": "Telegram account"
         }
       }
@@ -151,17 +175,11 @@
       "type": "@n8n/n8n-nodes-langchain.ollama",
       "typeVersion": 1,
       "position": [
-        -2048,
-        1264
+        -2336,
+        -16
       ],
-      "id": "b92eef7f-806f-448a-93d2-8ca27c49d9ee",
-      "name": "Message a model",
-      "credentials": {
-        "ollamaApi": {
-          "id": "SORRheSfthonKufQ",
-          "name": "Ollama Free"
-        }
-      }
+      "id": "7c7e890d-bf87-4e70-bafe-d0ff4511c5d0",
+      "name": "Message a model"
     },
     {
       "parameters": {
@@ -175,16 +193,16 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        816,
-        576
+        544,
+        -704
       ],
-      "id": "a4f7dcc5-979f-4b87-81d4-9f6341916eb9",
+      "id": "20ab7845-5892-4d6e-b58d-a2452f584c87",
       "name": "Send a document",
       "webhookId": "68cabebe-d0d8-41b1-8719-f51a48bbd02b",
       "alwaysOutputData": false,
       "credentials": {
         "telegramApi": {
-          "id": "o1nn1kI7UNcYtaa0",
+          "id": "4OTRkAKDbO92IV26",
           "name": "Telegram account"
         }
       },
@@ -202,14 +220,14 @@
       "type": "CUSTOM.binanceKlineTool",
       "typeVersion": 1,
       "position": [
-        0,
-        864
+        -288,
+        -416
       ],
-      "id": "1b2da07e-05ce-430d-8bb1-50de7cb1f5ea",
+      "id": "2c81c07e-e583-4707-b553-13ea5d52eb2f",
       "name": "Current Price",
       "credentials": {
         "binanceApi": {
-          "id": "o5h1pBx4xuCJNiyu",
+          "id": "AOzLqkVyHfltJyF8",
           "name": "Binance account"
         }
       }
@@ -218,13 +236,13 @@
       "parameters": {
         "jsCode": "const order = ['1m','15m', '1h', '4h'];\nconst items = $input.all();\nitems.sort((a, b) => order.indexOf(a.json.interval) - order.indexOf(b.json.interval));\nreturn items;"
       },
-      "id": "0607fb46-4a5e-4456-8e14-61bc9d2795ae",
+      "id": "dc59018d-f802-41bd-90d3-5140fabaa37a",
       "name": "Sort by Interval",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -928,
-        480
+        -1216,
+        -800
       ]
     },
     {
@@ -236,10 +254,10 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        -704,
-        480
+        -992,
+        -800
       ],
-      "id": "2fe22e23-5fa9-41ec-a3a5-b64a58452dbe",
+      "id": "0a26b377-4120-4e4d-969d-7ccdc12463da",
       "name": "Aggregate"
     },
     {
@@ -254,12 +272,14 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -80,
-        640
+        -368,
+        -640
       ],
-      "id": "c47eb150-ee8e-4cc5-8df5-f000480a3015",
+      "id": "f7e4913c-3e4e-4711-a72b-6611d4669f56",
       "name": "Gemini Trader",
-      "notesInFlow": false
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -270,10 +290,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        128,
-        864
+        -160,
+        -416
       ],
-      "id": "8d6f999e-babf-49af-99ac-de79817db60b",
+      "id": "08fcd302-df3e-47f9-8d2b-3d026e858a9f",
       "name": "News Sentiment"
     },
     {
@@ -287,14 +307,14 @@
       "type": "CUSTOM.binanceKline",
       "typeVersion": 1,
       "position": [
-        -1600,
-        192
+        -1888,
+        -1088
       ],
-      "id": "a03a3b0b-5927-4ac8-bc5f-594fd2aa1a2d",
+      "id": "8de723df-81a5-4c10-80f1-69e2cc8be16e",
       "name": "USDM-M 1m",
       "credentials": {
         "binanceApi": {
-          "id": "o5h1pBx4xuCJNiyu",
+          "id": "AOzLqkVyHfltJyF8",
           "name": "Binance account"
         }
       }
@@ -308,10 +328,10 @@
       "type": "CUSTOM.binanceKlineIndicators",
       "typeVersion": 1,
       "position": [
-        -1376,
-        192
+        -1664,
+        -1088
       ],
-      "id": "aff1c179-5fbc-4482-a882-a694c2a7c598",
+      "id": "def27198-8e0f-401a-9361-f0e6d19b4eb0",
       "name": "Indicators 1m"
     },
     {
@@ -325,14 +345,14 @@
       "type": "CUSTOM.binanceKline",
       "typeVersion": 1,
       "position": [
-        -1600,
-        384
+        -1888,
+        -896
       ],
-      "id": "b6cfa374-ba59-4bf1-b191-32081279a2f4",
+      "id": "871b3057-c8bb-4c0c-b4c6-7af77e907e3d",
       "name": "USDM-M 15m",
       "credentials": {
         "binanceApi": {
-          "id": "o5h1pBx4xuCJNiyu",
+          "id": "AOzLqkVyHfltJyF8",
           "name": "Binance account"
         }
       }
@@ -346,10 +366,10 @@
       "type": "CUSTOM.binanceKlineIndicators",
       "typeVersion": 1,
       "position": [
-        -1376,
-        384
+        -1664,
+        -896
       ],
-      "id": "e34a2d0f-dfd6-4b66-bdea-ec552262749c",
+      "id": "40ce0518-eac5-4e88-97a8-20eed46b98cc",
       "name": "Indicators 15m"
     },
     {
@@ -363,14 +383,14 @@
       "type": "CUSTOM.binanceKline",
       "typeVersion": 1,
       "position": [
-        -1600,
-        576
+        -1888,
+        -704
       ],
-      "id": "b44b7ce5-adf0-4d3d-8097-6740a3d08c43",
+      "id": "2c8afc08-e6d3-4835-b20a-abe7edeaf368",
       "name": "USDM-M 1h",
       "credentials": {
         "binanceApi": {
-          "id": "o5h1pBx4xuCJNiyu",
+          "id": "AOzLqkVyHfltJyF8",
           "name": "Binance account"
         }
       }
@@ -384,10 +404,10 @@
       "type": "CUSTOM.binanceKlineIndicators",
       "typeVersion": 1,
       "position": [
-        -1376,
-        576
+        -1664,
+        -704
       ],
-      "id": "16c4bc2c-cd53-4f1f-af28-8ade026415dd",
+      "id": "9d1e0403-55df-4ca7-a0b6-3f4294c45b79",
       "name": "Indicators 1h"
     },
     {
@@ -401,14 +421,14 @@
       "type": "CUSTOM.binanceKline",
       "typeVersion": 1,
       "position": [
-        -1600,
-        768
+        -1888,
+        -512
       ],
-      "id": "ea62a6ea-6cab-4f66-b6bf-ab9e31ced219",
+      "id": "b3152328-1c0b-458a-8549-aef90fabea0f",
       "name": "USDM-M 4h",
       "credentials": {
         "binanceApi": {
-          "id": "o5h1pBx4xuCJNiyu",
+          "id": "AOzLqkVyHfltJyF8",
           "name": "Binance account"
         }
       }
@@ -422,10 +442,10 @@
       "type": "CUSTOM.binanceKlineIndicators",
       "typeVersion": 1,
       "position": [
-        -1376,
-        768
+        -1664,
+        -512
       ],
-      "id": "9710da77-69ca-4110-b012-65804c497a26",
+      "id": "9e515307-f7a6-4d2c-870c-6cc4315907f7",
       "name": "Indicators 4h"
     },
     {
@@ -435,10 +455,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -480,
-        480
+        -768,
+        -800
       ],
-      "id": "6a1a7f8b-db5e-4899-8367-ca8521609a08",
+      "id": "1f711a7f-26cc-441a-a7a4-d58c2c135b9f",
       "name": "Grouping"
     },
     {
@@ -449,14 +469,14 @@
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
       "position": [
-        -128,
-        864
+        -416,
+        -416
       ],
-      "id": "a3aee5a0-51bc-4ea2-b933-a3fa0b5fba21",
+      "id": "29232ed5-e6b0-4bc8-93a9-c849d8074fb1",
       "name": "Postgres Chat Memory",
       "credentials": {
         "postgres": {
-          "id": "c3KZAO5BTeeYm3LC",
+          "id": "E4UKIK8f8xssvBnk",
           "name": "Postgres account"
         }
       }
@@ -470,16 +490,16 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -16,
-        336
+        -304,
+        -944
       ],
-      "id": "e75f91c3-4c02-416a-add3-0a31b15e9489",
+      "id": "239721cf-5dc1-4b2b-bb63-867014ef9510",
       "name": "Notify AI Agent",
       "webhookId": "058cd607-dd62-4cb4-80c4-7fd0459ac9a9",
       "notesInFlow": true,
       "credentials": {
         "telegramApi": {
-          "id": "o1nn1kI7UNcYtaa0",
+          "id": "4OTRkAKDbO92IV26",
           "name": "Telegram account"
         }
       },
@@ -524,14 +544,14 @@
       "type": "n8n-nodes-base.postgresTool",
       "typeVersion": 2.6,
       "position": [
-        -1984,
-        1488
+        -2272,
+        208
       ],
-      "id": "e1e854ca-e91d-4edb-b807-52df7d2cb27f",
+      "id": "4aea1b80-7b11-45e2-bdf8-705fc2e24604",
       "name": "Select rows from a table in Postgres",
       "credentials": {
         "postgres": {
-          "id": "c3KZAO5BTeeYm3LC",
+          "id": "E4UKIK8f8xssvBnk",
           "name": "Postgres account"
         }
       }
@@ -546,15 +566,15 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -256,
-        864
+        -544,
+        -416
       ],
-      "id": "5685c33c-5163-457a-bbd7-7785e6363d01",
+      "id": "f72a1336-3fab-4c20-bb1f-a3f9fb7e7930",
       "name": "Gemini Free Account",
       "credentials": {
         "googlePalmApi": {
-          "id": "9NiDiNKjBOjqbk35",
-          "name": "Gemini Api Free"
+          "id": "DN4cSo7xmUSljqG8",
+          "name": "Gemini Free"
         }
       }
     },
@@ -570,14 +590,14 @@
       "type": "CUSTOM.binanceKlineTool",
       "typeVersion": 1,
       "position": [
-        256,
-        864
+        -32,
+        -416
       ],
-      "id": "91b73404-2d60-46e3-8077-a8629b47bdb9",
+      "id": "38719f1f-2d4b-44e7-8fcd-81c43bde5ade",
       "name": "Klines 1m",
       "credentials": {
         "binanceApi": {
-          "id": "o5h1pBx4xuCJNiyu",
+          "id": "AOzLqkVyHfltJyF8",
           "name": "Binance account"
         }
       }
@@ -599,10 +619,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        464,
-        832
+        192,
+        -448
       ],
-      "id": "5271aa90-ba1c-404b-ac60-7c50dadc404a",
+      "id": "05da7838-e94e-4ee1-9087-196c92b3b7c6",
       "name": "Basic LLM Chain"
     },
     {
@@ -615,15 +635,15 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        480,
-        1056
+        208,
+        -224
       ],
-      "id": "d52205b9-d34d-4a0b-a4ee-20c32994d8cf",
+      "id": "27d14242-ae4c-49d3-b237-1ac1c507b856",
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
-          "id": "9NiDiNKjBOjqbk35",
-          "name": "Gemini Api Free"
+          "id": "DN4cSo7xmUSljqG8",
+          "name": "Gemini Free"
         }
       }
     },
@@ -634,20 +654,20 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        608,
-        1056
+        336,
+        -224
       ],
-      "id": "39182f37-5681-49b7-9639-9911334cdfe5",
+      "id": "e6bf2369-9860-4ee6-93ef-a73ffe4fc484",
       "name": "Structured Output Parser"
     },
     {
       "parameters": {
         "dataTableId": {
           "__rl": true,
-          "value": "0NYrPBAxD7OjO3a8",
+          "value": "r6llZpqBEla1te4U",
           "mode": "list",
           "cachedResultName": "n8n_crypto_analyse",
-          "cachedResultUrl": "/projects/XaCztHTPYI4QmEIm/datatables/0NYrPBAxD7OjO3a8"
+          "cachedResultUrl": "/projects/cnX5hE5JuMQaKTQq/datatables/r6llZpqBEla1te4U"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -662,7 +682,9 @@
             "entry_high": "={{ $json.output.entry_high }}",
             "entry_ok": false,
             "action_ok": false,
-            "take_profit_ok": false
+            "take_profit_ok": false,
+            "takes": "0",
+            "validated": false
           },
           "matchingColumns": [],
           "schema": [
@@ -737,12 +759,12 @@
               "removed": false
             },
             {
-              "id": "information",
-              "displayName": "information",
+              "id": "validated",
+              "displayName": "validated",
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "string",
+              "type": "boolean",
               "readOnly": false,
               "removed": false
             },
@@ -775,6 +797,36 @@
               "type": "boolean",
               "readOnly": false,
               "removed": false
+            },
+            {
+              "id": "takes",
+              "displayName": "takes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "information",
+              "displayName": "information",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -785,38 +837,26 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        816,
-        832
+        544,
+        -448
       ],
-      "id": "1f70c221-a96d-4592-ba7b-1d4ee50131de",
+      "id": "20cc0c53-5195-49be-8d61-cb434debe57c",
       "name": "n8n_crypto_analyse"
-    },
-    {
-      "parameters": {
-        "updates": [
-          "message"
-        ],
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegramTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -1264,
-        864
-      ],
-      "id": "13960b71-77a0-411a-851e-2a09606361fe",
-      "name": "Telegram Trigger",
-      "webhookId": "87aec948-d106-434b-91c2-f8b3062c591b",
-      "credentials": {
-        "telegramApi": {
-          "id": "o1nn1kI7UNcYtaa0",
-          "name": "Telegram account"
-        }
-      }
     }
   ],
   "pinData": {},
   "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Markdown Binary": {
       "main": [
         [
@@ -895,11 +935,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Message a model": {
-      "main": [
-        []
       ]
     },
     "Current Price": {
@@ -1150,11 +1185,10 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "8e2efa7a-7a5e-49e6-ae8f-a63ea0e8eee2",
+  "versionId": "e0d56c43-dec0-403d-a1b6-f926a53ae979",
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "5f2292d3daa2a56161826381ea5f0848169d29da34cdd4a16bfd17664e4cba50"
+    "instanceId": "71e365f928f0d1287bd505a9840e4a88e5524f86349cf1da79a479c099e7916c"
   },
-  "id": "7hz64iIaUCNbWKZp",
+  "id": "mfemPDy1MeWBsyCQ",
   "tags": []
 }
