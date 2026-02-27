@@ -20,7 +20,8 @@
         "N8N_SENTRY_DSN",
         "N8N_VERSION",
         "ENVIRONMENT",
-        "DEPLOYMENT_NAME"
+        "DEPLOYMENT_NAME",
+        "HOME"
       ],
       "env-overrides": {
         "NODE_FUNCTION_ALLOW_BUILTIN": "crypto",
@@ -32,10 +33,7 @@
       "runner-type": "python",
       "workdir": "/home/runner",
       "command": "/opt/runners/task-runner-python/.venv/bin/python",
-      "args": [
-        "-m",
-        "src.main"
-      ],
+      "args": ["-I", "-B", "-X", "disable_remote_debug", "-m", "src.main"],
       "health-check-server-port": "5682",
       "allowed-env": [
         "PATH",
@@ -49,7 +47,6 @@
         "DEPLOYMENT_NAME"
       ],
       "env-overrides": {
-        "PYTHONPATH": "/opt/runners/task-runner-python",
         "N8N_RUNNERS_STDLIB_ALLOW": "json,urllib,datetime,ssl",
         "N8N_RUNNERS_EXTERNAL_ALLOW": "numpy,pandas,feedparser,requests,bs4,textblob,vaderSentiment,torch,quote"
       }

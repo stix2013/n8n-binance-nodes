@@ -1,9 +1,9 @@
 services:
+  # n8n Main
   n8n:
     image: n8nio/n8n:${N8N_VERSION:-2.9.4-amd64}
     container_name: n8n-main
     restart: always
-    # user: "1000:1000"  # Commented out - caused issues
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -20,7 +20,7 @@ services:
     networks:
       - n8n_network
     ports:
-      - "${N8N_HOST_PORT}:${N8N_PORT}" # Default n8n port: host_port:container_port
+      - "${N8N_HOST_PORT}:${N8N_PORT}"
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=user
@@ -28,34 +28,30 @@ services:
       - N8N_HOST=${N8N_HOST}
       - N8N_PORT=${N8N_PORT}
       - N8N_PROTOCOL=http
+      # - N8N Runners
       - N8N_RUNNERS_MODE=external
+      - N8N_RUNNERS_EXECUTIONS_PROCESS=child
       - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
+      # - N8N_RUNNERS_HOST=${N8N_RUNNERS_HOST}
+      # - N8N_RUNNERS_PORT=${N8N_RUNNERS_PORT}
+      - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+      # 
       - TZ=Asia/Jakarta
       - N8N_COMMUNITY_PACKAGES_ENABLED=true
       - WEBHOOK_URL=${WEBHOOK_URL}
-      - N8N_RESTRICT_FILE_ACCESS_TO=/home/node/analyse
-      - N8N_RUNNERS_AUTH_TOKEN=MHPA2F2G1PL1Z6XdL3Yur1Pm23hbLM6J
+      - N8N_RESTRICT_FILE_ACCESS_TO=${N8N_RESTRICT_FILE_ACCESS_TO}
+      - N8N_PROXY_HOPS=${N8N_PROXY_HOPS}
       - NODE_FUNCTION_ALLOW_EXTERNAL=moment,uuid,@binance/spot,@binance/common,trading-signals
-      - N8N_NATIVE_PYTHON_RUNNER=true
+      # - N8N_NATIVE_PYTHON_RUNNER=true
       - N8N_MIGRATE_FS_STORAGE_PATH=true
       - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
-      # DB 
+      # Database
       - DB_TYPE=${N8N_DB_TYPE:-postgresdb}
       - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_NON_ROOT_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_NON_ROOT_PASSWORD}
-      
-      # Queue Mode
-      # - EXECUTIONS_MODE=regular
-      - EXECUTIONS_MODE=queue
-      - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
-      - QUEUE_BULL_REDIS_HOST=redis
-      - QUEUE_BULL_REDIS_PORT=6379
-      - QUEUE_HEALTH_CHECK_ACTIVE=true
-
-    # Persist n8n data (workflows, credentials, etc.)
     volumes:
       - n8n_storage:/home/node/.n8n
       - ./docs/analyse:/home/node/analyse:rw
@@ -73,27 +69,31 @@ services:
       retries: 10
       start_period: 3600s
     depends_on:
-      # task-runners:
-      #   condition: service_healthy
       api:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
 
   # n8n Tasks Runners
   task-runners:
-    image: n8nio-runners-local:${N8N_VERSION:-2.7.5}
+    # image: n8nio/runners:2.9.4
+    image: n8nio-runners-local:${N8N_VERSION:-2.9.4}
     build:
       context: .
       dockerfile: dockers/Dockerfile.runners
       args:
-        - N8N_VERSION=${N8N_VERSION:-2.7.5}
+        - N8N_VERSION=${N8N_VERSION:-2.9.4}
+    container_name: task-runners
     restart: always
-    container_name: n8n-runners
     networks:
       - n8n_network
+    environment:
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n-main:5679
+      - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+      - N8N_RUNNERS_EXECUTIONS_PROCESS=child
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./docs/analyse:/home/node/analyse:rw
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -105,22 +105,25 @@ services:
       - "fapi.binance.com:13.35.24.46"
       - "fstream.binance.com:13.249.134.34"
       - "stream.binance.com:13.114.105.102"
-    environment:
-      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n-main:5679
-      - N8N_RESTRICT_FILE_ACCESS_TO=/home/node/analyse
-      - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
-      - N8N_RUNNERS_LAUNCHER_LOG_LEVEL=${N8N_RUNNERS_LAUNCHER_LOG_LEVEL}
-      - N8N_RUNNERS_EXTERNAL_ALLOW=${N8N_RUNNERS_EXTERNAL_ALLOW}
-      - NODE_FUNCTION_ALLOW_EXTERNAL=${NODE_FUNCTION_ALLOW_EXTERNAL}
-      - N8N_RUNNERS_TASK_RUNNER_CONFIG_PATH=/config/n8n-task-runners.json
-      - NODE_OPTIONS="--max-old-space-size=1024"
-      - N8N_RUNNERS_MAX_CONCURRENCY=5
-      - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=120
-    volumes:
-      - ./config/n8n-task-runners.json:/etc/n8n-task-runners.json
-      - ./docs/analyse:/home/node/analyse:rw
+    # environment:
+    #   - N8N_RUNNERS_TASK_BROKER_URI=http://n8n-main:5679
+    #   - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+    #   - N8N_RUNNERS_EXECUTIONS_PROCESS=child
+      # - N8N_RUNNERS_TASK_BROKER_URI=http://n8n-worker:5679
+      # - N8N_RESTRICT_FILE_ACCESS_TO=${N8N_RESTRICT_FILE_ACCESS_TO}
+      # - N8N_RUNNERS_LAUNCHER_LOG_LEVEL=${N8N_RUNNERS_LAUNCHER_LOG_LEVEL}
+      # - N8N_RUNNERS_EXTERNAL_ALLOW=${N8N_RUNNERS_EXTERNAL_ALLOW}
+      # - N8N_RUNNERS_PORT=${N8N_RUNNERS_PORT}
+      # - NODE_FUNCTION_ALLOW_EXTERNAL=${NODE_FUNCTION_ALLOW_EXTERNAL}
+      # - N8N_RUNNERS_TASK_RUNNER_CONFIG_PATH=/config/n8n-task-runners.json
+      # - NODE_OPTIONS="--max-old-space-size=1024"
+      # - N8N_RUNNERS_MAX_CONCURRENCY=5
+      # - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=120
+    # volumes:
+      # - ./config/n8n-task-runners.json:/config/n8n-task-runners.json
+      # - ./docs/analyse:/home/node/analyse:rw
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://n8n-main:5679/healthz || exit 1"]
+      test: ["CMD", "sh", "-c", "wget -q -O- http://task-runners:5680/healthz || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -191,21 +194,6 @@ services:
       retries: 10
       start_period: 10s
 
-  # Redis for QUEUE
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    restart: unless-stopped
-    networks:
-      - n8n_network
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
 # Volumes
 volumes:
   n8n_data:
@@ -220,8 +208,7 @@ volumes:
   rabbitmq_data:
     external: true
     name: rabbitmq_data
-  redis_data:
-    name: redis_data
+# Networks 
 networks:
   n8n_network:
     external: true
