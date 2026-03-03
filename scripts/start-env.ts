@@ -17,8 +17,8 @@ async function main() {
 
   // Load config from .env
   const [zrokReservedName, zrokPublicUrl] = await Promise.all([
-    getEnvValue("ZROK_RESERVED_NAME") || "stix2025n8n",
-    getEnvValue("ZROK_PUBLIC_URL") || "https://stixgoauth2025.share.zrok.io",
+    getEnvValue("ZROK_RESERVED_NAME") || "stixn8n",
+    getEnvValue("ZROK_PUBLIC_URL") || "https://stixn8n.shares.zrok.io",
   ]);
 
   // 1. Start Docker Compose
