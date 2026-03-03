@@ -114,7 +114,7 @@ app.include_router(indicators.router)
 app.include_router(ingest.router)
 app.include_router(news.router)
 app.include_router(trading.router)
-app.include_router(training.router, prefix="/api")
+app.include_router(training.router)
 
 
 @app.get("/", response_model=RootResponse)

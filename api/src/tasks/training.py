@@ -64,6 +64,13 @@ def train_online_model(
 
         # Step 2: Initialize and train on warmup data
         logger.info(f"[2/4] Initial training on first {warmup_bars} bars...")
+
+        if len(data) < warmup_bars:
+            logger.warning(
+                f"Not enough data for warmup. Requested {warmup_bars}, got {len(data)}. Adjusting..."
+            )
+            warmup_bars = int(len(data) * 0.5)
+
         warmup_data = data.iloc[:warmup_bars]
 
         generator = OnlineSignalGenerator(
@@ -73,13 +80,20 @@ def train_online_model(
         )
 
         try:
+            if len(warmup_data) < generator.lookback_period:
+                logger.warning(
+                    f"Warmup data ({len(warmup_data)}) is less than generator lookback ({generator.lookback_period})"
+                )
+
             generator.fit(warmup_data)
             logger.info("Initial training completed successfully")
         except Exception as fit_error:
             logger.error(f"Initial training failed: {fit_error}")
-            logger.info("Attempting with more data...")
-            warmup_data = data.iloc[: min(warmup_bars * 2, len(data) - 100)]
-            generator.fit(warmup_data)
+            # Try to continue without initial fit if we have enough data later,
+            # but usually fit is required for scaler
+            raise Exception(
+                f"Failed to fit model with {len(warmup_data)} samples: {str(fit_error)}"
+            )
 
         # Step 3: Run online learning simulation
         logger.info("[3/4] Running online learning simulation...")

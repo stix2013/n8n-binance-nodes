@@ -44,6 +44,7 @@ class TrainingStatusResponse(BaseModel):
 
     task_id: str
     status: str
+    message: Optional[str] = None
     result: Optional[dict] = None
     error: Optional[str] = None
     progress: Optional[int] = None
