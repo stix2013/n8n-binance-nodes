@@ -251,14 +251,48 @@ celery-worker:
 | Date | Step | Status | Notes |
 |------|------|--------|-------|
 | 2026-03-03 | Plan created | ✅ Complete | Plan saved to docs/TODO-celery-online-training.md |
-| 2026-03-03 | Git worktree | 🔄 In Progress | Creating worktree at .worktrees/feat/online-training |
-| 2026-03-03 | Docker services | ⏳ Pending | Redis + Celery Worker setup |
-| 2026-03-03 | Celery config | ⏳ Pending | celery_app.py initialization |
-| 2026-03-03 | Training task | ⏳ Pending | Integrate crypto-analysis module |
-| 2026-03-03 | API endpoints | ⏳ Pending | Training routes implementation |
+| 2026-03-03 | Git worktree | ✅ Complete | Worktree created at .worktrees/feat/online-training |
+| 2026-03-03 | Docker services | ✅ Complete | Redis + Celery Worker added to docker-compose.yml |
+| 2026-03-03 | Celery config | ✅ Complete | celery_app.py created in src/config/ |
+| 2026-03-03 | Training task | ✅ Complete | train_online_model task created in src/tasks/ |
+| 2026-03-03 | API endpoints | ✅ Complete | Training routes created in src/routes/ |
+| 2026-03-03 | Dependencies | ✅ Complete | Added celery[redis], torch, scikit-learn to pyproject.toml |
+| 2026-03-03 | Environment variables | ✅ Complete | Added CELERY_* and TRAIN_* vars to .env |
+| 2026-03-03 | Final validation | ✅ Complete | All endpoints verified and model persistence confirmed |
+
+---
+
+## Final Status
+
+### Completed
+- ✅ Test Docker build with new dependencies (PyTorch CPU optimized)
+- ✅ Start services and verify Redis connectivity
+- ✅ Test training task execution (ETHUSDT 1m)
+- ✅ Fixed dynamic feature count issue in crypto-analysis module
+- ✅ Fixed volume mapping issues in docker-compose.yml
+- ✅ Validated model persistence in shared volume (.joblib creation)
+- ✅ Verified API status endpoint with task_id
+- ✅ Verified API models list endpoint
+- ✅ Fixed Pydantic model discrepancies in status response
+
+### Summary of Infrastructure
+- **API**: Running on port 8001 (worktree isolation)
+- **Celery Worker**: Running in background, linked to `crypto-analysis` module
+- **Redis**: Running on port 6380
+- **Models**: Stored in `./models/` (shared volume)
+
+---
+
+## Next Steps (Future Enhancements)
+- [ ] Add Celery Beat for scheduled re-training
+- [ ] Add prediction/inference endpoint logic using the trained model
+- [ ] Create n8n workflow for training orchestration
+- [ ] Implement model versioning and cleanup of old models
 
 ---
 
 **Created**: 2026-03-03  
+**Last Updated**: 2026-03-03  
 **Author**: AI Assistant  
-**Branch**: `feat/online-training`
+**Branch**: `feat/online-training`  
+**Status**: Infrastructure Complete - Ready for Testing

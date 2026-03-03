@@ -2,7 +2,6 @@ services:
   # n8n Main
   n8n:
     image: n8nio/n8n:${N8N_VERSION:-2.9.4-amd64}
-    container_name: n8n-main
     restart: always
     dns:
       - 8.8.8.8
@@ -83,7 +82,6 @@ services:
       dockerfile: dockers/Dockerfile.runners
       args:
         - N8N_VERSION=${N8N_VERSION:-2.9.4}
-    container_name: task-runners
     restart: always
     networks:
       - n8n_network
@@ -129,53 +127,12 @@ services:
       retries: 3
       start_period: 90s
 
-  # API Python
-  api:
-    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.4.0}
-    build:
-      context: .
-      dockerfile: dockers/Dockerfile.python
-      args:
-        - API_VERSION=${API_VERSION:-1.5.0}
-    container_name: api
-    restart: unless-stopped
-    networks:
-      - n8n_network
-    ports:
-      - "8000:8000"
-    extra_hosts:
-      - "api.binance.com:108.156.104.23"
-    environment:
-      - PYTHONUNBUFFERED=1
-      - API_LOG_LEVEL=${API_LOG_LEVEL:-INFO}
-    volumes:
-      - ./api:/app
-      - ./.env:/app/.env:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    depends_on:
-      postgres:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-
   # Postgres
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
-    container_name: postgres-db
     ports:
-      - 5432:5432
+      - 5433:5432
     networks:
       - n8n_network
     volumes:
@@ -194,6 +151,103 @@ services:
       retries: 10
       start_period: 10s
 
+  # Redis (Celery Broker & Result Backend)
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - n8n_network
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+
+  # API Python
+  api:
+    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.6.0}
+    build:
+      context: .
+      dockerfile: dockers/Dockerfile.python
+      args:
+        - API_VERSION=${API_VERSION:-1.6.0}
+    restart: unless-stopped
+    networks:
+      - n8n_network
+    ports:
+      - "8001:8000"
+    extra_hosts:
+      - "binance.com:3.170.91.76"
+      - "www.binance.com:3.170.91.76"
+      - "api.binance.com:108.156.104.23"
+      - "developers.binance.com:18.172.242.31"
+      - "fapi.binance.com:13.35.24.46"
+      - "fstream.binance.com:13.249.134.34"
+      - "stream.binance.com:13.114.105.102"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_LOG_LEVEL=${API_LOG_LEVEL:-INFO}
+      - PYTHONPATH=/app:/libs/crypto-analysis/src
+    volumes:
+      - ./api:/app
+      - ./models:/app/models
+      - ./.env:/app/.env:ro
+
+  # Celery Worker (Model Training)
+  celery-worker:
+    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.6.0}
+    build:
+      context: .
+      dockerfile: dockers/Dockerfile.python
+      args:
+        - API_VERSION=${API_VERSION:-1.6.0}
+    restart: unless-stopped
+    networks:
+      - n8n_network
+    command: python -m celery -A src.config.celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info}
+    extra_hosts:
+      - "binance.com:3.170.91.76"
+      - "www.binance.com:3.170.91.76"
+      - "api.binance.com:108.156.104.23"
+      - "developers.binance.com:18.172.242.31"
+      - "fapi.binance.com:13.35.24.46"
+      - "fstream.binance.com:13.249.134.34"
+      - "stream.binance.com:13.114.105.102"
+    volumes:
+      - ./api:/app
+      - ../../../../trader/crypto-analysis:/libs/crypto-analysis
+      - ./models:/app/models
+      - ./.env:/app/.env:ro
+    environment:
+      - PYTHONPATH=/app:/libs/crypto-analysis/src
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_SECRET_KEY=${BINANCE_SECRET_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
 # Volumes
 volumes:
   n8n_data:
@@ -208,6 +262,10 @@ volumes:
   rabbitmq_data:
     external: true
     name: rabbitmq_data
+  redis_data:
+    name: redis_data
+  models_storage:
+    name: models_storage
 # Networks 
 networks:
   n8n_network:
