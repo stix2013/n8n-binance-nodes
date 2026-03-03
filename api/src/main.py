@@ -91,8 +91,8 @@ async def lifespan(app):
 # Create FastAPI app with settings
 app = FastAPI(
     title="n8n Binance API",
-    description="API for fetching cryptocurrency prices from Binance with Pydantic type validation and technical indicators",
-    version="1.5.0",
+    description="API for fetching cryptocurrency prices from Binance with Pydantic type validation, technical indicators, and ML model training",
+    version="1.6.0",
     debug=settings.api_debug,
     lifespan=lifespan,
 )
@@ -103,10 +103,10 @@ app.add_middleware(ErrorLoggingMiddleware)
 # Import and include routers
 try:
     # Try relative import first
-    from .routes import binance, indicators, ingest, news, trading
+    from .routes import binance, indicators, ingest, news, trading, training
 except ImportError:
     # Fall back to absolute import for direct execution
-    from routes import binance, indicators, ingest, news, trading
+    from routes import binance, indicators, ingest, news, trading, training
 
 # Include routers
 app.include_router(binance.router)
@@ -114,6 +114,7 @@ app.include_router(indicators.router)
 app.include_router(ingest.router)
 app.include_router(news.router)
 app.include_router(trading.router)
+app.include_router(training.router, prefix="/api")
 
 
 @app.get("/", response_model=RootResponse)
