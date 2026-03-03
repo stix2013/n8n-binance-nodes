@@ -1,16 +1,15 @@
 """Technical indicators calculations for trading analysis."""
 
-from typing import List, Dict, Tuple
+
 import numpy as np
 import pandas as pd
-from datetime import datetime
 
 
 class TechnicalIndicators:
     """Core technical indicator calculations."""
 
     @staticmethod
-    def calculate_rsi(prices: List[float], period: int = 14) -> float:
+    def calculate_rsi(prices: list[float], period: int = 14) -> float:
         """
         Calculate RSI (Relative Strength Index).
 
@@ -61,7 +60,7 @@ class TechnicalIndicators:
         return round(rsi, 2)
 
     @staticmethod
-    def calculate_ema(prices: List[float], period: int) -> List[float]:
+    def calculate_ema(prices: list[float], period: int) -> list[float]:
         """
         Calculate Exponential Moving Average.
 
@@ -109,11 +108,11 @@ class TechnicalIndicators:
 
     @staticmethod
     def calculate_macd(
-        prices: List[float],
+        prices: list[float],
         fast_period: int = 12,
         slow_period: int = 26,
         signal_period: int = 9,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate MACD (Moving Average Convergence Divergence).
 
@@ -191,7 +190,7 @@ class TechnicalIndicators:
             return "NEUTRAL"
 
     @staticmethod
-    def generate_macd_signal(macd_data: Dict[str, float]) -> Tuple[str, str]:
+    def generate_macd_signal(macd_data: dict[str, float]) -> tuple[str, str]:
         """
         Generate MACD signal based on MACD components.
 
@@ -259,7 +258,7 @@ class TechnicalIndicators:
             return "HOLD"
 
     @staticmethod
-    def validate_price_data(prices: List[float], min_candles: int = 30) -> None:
+    def validate_price_data(prices: list[float], min_candles: int = 30) -> None:
         """
         Validate price data for technical analysis.
 
@@ -291,7 +290,7 @@ class TechnicalIndicators:
             )
 
     @staticmethod
-    def calculate_sma(prices: List[float], windows: List[int]) -> Dict[int, float]:
+    def calculate_sma(prices: list[float], windows: list[int]) -> dict[int, float]:
         """
         Calculate Simple Moving Average (SMA) for multiple windows using pandas.
 
@@ -333,7 +332,7 @@ class TechnicalIndicators:
         return sma_values
 
     @staticmethod
-    def generate_sma_signal(current_price: float, sma_values: Dict[int, float]) -> str:
+    def generate_sma_signal(current_price: float, sma_values: dict[int, float]) -> str:
         """
         Generate trading signal based on SMA values.
 
@@ -366,7 +365,7 @@ class TechnicalIndicators:
             return "NEUTRAL"
 
     @staticmethod
-    def calculate_emas(prices: List[float], windows: List[int]) -> Dict[int, float]:
+    def calculate_emas(prices: list[float], windows: list[int]) -> dict[int, float]:
         """
         Calculate Exponential Moving Average (EMA) for multiple windows using pandas.
 
@@ -410,7 +409,7 @@ class TechnicalIndicators:
         return ema_values
 
     @staticmethod
-    def generate_ema_signal(current_price: float, ema_values: Dict[int, float]) -> str:
+    def generate_ema_signal(current_price: float, ema_values: dict[int, float]) -> str:
         """
         Generate trading signal based on EMA values.
 

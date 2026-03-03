@@ -1,6 +1,5 @@
 """Date utility functions for API."""
 from datetime import datetime
-from typing import Union
 
 
 def convert_date_format(date_str: str) -> str:
@@ -23,7 +22,7 @@ def convert_date_format(date_str: str) -> str:
         raise ValueError(f"Date format must be YYYYMMDD, got: {date_str}")
 
 
-def timestamp_to_iso(timestamp: Union[int, float]) -> str:
+def timestamp_to_iso(timestamp: int | float) -> str:
     """
     Convert milliseconds timestamp to ISO format string
     

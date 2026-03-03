@@ -1,35 +1,36 @@
 """Binance API routes."""
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-import httpx
-import os
 import logging
+import os
 from datetime import datetime
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 # Import utilities with fallback for both relative and absolute imports
 try:
-    from ..utils.date_utils import convert_date_format, timestamp_to_iso
-    from ..utils.price_validation import validate_price_data, PriceValidationError
-    from ..utils.crypto_utils import generate_signature, get_timestamp
     from ..models.api_models import (
-        PriceResponse,
         ErrorResponse,
         IntervalEnum,
         OrderRequest,
         OrderResponse,
+        PriceResponse,
     )
     from ..models.settings import settings
+    from ..utils.crypto_utils import generate_signature, get_timestamp
+    from ..utils.date_utils import convert_date_format, timestamp_to_iso
+    from ..utils.price_validation import PriceValidationError, validate_price_data
 except ImportError:
-    from utils.date_utils import convert_date_format, timestamp_to_iso
-    from utils.price_validation import validate_price_data
-    from utils.crypto_utils import generate_signature, get_timestamp
     from models.api_models import (
-        PriceResponse,
         ErrorResponse,
         IntervalEnum,
         OrderRequest,
         OrderResponse,
+        PriceResponse,
     )
+    from utils.crypto_utils import generate_signature, get_timestamp
+    from utils.date_utils import convert_date_format, timestamp_to_iso
+    from utils.price_validation import validate_price_data
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/binance", tags=["binance"])
@@ -496,19 +497,19 @@ async def place_binance_order(
                     # Persist to database (non-blocking - don't fail if DB insert fails)
                     try:
                         try:
-                            from ..services.trading_service import trading_service
                             from ..models.trading_models import (
-                                SpotOrderRequest,
                                 OrderSideEnum,
                                 OrderTypeEnum,
+                                SpotOrderRequest,
                             )
+                            from ..services.trading_service import trading_service
                         except ImportError:
-                            from services.trading_service import trading_service
                             from models.trading_models import (
-                                SpotOrderRequest,
                                 OrderSideEnum,
                                 OrderTypeEnum,
+                                SpotOrderRequest,
                             )
+                            from services.trading_service import trading_service
 
                         # Create order request for persistence
                         order_request = SpotOrderRequest(

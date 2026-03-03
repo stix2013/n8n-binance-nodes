@@ -1,36 +1,33 @@
 """Trading service for order management and database persistence."""
 
 import logging
-from typing import List, Optional, Dict, Any
-from datetime import datetime
+from typing import Any
 
 # Import with fallback for both relative and absolute imports
 try:
     from ..models.trading_models import (
-        SpotOrder,
         FuturesOrder,
-        SpotOrderRequest,
         FuturesOrderRequest,
-        OrderResponse,
         MarketTypeEnum,
+        OrderResponse,
         OrderStatusEnum,
+        SpotOrder,
+        SpotOrderRequest,
     )
     from ..utils.binance_client import BinanceClient
     from ..utils.exceptions import BinanceAPIError, DatabaseError
     from .database import db
 except ImportError:
     from models.trading_models import (
-        SpotOrder,
         FuturesOrder,
-        SpotOrderRequest,
         FuturesOrderRequest,
         OrderResponse,
-        MarketTypeEnum,
-        OrderStatusEnum,
+        SpotOrder,
+        SpotOrderRequest,
     )
+    from services.database import db
     from utils.binance_client import BinanceClient
     from utils.exceptions import BinanceAPIError, DatabaseError
-    from services.database import db
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +36,7 @@ class TradingService:
     """Service for handling trading operations with database persistence."""
 
     def __init__(self):
-        self.client: Optional[BinanceClient] = None
+        self.client: BinanceClient | None = None
 
     async def _get_client(self) -> BinanceClient:
         """Get or create Binance client."""
@@ -49,7 +46,7 @@ class TradingService:
 
     async def _get_order_status_from_binance(
         self, order_id: int, symbol: str, market_type: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Query current order status from Binance."""
         try:
             client = await self._get_client()
@@ -169,7 +166,7 @@ class TradingService:
                 error=f"Internal error: {str(e)}",
             )
 
-    async def _persist_spot_order(self, order_data: Dict[str, Any]) -> None:
+    async def _persist_spot_order(self, order_data: dict[str, Any]) -> None:
         """Persist spot order to database."""
         query = """
             INSERT INTO spot_orders (
@@ -310,7 +307,7 @@ class TradingService:
                 error=f"Internal error: {str(e)}",
             )
 
-    async def _persist_futures_order(self, order_data: Dict[str, Any]) -> None:
+    async def _persist_futures_order(self, order_data: dict[str, Any]) -> None:
         """Persist futures order to database."""
         query = """
             INSERT INTO futures_orders (
@@ -347,8 +344,8 @@ class TradingService:
         )
 
     async def get_recent_spot_orders(
-        self, symbol: Optional[str] = None, limit: int = 3
-    ) -> List[SpotOrder]:
+        self, symbol: str | None = None, limit: int = 3
+    ) -> list[SpotOrder]:
         """Get recent spot orders (max 3 per symbol by default)."""
         try:
             if symbol:
@@ -396,10 +393,10 @@ class TradingService:
 
     async def get_recent_futures_orders(
         self,
-        symbol: Optional[str] = None,
-        market_type: Optional[str] = None,
+        symbol: str | None = None,
+        market_type: str | None = None,
         limit: int = 3,
-    ) -> List[FuturesOrder]:
+    ) -> list[FuturesOrder]:
         """Get recent futures orders (max 3 per symbol by default)."""
         try:
             conditions = []

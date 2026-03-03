@@ -3,7 +3,7 @@ import { spawn } from "bun";
 console.log("🛑 Stopping n8n-binance-nodes environment...");
 
 // 1. Stop Zrok Tunnel (if running)
-const zrokPs = Bun.spawnSync(["pgrep", "-f", "zrok share reserved"]);
+const zrokPs = Bun.spawnSync(["pgrep", "-f", "zrok2 share reserved"]);
 const zrokPid = zrokPs.stdout.toString().trim();
 
 if (zrokPid) {

@@ -1,5 +1,4 @@
 import re
-from typing import List, Dict, Optional
 
 COIN_PATTERNS = {
     "BTC": ["bitcoin", "btc", "xbt"],
@@ -78,7 +77,7 @@ class CoinDetector:
 
     def detect_coins(
         self, title: str = "", summary: str = "", content: str = ""
-    ) -> List[Dict]:
+    ) -> list[dict]:
         detected = {}
         text = f"{title} {summary} {content}"
 
@@ -101,7 +100,7 @@ class CoinDetector:
 
     def _get_mentioned_locations(
         self, title: str, summary: str, content: str, symbol: str
-    ) -> List[str]:
+    ) -> list[str]:
         locations = []
         pattern = self.patterns.get(symbol, re.compile(r"", re.IGNORECASE))
 
@@ -114,5 +113,5 @@ class CoinDetector:
 
         return locations if locations else ["text"]
 
-    def get_unique_coins(self, coins: List[Dict]) -> List[str]:
+    def get_unique_coins(self, coins: list[dict]) -> list[str]:
         return list(set(c["symbol"] for c in coins))

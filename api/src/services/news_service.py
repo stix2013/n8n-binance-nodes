@@ -1,13 +1,12 @@
 import hashlib
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from datetime import UTC, datetime, timedelta
 
+from .coin_detector import CoinDetector
 from .database import Database
+from .failover_manager import FailoverManager
 from .rss_fetcher import RSSFetcher
 from .sentiment_analyzer import SentimentAnalyzer
-from .coin_detector import CoinDetector
-from .failover_manager import FailoverManager
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class NewsService:
 
         return results
 
-    async def _process_articles_batch(self, source: str, articles: List[dict]) -> None:
+    async def _process_articles_batch(self, source: str, articles: list[dict]) -> None:
         processed = 0
         skipped = 0
 
@@ -88,9 +87,9 @@ class NewsService:
         source: str,
         article: dict,
         sentiment: dict,
-        coins: List[dict],
+        coins: list[dict],
     ) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires_at = now + timedelta(hours=self.CACHE_TTL_HOURS)
 
         published_at = self._parse_published_date(article.get("published"))
@@ -137,9 +136,9 @@ class NewsService:
                         query_coins, article_id, coin["symbol"], coin["confidence"]
                     )
 
-    def _parse_published_date(self, published: Optional[str]) -> datetime:
+    def _parse_published_date(self, published: str | None) -> datetime:
         if not published:
-            return datetime.now(timezone.utc)
+            return datetime.now(UTC)
         try:
             if isinstance(published, str):
                 from email.utils import parsedate_to_datetime
@@ -147,7 +146,7 @@ class NewsService:
                 return parsedate_to_datetime(published)
         except Exception:
             pass
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)
 
     async def get_sentiment_by_coin(self, coin_symbol: str, hours: int = 24) -> dict:
         query = """
@@ -203,12 +202,12 @@ class NewsService:
 
     async def get_articles(
         self,
-        coin: Optional[str] = None,
-        source: Optional[str] = None,
-        sentiment_type: Optional[str] = None,
+        coin: str | None = None,
+        source: str | None = None,
+        sentiment_type: str | None = None,
         limit: int = 50,
         hours: int = 24,
-    ) -> List[dict]:
+    ) -> list[dict]:
         conditions = ["na.is_active = TRUE", "na.expires_at > NOW()"]
         params = []
         param_idx = 1
@@ -225,11 +224,11 @@ class NewsService:
 
         if sentiment_type:
             if sentiment_type == "positive":
-                conditions.append(f"ast.compound_score > 0.05")
+                conditions.append("ast.compound_score > 0.05")
             elif sentiment_type == "negative":
-                conditions.append(f"ast.compound_score < -0.05")
+                conditions.append("ast.compound_score < -0.05")
             else:
-                conditions.append(f"ast.compound_score BETWEEN -0.05 AND 0.05")
+                conditions.append("ast.compound_score BETWEEN -0.05 AND 0.05")
 
         conditions.append(f"na.published_at > NOW() - INTERVAL '1 hour' * ${param_idx}")
         params.append(hours)
@@ -266,7 +265,7 @@ class NewsService:
 
         return [dict(r) for r in rows]
 
-    async def get_all_coins_sentiment(self, min_articles: int = 5) -> List[dict]:
+    async def get_all_coins_sentiment(self, min_articles: int = 5) -> list[dict]:
         query = """
         SELECT 
             coin_symbol,

@@ -2,11 +2,20 @@
 node_modules
 __pycache__
 
-# API coverage reports
+# API
 api/.coverage
 api/htmlcov/
-api/.coverage
 api/.pytest_cache/
+api/.ruff_cache/
+api/.venv/
+api/.env
+api/uv.lock
+api/src/api.egg-info/
+
+# Global Python
+*.py[cod]
+*$py.class
+*.so
 
 # Analyse results
 docs/analyse

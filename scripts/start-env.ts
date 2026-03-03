@@ -44,7 +44,7 @@ async function main() {
   console.log("Press Ctrl+C to stop the tunnel.");
   console.log("-------------------------------------------------------");
 
-  const zrok = Bun.spawn(["zrok", "share", "reserved", zrokReservedName, "--headless"], {
+  const zrok = Bun.spawn(["zrok2", "share", "reserved", zrokReservedName, "--headless"], {
     stdout: "inherit",
     stderr: "inherit",
   });
