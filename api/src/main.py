@@ -92,7 +92,7 @@ async def lifespan(app):
 app = FastAPI(
     title="n8n Binance API",
     description="API for fetching cryptocurrency prices from Binance with Pydantic type validation, technical indicators, and ML model training",
-    version="1.6.0",
+    version="1.7.0",
     debug=settings.api_debug,
     lifespan=lifespan,
 )

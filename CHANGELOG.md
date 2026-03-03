@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-03-03
+
+### Added
+- **Real-time Prediction API**: Introduced `POST /api/crypto/predict` for generating trading signals using trained models.
+- **Model Training Integration**: Fully integrated `OnlineSignalGenerator` for real-time inference on current Binance market data.
+- **Infrastructure**: Added shared `models/` volume for persistent model storage across API and Celery workers.
+
+### Changed
+- **API Version**: Upgraded API to `1.7.0`.
+- **Project Structure**: Consolidated prediction and training workflows.
+
+### Fixed
+- **Celery Worker**: Improved error handling and state tracking for training tasks.
+- **Volume Paths**: Corrected `crypto-analysis` library volume paths in `docker-compose.yml`.
+
 ## [1.6.0] - 2026-02-19
 
 ### Added

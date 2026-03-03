@@ -175,17 +175,17 @@ services:
 
   # API Python
   api:
-    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.6.0}
+    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.0}
     build:
       context: .
       dockerfile: dockers/Dockerfile.python
       args:
-        - API_VERSION=${API_VERSION:-1.6.0}
+        - API_VERSION=${API_VERSION:-1.7.0}
     restart: unless-stopped
     networks:
       - n8n_network
     ports:
-      - "8001:8000"
+      - "8000:8000"
     extra_hosts:
       - "binance.com:3.170.91.76"
       - "www.binance.com:3.170.91.76"
@@ -206,12 +206,12 @@ services:
 
   # Celery Worker (Model Training)
   celery-worker:
-    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.6.0}
+    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.0}
     build:
       context: .
       dockerfile: dockers/Dockerfile.python
       args:
-        - API_VERSION=${API_VERSION:-1.6.0}
+        - API_VERSION=${API_VERSION:-1.7.0}
     restart: unless-stopped
     networks:
       - n8n_network
