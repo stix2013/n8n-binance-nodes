@@ -27,8 +27,14 @@ dependencies = [
     # Machine Learning
     "joblib>=1.3.0",
     "scikit-learn>=1.3.0",
-    "torch>=2.0.0",
+    # CPU-only PyTorch (smaller image size, faster build)
+    "torch>=2.0.0; platform_system != 'Darwin'",
+    "torchvision>=0.15.0; platform_system != 'Darwin'",
 ]
+
+[tool.pip]
+# Use CPU-only PyTorch index to avoid NVIDIA dependencies
+extra-index-url = "https://download.pytorch.org/whl/cpu"
 
 [project.optional-dependencies]
 dev = [

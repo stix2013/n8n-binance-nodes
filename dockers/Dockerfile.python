@@ -18,6 +18,8 @@ COPY ./api/pyproject.toml /app/pyproject.toml
 
 # Install Python dependencies
 WORKDIR /app
+# Install CPU-only PyTorch first to save space and avoid NVIDIA dependencies
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -e .
 
 # Copy application code
