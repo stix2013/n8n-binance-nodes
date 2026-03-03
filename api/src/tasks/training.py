@@ -191,8 +191,4 @@ def train_online_model(
         logger.error(
             f"Training task failed for {symbol} {interval}: {e}", exc_info=True
         )
-        try:
-            self.update_state(state="FAILURE", meta={"error": str(e)})
-        except Exception:
-            pass
         raise

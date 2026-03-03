@@ -113,37 +113,57 @@ def get_training_status(task_id: str):
     try:
         task_result = AsyncResult(task_id, app=celery_app)
 
+        try:
+            state = task_result.state
+        except Exception as state_err:
+            logger.error(f"Error getting state for {task_id}: {state_err}")
+            return TrainingStatusResponse(
+                task_id=task_id,
+                status="UNKNOWN",
+                message=f"Error retrieving state: {str(state_err)}",
+            )
+
         response = TrainingStatusResponse(
             task_id=task_id,
-            status=task_result.state,
+            status=state,
         )
 
-        if task_result.state == "PENDING":
+        if state == "PENDING":
             response.message = "Task is waiting to be executed"
 
-        elif task_result.state == "STARTED":
+        elif state == "STARTED":
             response.message = "Task is currently executing"
 
-        elif task_result.state == "PROGRESS":
+        elif state == "PROGRESS":
             response.status = "PROGRESS"
-            if task_result.info and isinstance(task_result.info, dict):
-                response.progress = task_result.info.get("progress", 0)
-                response.message = f"Training in progress: {response.progress}%"
+            try:
+                info = task_result.info
+                if info and isinstance(info, dict):
+                    response.progress = info.get("progress", 0)
+                    response.message = f"Training in progress: {response.progress}%"
+            except Exception:
+                response.message = "Training in progress"
 
-        elif task_result.state == "SUCCESS":
+        elif state == "SUCCESS":
             response.status = "SUCCESS"
-            response.result = task_result.result
-            response.message = "Training completed successfully"
+            try:
+                response.result = task_result.result
+                response.message = "Training completed successfully"
+            except Exception as res_err:
+                response.message = (
+                    f"Training succeeded but result decoding failed: {str(res_err)}"
+                )
 
-        elif task_result.state == "FAILURE":
+        elif state == "FAILURE":
             response.status = "FAILURE"
-            response.error = (
-                str(task_result.result) if task_result.result else "Unknown error"
-            )
+            try:
+                response.error = str(task_result.result)
+            except Exception:
+                response.error = "Unknown error (decoding failed)"
             response.message = "Training failed"
 
         else:
-            response.message = f"Task state: {task_result.state}"
+            response.message = f"Task state: {state}"
 
         return response
 
