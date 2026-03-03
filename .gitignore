@@ -15,4 +15,3 @@ docs/analyse
 nodes/**/dist
 worktrees/
 .worktrees/
-.worktrees/
