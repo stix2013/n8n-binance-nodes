@@ -84,6 +84,9 @@ TRAIN_BARS=5000
 TRAIN_WARMUP_BARS=1000
 TRAIN_SEQUENCE_LENGTH=60
 
+# Prediction Defaults
+PREDICT_BARS=210
+
 # Binance API Credentials
 BINANCE_API_KEY="your_binance_api_key"
 BINANCE_SECRET_KEY="your_binance_api_secret"

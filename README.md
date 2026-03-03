@@ -16,11 +16,12 @@ A Docker-based n8n workflow automation environment with custom community nodes f
   - FastAPI service for custom endpoints (Python 3.14, version configurable via `API_VERSION`)
   - Python 3.14 task runner environment
 
-- **Model Training:**
+- **Model Training & Prediction:**
   - Background model training using Celery workers
   - Online learning with current Binance market data
   - Persistence of trained models as `.joblib` files
   - API endpoints for training management (start, status, list, delete)
+  - **Real-time prediction endpoint** for generating trading signals using trained models
 
 - **Trading Tools:**
   - Technical analysis workflows (MACD, RSI, Volume)
@@ -290,6 +291,7 @@ FastAPI service available at `http://localhost:8000`
 - `POST /api/training/train` - Trigger background model training.
 - `GET /api/training/status/{task_id}` - Check training task status.
 - `GET /api/training/models` - List available trained models.
+- `POST /api/crypto/predict` - Generate real-time trading signals (LONG, SHORT, WAIT) using a trained model.
 
 **Configuration:**
 - Python 3.14 with pip
@@ -324,6 +326,7 @@ docker compose logs api | jq
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version information.
 
+- **v1.6.1** (2026-03-03) - Real-time Prediction API, Celery worker enhancements
 - **v1.6.0** (2026-02-19) - Upgrade to n8n 2.8.3 and API 1.6.0
 - **v1.5.0** (2026-02-14) - News Sentiment Analysis, MarkdownSaver Node, n8n 2.7.5
 - **v1.4.0** (2026-02-10) - SMA Indicator, API response enhancement, Python 3.14
