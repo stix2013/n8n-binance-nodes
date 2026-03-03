@@ -200,7 +200,7 @@ services:
       - PYTHONPATH=/app:/libs/crypto-analysis/src
     volumes:
       - ./api:/app
-      - ../../../../trader/crypto-analysis:/libs/crypto-analysis
+      - ../trader/crypto-analysis:/libs/crypto-analysis
       - ./models:/app/models
       - ./.env:/app/.env:ro
 
