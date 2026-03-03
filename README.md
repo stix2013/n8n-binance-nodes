@@ -12,8 +12,15 @@ A Docker-based n8n workflow automation environment with custom community nodes f
 - **Infrastructure:**
   - n8n with external task runners (version configurable via `N8N_VERSION`)
   - PostgreSQL 16 database
+  - Redis 7 for Celery task broker and results
   - FastAPI service for custom endpoints (Python 3.14, version configurable via `API_VERSION`)
   - Python 3.14 task runner environment
+
+- **Model Training:**
+  - Background model training using Celery workers
+  - Online learning with current Binance market data
+  - Persistence of trained models as `.joblib` files
+  - API endpoints for training management (start, status, list, delete)
 
 - **Trading Tools:**
   - Technical analysis workflows (MACD, RSI, Volume)
@@ -280,9 +287,12 @@ FastAPI service available at `http://localhost:8000`
 - `GET /api/indicators/rsi` - RSI indicator only
 - `GET /api/indicators/macd` - MACD indicator only
 - `POST /api/ingest/analyze` - Receives n8n BinanceKline data and performs technical analysis.
+- `POST /api/training/train` - Trigger background model training.
+- `GET /api/training/status/{task_id}` - Check training task status.
+- `GET /api/training/models` - List available trained models.
 
 **Configuration:**
-- Python 3.13 with pip
+- Python 3.14 with pip
 - Reads environment variables from `.env` file
 - Supports multiple time intervals (1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M)
 - Date range filtering with YYYYMMDD format

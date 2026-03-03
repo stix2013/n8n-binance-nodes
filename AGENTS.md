@@ -3,15 +3,17 @@
 Essential guidelines for agentic coding agents in the `n8n-binance-nodes` repository.
 
 ## Environment
-- **API (Python)**: >=3.14, FastAPI, Pydantic v2, `uv` or `pip` in `.venv`
+- **API (Python)**: >=3.14, FastAPI, Pydantic v2, Celery, `uv` or `pip` in `.venv`
 - **Nodes (TS)**: n8n 2.9.2, BunJS 1.3.6
-- **Docker**: n8n, PostgreSQL 16, API
+- **Docker**: n8n, PostgreSQL 16, Redis 7, API
 - **AI Models**: 
   - Local: Ollama (`glm-4`, `phi-4`)
   - Cloud: Google Gemini (`gemini-2.0-flash`)
 
 ## Project Structure
 - `/api/src/`: FastAPI implementation
+- `/api/src/tasks/`: Celery background tasks
+- `/api/src/config/celery_app.py`: Celery configuration
 - `/api/tests/`: Pytest suite
 - `/nodes/@stix/`: Custom n8n community nodes
 - `/docs/workflows/`: n8n workflow JSON exports (Versioned: D=Fixed, E=Refactored, F=Multi-Agent)
@@ -24,6 +26,7 @@ Essential guidelines for agentic coding agents in the `n8n-binance-nodes` reposi
 ```bash
 source .venv/bin/activate && pip install -e .[dev]
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+python -m celery -A src.config.celery_app worker --loglevel=info # Run Celery worker
 ruff check . && ruff format .           # Lint & format
 python -m pytest --cov=src --cov-report=term-missing  # Test + coverage
 ```
@@ -111,6 +114,12 @@ python scripts/build_analyse_f.py  # Generate multi-agent version F
 - **Dockerfile Naming**: Use `Dockerfile.runners` in `/dockers/` for clarity
 - **Build Context**: Task-runners build context must be `.` (project root), not `./dockers`
 - **Healthcheck Port**: Task-runners healthcheck uses port 5680 (not 5679)
+
+### Model Training & Celery
+- **CPU-only PyTorch**: Use `--index-url https://download.pytorch.org/whl/cpu` for much smaller Docker images (~500MB vs 3GB+).
+- **PYTHONPATH**: Celery requires the source directory (e.g., `/app`) to be in `PYTHONPATH` to resolve task modules like `src.tasks.training`.
+- **Torch Pickling**: `torch.device` objects are not picklable. Use custom `__getstate__` and `__setstate__` to exclude them during serialization and restore them after.
+- **Port Isolation**: When running multiple stacks (e.g., in a worktree), use isolated host ports for Redis (6380) and Postgres (5433) to avoid conflicts.
 
 ### Deprecation Warnings Fix
 - Add `N8N_MIGRATE_FS_STORAGE_PATH=true` for binaryData → storage migration
