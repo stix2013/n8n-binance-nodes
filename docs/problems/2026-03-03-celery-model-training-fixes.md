@@ -49,12 +49,29 @@
   ```
 
 ## 6. Docker Volume Mapping in Worktrees
-**Issue**: Code changes made in the git worktree were not reflected inside the running containers due to relative path mapping or volume caching.
+**Issue**: Code changes made in the git worktree were not reflected inside the running containers due to relative path mapping resolution issues or volume caching.
 **Solution**:
-- Switched from relative paths (`./api`) to absolute paths based on the worktree root in `docker-compose.yml`.
-- Used `docker compose -p online-training up -d --force-recreate` to ensure new volumes were applied.
+- Initially used absolute paths for debug visibility.
+- Final solution: Used correct relative paths in `docker-compose.yml` (`./api`, `./models`) and reached outside the worktree for shared libraries using `../../../../trader/crypto-analysis`.
+- Used `docker compose -p online-training up -d --force-recreate` to ensure new volume definitions were applied.
 
 ## 7. Pydantic Model Validation Errors
 **Issue**: `Failed to get status: "TrainingStatusResponse" object has no field "message"`. The API logic attempted to populate a field that wasn't defined in the response model.
 **Solution**:
 - Updated `api/src/routes/training.py` to include the `message` field in `TrainingStatusResponse`.
+
+## 8. Development Environment Port Conflicts
+**Issue**: Running multiple instances of the stack (main project and feature worktree) caused port conflicts for Postgres (5432) and Redis (6379).
+**Solution**:
+- Implemented port isolation in the worktree `docker-compose.yml`:
+  - API: `8000` -> `8001`
+  - Postgres: `5432` -> `5433`
+  - Redis: `6379` -> `6380`
+- Used `-p online-training` project name to isolate networks and container names.
+
+---
+
+## Final Verification Results
+- **Success Rate**: 100% (BTC and ETH training runs successful).
+- **Persistence**: Models correctly saved as `.joblib` in `./models/`.
+- **API Response**: Status and Model List endpoints verified working with new schema.
