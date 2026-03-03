@@ -258,25 +258,36 @@ celery-worker:
 | 2026-03-03 | API endpoints | ✅ Complete | Training routes created in src/routes/ |
 | 2026-03-03 | Dependencies | ✅ Complete | Added celery[redis], torch, scikit-learn to pyproject.toml |
 | 2026-03-03 | Environment variables | ✅ Complete | Added CELERY_* and TRAIN_* vars to .env |
-| 2026-03-03 | Build & validation | 🔄 In Progress | Ready for testing |
+| 2026-03-03 | Final validation | ✅ Complete | All endpoints verified and model persistence confirmed |
 
 ---
 
-## Next Steps
+## Final Status
 
-### Pending Implementation
-- [ ] Test Docker build with new dependencies
-- [ ] Start services and verify Redis connectivity
-- [ ] Test training task execution
-- [ ] Validate model persistence in shared volume
-- [ ] Test API endpoints with curl/Postman
+### Completed
+- ✅ Test Docker build with new dependencies (PyTorch CPU optimized)
+- ✅ Start services and verify Redis connectivity
+- ✅ Test training task execution (ETHUSDT 1m)
+- ✅ Fixed dynamic feature count issue in crypto-analysis module
+- ✅ Fixed volume mapping issues in docker-compose.yml
+- ✅ Validated model persistence in shared volume (.joblib creation)
+- ✅ Verified API status endpoint with task_id
+- ✅ Verified API models list endpoint
+- ✅ Fixed Pydantic model discrepancies in status response
 
-### Future Enhancements
+### Summary of Infrastructure
+- **API**: Running on port 8001 (worktree isolation)
+- **Celery Worker**: Running in background, linked to `crypto-analysis` module
+- **Redis**: Running on port 6380
+- **Models**: Stored in `./models/` (shared volume)
+
+---
+
+## Next Steps (Future Enhancements)
 - [ ] Add Celery Beat for scheduled re-training
-- [ ] Implement model versioning
-- [ ] Add prediction/inference endpoint
+- [ ] Add prediction/inference endpoint logic using the trained model
 - [ ] Create n8n workflow for training orchestration
-- [ ] Add GPU support configuration (optional)
+- [ ] Implement model versioning and cleanup of old models
 
 ---
 
