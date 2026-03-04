@@ -1,11 +1,11 @@
 x-binance-hosts: &binance-hosts
-  - "binance.com:3.170.91.76"
-  - "www.binance.com:3.170.91.76"
-  - "api.binance.com:108.156.104.23"
-  - "developers.binance.com:18.172.242.31"
-  - "fapi.binance.com:13.35.24.46"
-  - "fstream.binance.com:13.249.134.34"
-  - "stream.binance.com:13.114.105.102"
+  binance.com: 3.170.91.76
+  www.binance.com: 3.170.91.76
+  api.binance.com: 108.156.104.23
+  developers.binance.com: 18.172.242.31
+  fapi.binance.com: 13.35.24.46
+  fstream.binance.com: 13.249.134.34
+  stream.binance.com: 13.114.105.102
 
 services:
   # n8n Main
@@ -17,8 +17,8 @@ services:
       - 1.1.1.1
     extra_hosts:
       <<: *binance-hosts
-      - "host.docker.internal:192.168.0.14"
-      - "host.local:192.168.0.14"
+      host.docker.internal: 192.168.0.14
+      host.local: 192.168.0.14
     networks:
       - n8n_network
     ports:
@@ -31,6 +31,7 @@ services:
       - N8N_PORT=${N8N_PORT}
       - N8N_PROTOCOL=http
       # - N8N Runners
+      - N8N_RUNNERS_ENABLED=true
       - N8N_RUNNERS_MODE=external
       - N8N_RUNNERS_EXECUTIONS_PROCESS=child
       - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
@@ -89,19 +90,23 @@ services:
     networks:
       - n8n_network
     environment:
-      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n-main:5679
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
       - N8N_RUNNERS_EXECUTIONS_PROCESS=child
+      - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
     volumes:
       - n8n_storage:/home/node/.n8n
       - ./docs/analyse:/home/node/analyse:rw
+      - ./nodes/@stix:/home/node/.n8n/custom:rw
     dns:
       - 8.8.8.8
       - 1.1.1.1
     extra_hosts:
       <<: *binance-hosts
+      host.docker.internal: 192.168.0.14
+      host.local: 192.168.0.14
     healthcheck:
-      test: ["CMD", "sh", "-c", "wget -q -O- http://task-runners:5680/healthz || exit 1"]
+      test: ["CMD", "sh", "-c", "wget -q -O- http://localhost:5680/healthz || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -131,34 +136,12 @@ services:
       retries: 10
       start_period: 10s
 
-  # Redis (Celery Broker & Result Backend)
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    networks:
-      - n8n_network
-    ports:
-      - "6380:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 64M
-
   # API Python
   api:
     image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.0}
     build:
       context: .
-      dockerfile: dockers/Dockerfile.python
+      dockerfile: dockers/Dockerfile.api
       args:
         - API_VERSION=${API_VERSION:-1.7.0}
     restart: unless-stopped
@@ -171,51 +154,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - API_LOG_LEVEL=${API_LOG_LEVEL:-INFO}
-      - PYTHONPATH=/app:/libs/crypto-analysis/src
     volumes:
       - ./api:/app
-      - ../trader/crypto-analysis:/libs/crypto-analysis
-      - ./models:/app/models
       - ./.env:/app/.env:ro
-
-  # Celery Worker (Model Training)
-  celery-worker:
-    image: api-python-worker${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.0}
-    build:
-      context: .
-      dockerfile: dockers/Dockerfile.worker
-      args:
-        - API_VERSION=${API_VERSION:-1.7.0}
-    restart: unless-stopped
-    networks:
-      - n8n_network
-    command: python -m celery -A src.config.celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info}
-    extra_hosts:
-      <<: *binance-hosts
-    volumes:
-      - ./api:/app
-      - ../trader/crypto-analysis:/libs/crypto-analysis
-      - ./models:/app/models
-      - ./.env:/app/.env:ro
-    environment:
-      - PYTHONPATH=/app:/libs/crypto-analysis/src
-      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
-      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
-      - BINANCE_API_KEY=${BINANCE_API_KEY}
-      - BINANCE_SECRET_KEY=${BINANCE_SECRET_KEY}
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
 
 # Volumes
 volumes:
@@ -224,10 +165,8 @@ volumes:
     name: n8n_storage
   postgres_data:
     name: postgres_data
-  redis_data:
-    name: redis_data
 # Networks 
 networks:
   n8n_network:
-    external: true
+    driver: bridge
     name: n8n_network
