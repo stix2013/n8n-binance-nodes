@@ -1,8 +1,8 @@
 """Price data validation utilities for Binance API responses."""
 
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class PriceValidationError(Exception):
         index: int,
         error_type: str,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         self.index = index
         self.error_type = error_type
@@ -54,8 +54,8 @@ def get_interval_duration_minutes(interval_value: str) -> int:
 
 
 def validate_close_time(
-    data_point: Dict[str, Any], interval_value: str, index: int
-) -> Tuple[bool, Optional[str]]:
+    data_point: dict[str, Any], interval_value: str, index: int
+) -> tuple[bool, str | None]:
     """Validate that close_time is at the end of the expected timeframe.
 
     Args:
@@ -99,8 +99,8 @@ def validate_close_time(
 
 
 def validate_prices(
-    data_point: Dict[str, Any], index: int
-) -> Tuple[bool, Optional[str]]:
+    data_point: dict[str, Any], index: int
+) -> tuple[bool, str | None]:
     """Validate that open, close, high, and low prices are logically consistent.
 
     Validations:
@@ -149,8 +149,8 @@ def validate_prices(
 
 
 def validate_volume(
-    data_point: Dict[str, Any], index: int
-) -> Tuple[bool, Optional[str]]:
+    data_point: dict[str, Any], index: int
+) -> tuple[bool, str | None]:
     """Validate that volume is greater than zero.
 
     Args:
@@ -170,12 +170,12 @@ def validate_volume(
 
 
 def validate_price_data(
-    data_points: List[Dict[str, Any]],
+    data_points: list[dict[str, Any]],
     interval_value: str,
     skip_volume_validation: bool = False,
     skip_time_validation: bool = False,
     skip_price_validation: bool = False,
-) -> List[PriceValidationError]:
+) -> list[PriceValidationError]:
     """Validate all price data points from Binance API response.
 
     Performs three types of validation:
@@ -245,12 +245,12 @@ def validate_price_data(
 
 
 def filter_valid_data_points(
-    data_points: List[Dict[str, Any]],
+    data_points: list[dict[str, Any]],
     interval_value: str,
     skip_volume_validation: bool = False,
     skip_time_validation: bool = False,
     skip_price_validation: bool = False,
-) -> Tuple[List[Dict[str, Any]], List[PriceValidationError]]:
+) -> tuple[list[dict[str, Any]], list[PriceValidationError]]:
     """Filter out invalid data points and return errors.
 
     Args:

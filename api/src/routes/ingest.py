@@ -2,26 +2,26 @@ from fastapi import APIRouter, HTTPException
 
 try:
     from ..models.ingest_models import (
+        EMAResult,
         IngestRequest,
         IngestResponse,
-        RSIResult,
         MACDResult,
+        RSIResult,
         SMAResult,
-        EMAResult,
     )
     from ..utils.indicators import TechnicalIndicators
 except ImportError:
     from models.ingest_models import (
+        EMAResult,
         IngestRequest,
         IngestResponse,
-        RSIResult,
         MACDResult,
+        RSIResult,
         SMAResult,
-        EMAResult,
     )
     from utils.indicators import TechnicalIndicators
-from datetime import datetime
 import logging
+from datetime import datetime
 
 router = APIRouter(prefix="/api/ingest", tags=["ingest"])
 logger = logging.getLogger(__name__)

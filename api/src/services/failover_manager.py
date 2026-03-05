@@ -1,7 +1,6 @@
 import logging
 from collections import deque
 from datetime import datetime
-from typing import Dict, List, Set
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +42,10 @@ class FailoverManager:
                 "time_nextadvisor",
             ]
         )
-        self.active_sources: Set = set(self.primaries)
-        self.consecutive_failures: Dict[str, int] = {s: 0 for s in RSS_SOURCES}
-        self.failed_primaries: Dict[str, datetime] = {}
-        self.active_backups: Dict[str, str] = {}
+        self.active_sources: set = set(self.primaries)
+        self.consecutive_failures: dict[str, int] = dict.fromkeys(RSS_SOURCES, 0)
+        self.failed_primaries: dict[str, datetime] = {}
+        self.active_backups: dict[str, str] = {}
 
     def record_failure(self, source: str) -> None:
         if source not in self.primaries:
@@ -105,7 +104,7 @@ class FailoverManager:
             f"RESTORED: {recovered_primary} <- {backup_to_remove} | Active sources: {sorted(self.active_sources)}"
         )
 
-    def get_active_sources(self) -> List[str]:
+    def get_active_sources(self) -> list[str]:
         return sorted(list(self.active_sources))
 
     def get_status(self) -> dict:

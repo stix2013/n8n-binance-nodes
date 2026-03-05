@@ -1,40 +1,38 @@
 """Trading routes for spot and futures operations."""
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import List, Optional
-from datetime import datetime
 import logging
+from datetime import datetime
+
+from fastapi import APIRouter, HTTPException, Query
 
 # Import utilities with fallback for both relative and absolute imports
 try:
     from ..models.trading_models import (
-        SpotOrderRequest,
-        FuturesOrderRequest,
-        OrderResponse,
-        SpotOrder,
-        FuturesOrder,
-        CandlestickResponse,
         CandlestickData,
-        MarkPriceResponse,
-        OpenInterestResponse,
+        CandlestickResponse,
+        FuturesOrder,
+        FuturesOrderRequest,
         IntervalEnum,
         MarketTypeEnum,
+        MarkPriceResponse,
+        OpenInterestResponse,
+        OrderResponse,
+        SpotOrder,
+        SpotOrderRequest,
     )
     from ..services.trading_service import trading_service
     from ..utils.exceptions import BinanceAPIError, DatabaseError
 except ImportError:
     from models.trading_models import (
-        SpotOrderRequest,
+        CandlestickData,
+        CandlestickResponse,
+        FuturesOrder,
         FuturesOrderRequest,
+        IntervalEnum,
+        MarkPriceResponse,
         OrderResponse,
         SpotOrder,
-        FuturesOrder,
-        CandlestickResponse,
-        CandlestickData,
-        MarkPriceResponse,
-        OpenInterestResponse,
-        IntervalEnum,
-        MarketTypeEnum,
+        SpotOrderRequest,
     )
     from services.trading_service import trading_service
     from utils.exceptions import BinanceAPIError, DatabaseError
@@ -77,12 +75,12 @@ async def place_spot_order(order_request: SpotOrderRequest):
 
 @router.get(
     "/spot/orders",
-    response_model=List[SpotOrder],
+    response_model=list[SpotOrder],
     summary="Get recent spot orders",
     description="Get recent spot orders from database (max 3 per symbol)",
 )
 async def get_recent_spot_orders(
-    symbol: Optional[str] = Query(None, description="Filter by symbol (e.g., BTCUSDT)"),
+    symbol: str | None = Query(None, description="Filter by symbol (e.g., BTCUSDT)"),
     limit: int = Query(3, ge=1, le=10, description="Maximum orders per symbol"),
 ):
     """
@@ -139,13 +137,13 @@ async def place_futures_order(order_request: FuturesOrderRequest):
 
 @router.get(
     "/futures/orders",
-    response_model=List[FuturesOrder],
+    response_model=list[FuturesOrder],
     summary="Get recent futures orders",
     description="Get recent futures orders from database (max 3 per symbol)",
 )
 async def get_recent_futures_orders(
-    symbol: Optional[str] = Query(None, description="Filter by symbol (e.g., BTCUSDT)"),
-    market_type: Optional[str] = Query(
+    symbol: str | None = Query(None, description="Filter by symbol (e.g., BTCUSDT)"),
+    market_type: str | None = Query(
         None, description="Filter by market type (usd_m or coin_m)"
     ),
     limit: int = Query(3, ge=1, le=10, description="Maximum orders per symbol"),
@@ -536,4 +534,3 @@ async def get_open_interest_history(
 
 
 # Import asyncio for background tasks
-import asyncio

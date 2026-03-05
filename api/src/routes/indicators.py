@@ -1,58 +1,53 @@
 """Technical indicators API routes."""
 
-from fastapi import APIRouter, HTTPException, Query, Depends
-from typing import List, Tuple
-import httpx
-import os
 import logging
+import os
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 # Import utilities with fallback for both relative and absolute imports
 try:
-    from ..utils.date_utils import convert_date_format, timestamp_to_iso
-    from ..utils.indicators import TechnicalIndicators
     from ..models.api_models import (
-        PriceRequest,
-        PriceResponse,
         ErrorResponse,
         IntervalEnum,
+        PriceRequest,
+        PriceResponse,
     )
     from ..models.indicators import (
-        TechnicalAnalysisRequest,
-        TechnicalAnalysisResponse,
-        RSIResult,
+        EMAResult,
+        IndicatorType,
         MACDResult,
         MACDSignal,
-        SMAResult,
-        EMAResult,
+        RSIResult,
         SingleIndicatorRequest,
         SingleIndicatorResponse,
-        IndicatorType,
+        SMAResult,
+        TechnicalAnalysisRequest,
+        TechnicalAnalysisResponse,
+    )
+    from ..models.indicators import (
         ErrorResponse as IndicatorsErrorResponse,
     )
     from ..models.settings import settings
+    from ..utils.date_utils import convert_date_format, timestamp_to_iso
+    from ..utils.indicators import TechnicalIndicators
 except ImportError:
-    from utils.date_utils import convert_date_format, timestamp_to_iso
-    from utils.indicators import TechnicalIndicators
-    from models.api_models import (
-        PriceRequest,
-        PriceResponse,
-        ErrorResponse,
-        IntervalEnum,
-    )
     from models.indicators import (
-        TechnicalAnalysisRequest,
-        TechnicalAnalysisResponse,
-        RSIResult,
+        EMAResult,
+        IndicatorType,
         MACDResult,
         MACDSignal,
-        SMAResult,
-        EMAResult,
-        SingleIndicatorRequest,
+        RSIResult,
         SingleIndicatorResponse,
-        IndicatorType,
+        SMAResult,
+        TechnicalAnalysisResponse,
+    )
+    from models.indicators import (
         ErrorResponse as IndicatorsErrorResponse,
     )
-    from models.settings import settings
+    from utils.date_utils import timestamp_to_iso
+    from utils.indicators import TechnicalIndicators
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/indicators", tags=["technical-indicators"])
@@ -117,7 +112,7 @@ async def get_binance_api_key() -> str:
 
 async def get_price_data(
     symbol: str, interval: str, limit: int, api_key: str
-) -> Tuple[List[float], int]:
+) -> tuple[list[float], int]:
     """
     Fetch price data from Binance API and extract closing prices.
 

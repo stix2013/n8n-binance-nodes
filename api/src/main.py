@@ -1,11 +1,11 @@
 """Main FastAPI application."""
 
 import logging
-from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-import sys
 import os
+import sys
+from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 
 # Add the src directory to Python path for imports
@@ -16,15 +16,15 @@ load_dotenv("/app/.env")
 
 # Import Pydantic models and settings
 try:
-    from .models.api_models import RootResponse, HealthResponse, ErrorResponse
-    from .models.settings import settings
     from .config.logging_config import setup_logging
     from .middleware.logging_middleware import ErrorLoggingMiddleware
+    from .models.api_models import ErrorResponse, HealthResponse, RootResponse
+    from .models.settings import settings
 except ImportError:
-    from models.api_models import RootResponse, HealthResponse, ErrorResponse
-    from models.settings import settings
     from config.logging_config import setup_logging
     from middleware.logging_middleware import ErrorLoggingMiddleware
+    from models.api_models import ErrorResponse, HealthResponse, RootResponse
+    from models.settings import settings
 
 # Set up logging
 setup_logging(settings.log_level)
@@ -50,9 +50,9 @@ async def lifespan(app):
 
     # Initialize database and news service
     try:
+        from scheduler.news_scheduler import NewsScheduler
         from services.database import db
         from services.news_service import NewsService
-        from scheduler.news_scheduler import NewsScheduler
 
         # Connect to database
         await db.connect()
@@ -103,10 +103,10 @@ app.add_middleware(ErrorLoggingMiddleware)
 # Import and include routers
 try:
     # Try relative import first
-    from .routes import binance, indicators, ingest, news, trading, training, crypto
+    from .routes import binance, crypto, indicators, ingest, news, trading
 except ImportError:
     # Fall back to absolute import for direct execution
-    from routes import binance, indicators, ingest, news, trading, training, crypto
+    from routes import binance, crypto, indicators, ingest, news, trading
 
 # Include routers
 app.include_router(binance.router)
@@ -114,7 +114,6 @@ app.include_router(indicators.router)
 app.include_router(ingest.router)
 app.include_router(news.router)
 app.include_router(trading.router)
-app.include_router(training.router)
 app.include_router(crypto.router)
 
 

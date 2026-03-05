@@ -1,12 +1,12 @@
 import os
-import asyncpg
 from contextlib import asynccontextmanager
-from typing import Optional
+
+import asyncpg
 
 
 class Database:
     def __init__(self):
-        self.pool: Optional[asyncpg.Pool] = None
+        self.pool: asyncpg.Pool | None = None
 
     async def connect(self) -> None:
         dsn = (

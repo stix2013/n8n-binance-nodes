@@ -1,0 +1,48 @@
+# ---------- Stage 1: Build the API ----------
+ARG API_VERSION=1.7.0
+FROM python:3.14-slim AS builder
+
+# System dependencies (minimal)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl build-essential && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy project files
+COPY ./api /app
+
+# Install dependencies (regular install, not editable for production)
+RUN pip install --no-cache-dir .
+
+# ---------- Stage 2: API runtime ----------
+FROM python:3.14-slim AS api-runtime
+
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy virtual environment and source
+COPY --from=builder /opt/venv /opt/venv
+COPY ./api /app
+
+# Create non-root user
+RUN useradd -u 1000 -m appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Set PATH to use the virtual environment
+ENV PATH="/opt/venv/bin:$PATH"
+ENV PYTHONPATH="/app/src"
+
+# Healthcheck
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Entrypoint for the API server
+WORKDIR /app/src
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,7 +1,7 @@
 import logging
+
 import feedparser
 import httpx
-from typing import Optional
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger(__name__)
@@ -130,13 +130,11 @@ class RSSFetcher:
         logger.info(f"Fetched {len(articles)} articles from {source}")
         return articles
 
-    def _parse_date(self, entry) -> Optional[str]:
+    def _parse_date(self, entry) -> str | None:
         if hasattr(entry, "published_parsed") and entry.published_parsed:
-            from time import mktime
 
             return str(entry.published_parsed)
         if hasattr(entry, "updated_parsed") and entry.updated_parsed:
-            from time import mktime
 
             return str(entry.updated_parsed)
         return None

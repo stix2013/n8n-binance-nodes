@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "api"
 version = "1.7.0"
@@ -17,9 +21,7 @@ dependencies = [
     "asyncpg>=0.29.0",
     "feedparser>=6.0.12",
     "vaderSentiment>=3.3.2",
-    "spacy>=3.7.0",
     "apscheduler>=3.10.4",
-    "beautifulsoup4>=4.12.0",
     "tenacity>=8.2.0",
     # Celery for background tasks
     "celery[redis]>=5.3.0",
@@ -27,14 +29,7 @@ dependencies = [
     # Machine Learning
     "joblib>=1.3.0",
     "scikit-learn>=1.3.0",
-    # CPU-only PyTorch (smaller image size, faster build)
-    "torch>=2.0.0; platform_system != 'Darwin'",
-    "torchvision>=0.15.0; platform_system != 'Darwin'",
 ]
-
-[tool.pip]
-# Use CPU-only PyTorch index to avoid NVIDIA dependencies
-extra-index-url = "https://download.pytorch.org/whl/cpu"
 
 [project.optional-dependencies]
 dev = [
@@ -42,4 +37,35 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-httpx>=0.27.0",
     "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
 ]
+
+[tool.ruff]
+exclude = [".gemini", ".opencode", "models", "signals"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM", "ASYNC"]
+ignore = [
+    "E501",
+    "N803",   # Argument name should be lowercase
+    "N806",   # Variable in function should be lowercase
+    "B905",   # zip() without strict=
+    "SIM105", # Use contextlib.suppress
+    "E722",   # Bare except (will be manually fixed where needed)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = ["-v", "--tb=short", "--strict-markers"]

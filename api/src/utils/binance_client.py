@@ -1,19 +1,21 @@
 """Unified Binance API client for Spot, USD-M Futures, and Coin-M Futures."""
 
-import os
-import hmac
 import hashlib
+import hmac
+import os
 import time
-from typing import Dict, Any, Optional, List
+from typing import Any
 from urllib.parse import urlencode
+
 import httpx
+
 from .exceptions import (
     BinanceAPIError,
     BinanceAuthError,
-    BinanceRateLimitError,
-    BinanceValidationError,
     BinanceOrderError,
+    BinanceRateLimitError,
     BinanceServerError,
+    BinanceValidationError,
 )
 
 
@@ -64,7 +66,7 @@ class BinanceClient:
         else:
             raise BinanceValidationError(f"Invalid market type: {market_type}")
 
-    def _get_headers(self, include_auth: bool = True) -> Dict[str, str]:
+    def _get_headers(self, include_auth: bool = True) -> dict[str, str]:
         """Get request headers."""
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -109,10 +111,10 @@ class BinanceClient:
         method: str,
         endpoint: str,
         market_type: str = "spot",
-        params: Dict[str, Any] = None,
+        params: dict[str, Any] = None,
         signed: bool = True,
         retry_count: int = 0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Make HTTP request with retry logic."""
         base_url = self._get_base_url(market_type)
         url = f"{base_url}{endpoint}"
@@ -198,7 +200,7 @@ class BinanceClient:
         limit: int = 500,
         start_time: int = None,
         end_time: int = None,
-    ) -> List[List]:
+    ) -> list[list]:
         """Get spot candlestick data."""
         params = {
             "symbol": symbol.upper(),
@@ -222,7 +224,7 @@ class BinanceClient:
         quantity: float,
         price: float = None,
         time_in_force: str = "GTC",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place spot order."""
         params = {
             "symbol": symbol.upper(),
@@ -250,7 +252,7 @@ class BinanceClient:
         limit: int = 500,
         start_time: int = None,
         end_time: int = None,
-    ) -> List[List]:
+    ) -> list[list]:
         """Get USD-M futures candlestick data."""
         params = {
             "symbol": symbol.upper(),
@@ -273,7 +275,7 @@ class BinanceClient:
         limit: int = 500,
         start_time: int = None,
         end_time: int = None,
-    ) -> List[List]:
+    ) -> list[list]:
         """Get USD-M futures mark price klines."""
         params = {
             "symbol": symbol.upper(),
@@ -293,7 +295,7 @@ class BinanceClient:
             signed=False,
         )
 
-    async def get_usdm_mark_price(self, symbol: str = None) -> Dict[str, Any]:
+    async def get_usdm_mark_price(self, symbol: str = None) -> dict[str, Any]:
         """Get USD-M futures mark price."""
         params = {}
         if symbol:
@@ -307,7 +309,7 @@ class BinanceClient:
             signed=False,
         )
 
-    async def get_usdm_open_interest(self, symbol: str) -> Dict[str, Any]:
+    async def get_usdm_open_interest(self, symbol: str) -> dict[str, Any]:
         """Get USD-M futures open interest."""
         params = {"symbol": symbol.upper()}
 
@@ -326,7 +328,7 @@ class BinanceClient:
         limit: int = 500,
         start_time: int = None,
         end_time: int = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get USD-M futures open interest history."""
         params = {
             "symbol": symbol.upper(),
@@ -359,7 +361,7 @@ class BinanceClient:
         close_position: bool = False,
         working_type: str = "CONTRACT_PRICE",
         price_protect: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place USD-M futures order."""
         params = {
             "symbol": symbol.upper(),
@@ -401,7 +403,7 @@ class BinanceClient:
         limit: int = 500,
         start_time: int = None,
         end_time: int = None,
-    ) -> List[List]:
+    ) -> list[list]:
         """Get Coin-M futures candlestick data."""
         params = {
             "symbol": symbol.upper(),
@@ -417,7 +419,7 @@ class BinanceClient:
             "GET", "/dapi/v1/klines", market_type="coin_m", params=params, signed=False
         )
 
-    async def get_coinm_mark_price(self, symbol: str = None) -> Dict[str, Any]:
+    async def get_coinm_mark_price(self, symbol: str = None) -> dict[str, Any]:
         """Get Coin-M futures mark price."""
         params = {}
         if symbol:
@@ -431,7 +433,7 @@ class BinanceClient:
             signed=False,
         )
 
-    async def get_coinm_open_interest(self, symbol: str) -> Dict[str, Any]:
+    async def get_coinm_open_interest(self, symbol: str) -> dict[str, Any]:
         """Get Coin-M futures open interest."""
         params = {"symbol": symbol.upper()}
 
@@ -453,7 +455,7 @@ class BinanceClient:
         stop_price: float = None,
         time_in_force: str = "GTC",
         reduce_only: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place Coin-M futures order."""
         params = {
             "symbol": symbol.upper(),
@@ -488,7 +490,7 @@ class BinanceClient:
         limit: int = 500,
         start_time: int = None,
         end_time: int = None,
-    ) -> List[List]:
+    ) -> list[list]:
         """Get klines for any market type (unified method)."""
         market_type = market_type.lower()
 
@@ -515,7 +517,7 @@ class BinanceClient:
         order_type: str,
         quantity: float,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place order for any market type (unified method)."""
         market_type = market_type.lower()
 

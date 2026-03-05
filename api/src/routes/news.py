@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 
@@ -11,7 +10,7 @@ from models.news_models import (
     SourceInfo,
     SystemStatusResponse,
 )
-from services import Database, NewsService
+from services import NewsService
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +54,9 @@ async def get_all_sentiment(
 
 @router.get("/articles", response_model=list[NewsArticleResponse])
 async def get_recent_articles(
-    coin: Optional[str] = Query(default=None),
-    source: Optional[str] = Query(default=None),
-    sentiment: Optional[str] = Query(default=None),
+    coin: str | None = Query(default=None),
+    source: str | None = Query(default=None),
+    sentiment: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
     hours: int = Query(default=24, ge=1, le=168),
     news_service: NewsService = Depends(get_news_service),
