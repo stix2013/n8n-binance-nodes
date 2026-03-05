@@ -10,7 +10,7 @@ x-binance-hosts: &binance-hosts
 services:
   # n8n Main
   n8n:
-    image: n8nio/n8n:${N8N_VERSION:-2.9.4-amd64}
+    image: n8nio/n8n:${N8N_VERSION:-2.10.3-amd64}
     restart: always
     dns:
       - 8.8.8.8
@@ -79,13 +79,13 @@ services:
 
   # n8n Tasks Runners
   task-runners:
-    # image: n8nio/runners:2.9.4
-    image: n8nio-runners-local:${N8N_VERSION:-2.9.4}
+    # image: n8nio/runners:2.10.3
+    image: n8nio-runners-local:${N8N_VERSION:-2.10.3-amd64}
     build:
       context: .
       dockerfile: dockers/Dockerfile.runners
       args:
-        - N8N_VERSION=${N8N_VERSION:-2.9.4}
+        - N8N_VERSION=${N8N_VERSION:-2.10.3-amd64}
     restart: always
     networks:
       - n8n_network
@@ -135,17 +135,17 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-
-  # API Python
-  api:
-    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.0}
-    build:
-      context: .
-      dockerfile: dockers/Dockerfile.api
-      args:
-        - API_VERSION=${API_VERSION:-1.7.0}
-    restart: unless-stopped
-    networks:
+# API Python
+api:
+  image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.1}
+  build:
+    context: .
+    dockerfile: dockers/Dockerfile.api
+    args:
+      - API_VERSION=${API_VERSION:-1.7.1}
+  restart: unless-stopped
+  networks:
+...
       - n8n_network
     ports:
       - "8000:8000"
