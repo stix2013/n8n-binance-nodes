@@ -135,17 +135,16 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-# API Python
-api:
-  image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.1}
-  build:
-    context: .
-    dockerfile: dockers/Dockerfile.api
-    args:
-      - API_VERSION=${API_VERSION:-1.7.1}
-  restart: unless-stopped
-  networks:
-...
+  # API Python
+  api:
+    image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.2}
+    build:
+      context: .
+      dockerfile: dockers/Dockerfile.api
+      args:
+        - API_VERSION=${API_VERSION:-1.7.2}
+    restart: unless-stopped
+    networks:
       - n8n_network
     ports:
       - "8000:8000"
@@ -157,6 +156,12 @@ api:
     volumes:
       - ./api:/app
       - ./.env:/app/.env:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 # Volumes
 volumes:

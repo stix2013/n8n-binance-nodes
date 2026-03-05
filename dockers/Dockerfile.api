@@ -1,5 +1,5 @@
 # ---------- Stage 1: Build the API ----------
-ARG API_VERSION=1.7.0
+ARG API_VERSION=1.7.2
 FROM python:3.14-slim AS builder
 
 # System dependencies (minimal)
