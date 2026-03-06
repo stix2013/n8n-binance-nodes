@@ -12,13 +12,21 @@ Essential guidelines for agentic coding agents in the `n8n-binance-nodes` reposi
 
 ## Project Structure
 - `/api/src/`: FastAPI implementation
-- `/api/src/tasks/`: Celery background tasks
-- `/api/src/config/celery_app.py`: Celery configuration
+- `/api/src/tasks/`: (Deprecated - tasks now handled via `celery_client` to `crypto-analysis` worker)
+- `/api/src/services/celery_client.py`: Celery client for task dispatching
+- `/api/src/routes/tasks.py`: API endpoints for triggering background tasks
 - `/api/tests/`: Pytest suite
 - `/nodes/@stix/`: Custom n8n community nodes
 - `/docs/workflows/`: n8n workflow JSON exports (Versioned: D=Fixed, E=Refactored, F=Multi-Agent)
 - `/scripts/`: Python/TS build and environment tools
 - `/dockers/`: Dockerfiles and infrastructure config
+
+## Architecture: Celery & crypto-analysis
+This project acts as a **Celery Client**, while the `crypto-analysis` project acts as the **Celery Worker**.
+- **Broker**: Redis (`redis://redis:6379/0`)
+- **Task Dispatch**: FastAPI sends tasks via `celery_client.send_task(task_name, ...)`
+- **Task Names**: Must match those defined in `crypto-analysis` (e.g., `train_model`, `fetch_market_data`)
+- **Integration**: The `api` service often mounts `crypto-analysis` as a volume or expects it to be in `PYTHONPATH` for certain operations.
 
 ## Commands
 
@@ -26,9 +34,21 @@ Essential guidelines for agentic coding agents in the `n8n-binance-nodes` reposi
 ```bash
 source .venv/bin/activate && pip install -e .[dev]
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-python -m celery -A src.config.celery_app worker --loglevel=info # Run Celery worker
+# Note: Celery worker is typically run from the crypto-analysis project
 ruff check . && ruff format .           # Lint & format
 python -m pytest --cov=src --cov-report=term-missing  # Test + coverage
+```
+
+### Celery Task Control (via curl)
+```bash
+# Trigger model training
+curl -X POST http://localhost:8000/api/tasks/train-model -H "Content-Type: application/json" -d '{"symbol": "ETHUSDT", "interval": "15m", "bars": 5000}'
+
+# Check task status
+curl http://localhost:8000/api/tasks/{task_id}
+
+# Trigger market data fetch
+curl -X POST http://localhost:8000/api/tasks/fetch-market-data -H "Content-Type: application/json" -d '{"symbol": "BTCUSDT", "interval": "1h", "bars": 1000}'
 ```
 
 ### Nodes (`/nodes/@stix/n8n-nodes-binance-kline/`)

@@ -15,16 +15,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 load_dotenv("/app/.env")
 
 # Import Pydantic models and settings
-try:
-    from .config.logging_config import setup_logging
-    from .middleware.logging_middleware import ErrorLoggingMiddleware
-    from .models.api_models import ErrorResponse, HealthResponse, RootResponse
-    from .models.settings import settings
-except ImportError:
-    from config.logging_config import setup_logging
-    from middleware.logging_middleware import ErrorLoggingMiddleware
-    from models.api_models import ErrorResponse, HealthResponse, RootResponse
-    from models.settings import settings
+from config.logging_config import setup_logging
+from middleware.logging_middleware import ErrorLoggingMiddleware
+from models.api_models import ErrorResponse, HealthResponse, RootResponse
+from models.settings import settings
 
 # Set up logging
 setup_logging(settings.log_level)
@@ -101,12 +95,7 @@ app = FastAPI(
 app.add_middleware(ErrorLoggingMiddleware)
 
 # Import and include routers
-try:
-    # Try relative import first
-    from .routes import binance, crypto, indicators, ingest, news, tasks, trading
-except ImportError:
-    # Fall back to absolute import for direct execution
-    from routes import binance, crypto, indicators, ingest, news, tasks, trading
+from routes import binance, crypto, indicators, ingest, news, tasks, trading
 
 # Include routers
 app.include_router(binance.router)

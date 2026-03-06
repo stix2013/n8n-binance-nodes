@@ -17,11 +17,20 @@ A Docker-based n8n workflow automation environment with custom community nodes f
   - Python 3.14 task runner environment
 
 - **Model Training & Prediction:**
-  - Background model training using Celery workers
+  - Background model training using **Celery workers** hosted in the `crypto-analysis` project
+  - Communication via a shared **Redis** broker for async task dispatch
   - Online learning with current Binance market data
   - Persistence of trained models as `.joblib` files
-  - API endpoints for training management (start, status, list, delete)
-  - **Real-time prediction endpoint** for generating trading signals using trained models
+  - **Celery Task API** for end-to-end ML lifecycle (fetch, train, predict, backtest)
+  - **Real-time prediction endpoint** for generating trading signals (LONG, SHORT, WAIT) using trained models
+
+## Connection to crypto-analysis
+
+This project is tightly integrated with the `crypto-analysis` project (located in `../trader/crypto-analysis`).
+- **Client-Worker Architecture**: `n8n-binance-nodes` acts as the Celery Client, while `crypto-analysis` acts as the Celery Worker.
+- **Shared Broker**: Both services must point to the same Redis instance (defined in `CELERY_BROKER_URL`).
+- **Task Names**: The API triggers tasks named `train_model`, `fetch_market_data`, etc., which are defined and executed by the `crypto-analysis` worker.
+- **Model Storage**: Trained models are saved in the `models/` directory, which is often shared between the two projects via volumes.
 
 - **Trading Tools:**
   - Technical analysis workflows (MACD, RSI, Volume)
@@ -288,9 +297,13 @@ FastAPI service available at `http://localhost:8000`
 - `GET /api/indicators/rsi` - RSI indicator only
 - `GET /api/indicators/macd` - MACD indicator only
 - `POST /api/ingest/analyze` - Receives n8n BinanceKline data and performs technical analysis.
-- `POST /api/training/train` - Trigger background model training.
-- `GET /api/training/status/{task_id}` - Check training task status.
-- `GET /api/training/models` - List available trained models.
+- **Celery Tasks (`/api/tasks/`):**
+  - `POST /api/tasks/fetch-market-data` - Trigger market data fetching task.
+  - `POST /api/tasks/train-model` - Trigger background model training.
+  - `POST /api/tasks/run-prediction` - Run a prediction task asynchronously.
+  - `POST /api/tasks/run-backtest` - Trigger a backtesting task.
+  - `POST /api/tasks/train-and-backtest` - Orchestrate a train-and-backtest pipeline.
+  - `GET /api/tasks/{task_id}` - Check the status and result of any triggered task.
 - `POST /api/crypto/predict` - Generate real-time trading signals (LONG, SHORT, WAIT) using a trained model.
 
 **Configuration:**
