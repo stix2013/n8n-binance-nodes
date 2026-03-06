@@ -146,6 +146,7 @@ services:
     restart: unless-stopped
     networks:
       - n8n_network
+      - shared_network
     ports:
       - "8000:8000"
     extra_hosts:
@@ -153,6 +154,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - API_LOG_LEVEL=${API_LOG_LEVEL:-INFO}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis_broker:6379/0}
     volumes:
       - ./api:/app
       - ./.env:/app/.env:ro
@@ -175,3 +177,5 @@ networks:
   n8n_network:
     driver: bridge
     name: n8n_network
+  shared_network:
+    external: true
