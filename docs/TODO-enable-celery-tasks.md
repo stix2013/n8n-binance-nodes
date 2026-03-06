@@ -22,13 +22,13 @@ Enable the `api` service in `n8n-binance-nodes` to send tasks to the `worker` se
 
 ## Implementation Steps
 
-### 1. Infrastructure Update
+### 1. Infrastructure Update [DONE]
 - **Modify `n8n-binance-nodes/docker-compose.yml`**:
     - Define `shared_network` as an external network.
     - Add `shared_network` to the `api` service's networks.
     - **Verification**: `docker network inspect shared_network` should show the `api` container after restart.
 
-### 2. Service Implementation
+### 2. Service Implementation [DONE]
 - **Create `api/src/services/celery_client.py`**:
     - Initialize `Celery` app with `broker_url` from environment.
     - Define a `send_task` helper method.
@@ -43,7 +43,7 @@ Enable the `api` service in `n8n-binance-nodes` to send tasks to the `worker` se
     - Return `task_id` and `status_url` (optional).
     - Add `GET /api/tasks/{task_id}` to check task status.
 
-### 3. Integration
+### 3. Integration [DONE]
 - **Update `api/src/main.py`**:
     - Import and include `tasks.router`.
 - **Update `env-example`**:
