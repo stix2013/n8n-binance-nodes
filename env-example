@@ -1,4 +1,4 @@
-N8N_VERSION="2.10.3-amd64"
+N8N_VERSION="2.11.2-amd64"
 # Zrok Domain (single source of truth)
 ZROK_DOMAIN=your-zrok-url.share.zrok.io
 

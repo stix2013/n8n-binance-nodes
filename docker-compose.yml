@@ -10,7 +10,7 @@ x-binance-hosts: &binance-hosts
 services:
   # n8n Main
   n8n:
-    image: n8nio/n8n:${N8N_VERSION:-2.10.3-amd64}
+    image: n8nio/n8n:${N8N_VERSION:-2.11.2-amd64}
     restart: always
     dns:
       - 8.8.8.8
@@ -80,12 +80,12 @@ services:
   # n8n Tasks Runners
   task-runners:
     # image: n8nio/runners:2.10.3
-    image: n8nio-runners-local:${N8N_VERSION:-2.10.3-amd64}
+    image: n8nio-runners-local:${N8N_VERSION:-2.11.2-amd64}
     build:
       context: .
       dockerfile: dockers/Dockerfile.runners
       args:
-        - N8N_VERSION=${N8N_VERSION:-2.10.3-amd64}
+        - N8N_VERSION=${N8N_VERSION:-2.11.2-amd64}
     restart: always
     networks:
       - n8n_network
