@@ -10,7 +10,7 @@ A Docker-based n8n workflow automation environment with custom community nodes f
   - **MarkdownSaver:** Convert JSON to Markdown with character filtering for data transformation
 
 - **Infrastructure:**
-  - n8n with external task runners (version configurable via `N8N_VERSION`)
+  - n8n with external task runners (version 2.11.2, configurable via `N8N_VERSION`)
   - PostgreSQL 16 database
   - Redis 7 for Celery task broker and results
   - FastAPI service for custom endpoints (Python 3.14, version configurable via `API_VERSION`)
@@ -56,11 +56,6 @@ n8n-binance-nodes/
 ├── opencode.json                   # OpenCode configuration
 ├── policy.yaml                     # Policy definitions
 │
-├── nodes/                          # n8n custom community nodes
-│   └── @stix/
-│       ├── n8n-nodes-binance-kline/   # Binance Kline & Order nodes
-│       └── n8n-nodes-markdown-saver/  # MarkdownSaver node
-│
 ├── api/                            # FastAPI Python service
 │   ├── src/
 │   │   ├── main.py                 # FastAPI entry point
@@ -75,8 +70,13 @@ n8n-binance-nodes/
 │   │   │   └── settings.py         # Environment settings
 │   │   ├── routes/                 # API route handlers
 │   │   │   ├── binance.py          # Binance API endpoints
+│   │   │   ├── crypto.py           # Crypto prediction endpoints
 │   │   │   ├── indicators.py       # Technical indicators endpoints
-│   │   │   └── news.py             # News sentiment endpoints
+│   │   │   ├── ingest.py           # Data ingestion endpoints
+│   │   │   ├── news.py             # News sentiment endpoints
+│   │   │   ├── tasks.py            # Celery task endpoints
+│   │   │   ├── trading.py          # Trading order endpoints
+│   │   │   └── __init__.py         # Routes export
 │   │   ├── services/               # Business logic services
 │   │   │   ├── celery_client.py    # Celery client configuration
 │   │   │   ├── coin_detector.py    # Crypto coin detection
@@ -86,7 +86,8 @@ n8n-binance-nodes/
 │   │   │   ├── rss_fetcher.py      # RSS feed fetching
 │   │   │   ├── sentiment_analyzer.py # Sentiment analysis
 │   │   │   ├── task_service.py     # Celery task result management
-│   │   │   └── trading_service.py  # Trading logic and order handling
+│   │   │   ├── trading_service.py  # Trading logic and order handling
+│   │   │   └── __init__.py         # Services export
 │   │   ├── scheduler/              # Background job schedulers
 │   │   │   └── news_scheduler.py   # News fetching scheduler
 │   │   └── utils/                  # Utility functions
@@ -94,7 +95,9 @@ n8n-binance-nodes/
 │   │       ├── indicators.py       # RSI, MACD, SMA calculations
 │   │       └── price_validation.py # Binance data validation
 │   ├── migrations/                 # Database migrations
-│   │   └── 001_news_tables.sql    # News tables schema
+│   │   ├── 001_news_tables.sql    # News tables schema
+│   │   ├── 002_trading_tables.sql # Trading orders schema
+│   │   └── 003_celery_task_results.sql # Celery task results schema
 │   ├── tests/                      # Unit tests
 │   ├── pyproject.toml              # Python dependencies
 │   └── demo_indicators.py          # Technical indicators demo
@@ -102,7 +105,7 @@ n8n-binance-nodes/
 ├── dockers/                        # Docker build files
 │   ├── task-runner-python/         # External task runner implementation
 │   ├── Dockerfile                  # Task runner image (n8nio/runners)
-│   ├── Dockerfile.python           # FastAPI Python 3.13 image
+│   ├── Dockerfile.python           # FastAPI Python 3.14 image
 │   ├── Dockerfile.postgres         # PostgreSQL customization
 │   └── n8n-task-runners.json       # Task runner config
 │
@@ -114,8 +117,12 @@ n8n-binance-nodes/
 │   ├── chart-img/                  # Chart examples
 │   ├── problems/                   # Known issues and solutions
 │   ├── crypto/                     # Crypto-related documentation
-│   └── workflows/                  # Example n8n workflows
-│       └── n8n-workflow-ingres.json # Data ingestion and analysis workflow
+│   ├── workflows/                  # Example n8n workflows
+│   │   ├── n8n-workflow-ingres.json # Data ingestion and analysis workflow
+│   │   ├── n8n-workflow-celery-callback.json # Celery callback workflow
+│   │   └── ...
+│   ├── celery-callback-webhook.md  # Celery integration guide
+│   └── ...
 │
 ├── scripts/                        # Environment management scripts
 │   ├── start-env.ts                # Start services and Zrok tunnel
@@ -123,8 +130,17 @@ n8n-binance-nodes/
 │   ├── build-images.ts             # Automated Docker image builder
 │   ├── build-image-choice.ts       # Interactive visual image selector
 │   └── utils/                      # Script utilities
-│       └── docker-build.ts         # Shared Docker build logic
+│       └── docker_build.ts         # Shared Docker build logic
 │
+├── nodes/                          # n8n custom community nodes
+│   └── @stix/
+│       ├── n8n-nodes-binance-kline/   # Binance Kline & Order nodes
+│       └── n8n-nodes-markdown-saver/  # MarkdownSaver node
+│
+├── models/                         # Shared model storage
+├── data/                           # Data files
+├── tasks/                          # Task planning and tracking
+├── .gemini/                        # Gemini CLI configuration
 └── .vscode/                        # VS Code settings
 ```
 
@@ -344,6 +360,10 @@ docker compose logs api | jq
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version information.
 
+- **v1.8.1** (2026-03-11) - Celery Task API, Task Service, n8n 2.11.2 upgrade
+- **v1.8.0** (2026-03-09) - Celery Callback Webhook, Task Result Persistence
+- **v1.7.2** (2026-03-05) - API Healthcheck fix, Docker configuration sync
+- **v1.7.1** (2026-03-05) - Upgrade to n8n 2.10.3
 - **v1.7.0** (2026-03-03) - Real-time Prediction API, Celery worker enhancements
 - **v1.6.1** (2026-03-03) - Documentation updates
 - **v1.6.0** (2026-02-19) - Upgrade to n8n 2.8.3 and API 1.6.0

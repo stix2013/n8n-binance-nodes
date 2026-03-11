@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-03-11
+
+### Added
+- **Celery Task API**: Fully implemented Celery task endpoints for async ML operations.
+  - Added `POST /api/tasks/fetch-market-data` for triggering market data fetching.
+  - Added `POST /api/tasks/train-model` for background model training.
+  - Added `POST /api/tasks/run-prediction` for async prediction tasks.
+  - Added `POST /api/tasks/run-backtest` for backtesting workflows.
+  - Added `POST /api/tasks/train-and-backtest` for orchestrated train-backtest pipelines.
+  - Added `GET /api/tasks/{task_id}` for checking task status and results.
+- **Task Service**: Added `TaskService` for persistent task result management.
+- **Database Migration**: Added `003_celery_task_results.sql` migration for task persistence.
+- **Celery Callback Webhook**: Implemented `POST /api/tasks/webhook/celery-callback` for receiving worker callbacks.
+- **Documentation**: Added `docs/celery-callback-webhook.md` integration guide.
+
+### Changed
+- **n8n Version**: Upgraded n8n from `2.10.3-amd64` to `2.11.2-amd64`.
+  - Updated `N8N_VERSION` in `.env`, `env-example`, `docker-compose.yml`, and `dockers/Dockerfile.runners`.
+- **API Version**: Upgraded API to `1.8.1`.
+- **Project Structure**: Updated `README.md` tree structure to include all service files, routes, and new docs.
+
+### Fixed
+- **Celery Integration**: Fixed task result persistence and callback handling from external workers.
+
 ## [1.8.0] - 2026-03-09
 
 ### Added
