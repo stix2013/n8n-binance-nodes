@@ -4,6 +4,7 @@ from .failover_manager import FailoverManager
 from .news_service import NewsService
 from .rss_fetcher import RSS_SOURCES, RSSFetcher
 from .sentiment_analyzer import SentimentAnalyzer
+from .task_service import TaskService, task_service
 
 __all__ = [
     "db",
@@ -14,4 +15,6 @@ __all__ = [
     "CoinDetector",
     "FailoverManager",
     "NewsService",
+    "TaskService",
+    "task_service",
 ]

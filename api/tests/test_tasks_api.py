@@ -84,3 +84,38 @@ def test_get_task_status_endpoint(mock_async_result, client):
     assert data["ready"] is True
     assert data["successful"] is True
     assert data["result"] == {"accuracy": 0.85}
+
+
+@patch("src.routes.tasks.task_service.save_task_result")
+def test_celery_callback_webhook(mock_save_result, client):
+    """Test the celery callback webhook endpoint."""
+    mock_save_result.return_value = True
+    
+    payload = {
+        "task_id": "test-webhook-id",
+        "task_name": "train_model",
+        "status": "SUCCESS",
+        "symbol": "BTCUSDT",
+        "interval": "15m",
+        "result": {"accuracy": 0.92},
+        "error": None
+    }
+    
+    response = client.post("/api/tasks/webhook/celery-callback", json=payload)
+    
+    assert response.status_code == 200
+    assert response.json() == {
+        "received": True,
+        "task_id": "test-webhook-id",
+        "status": "SUCCESS"
+    }
+    
+    mock_save_result.assert_called_once_with(
+        task_id="test-webhook-id",
+        task_name="train_model",
+        status="SUCCESS",
+        symbol="BTCUSDT",
+        interval="15m",
+        result={"accuracy": 0.92},
+        error=None
+    )

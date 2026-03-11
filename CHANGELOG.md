@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-03-09
+
+### Added
+- **Celery Callback Webhook**: Implemented `POST /api/tasks/webhook/celery-callback` to receive and persist task results from external Celery workers.
+- **Task Result Persistence**: Added `celery_task_results` table and `TaskService` to track the lifecycle and outcomes of background jobs (SUCCESS, FAILURE, etc.).
+- **Testing**: Added integration tests for the Celery callback mechanism in `tests/test_tasks_api.py`.
+
+### Changed
+- **API Documentation**: Updated `README.md` with detailed webhook schemas and integration instructions for the `crypto-analysis` worker.
+- **Project Structure**: Exported `TaskService` via `api/src/services/__init__.py`.
+
 ## [1.7.2] - 2026-03-05
 
 ### Fixed

@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from services.celery_client import celery_client
+from services.task_service import task_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
@@ -25,6 +26,24 @@ class TaskStatusResponse(BaseModel):
     ready: bool
     successful: bool
     result: Optional[Any] = None
+
+
+class CeleryCallbackRequest(BaseModel):
+    """Payload for Celery task callback webhook."""
+    task_id: str
+    task_name: str
+    status: str
+    symbol: Optional[str] = None
+    interval: Optional[str] = None
+    result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class WebhookResponse(BaseModel):
+    """Response for webhook receipt."""
+    received: bool
+    task_id: str
+    status: str
 
 
 class FetchMarketDataRequest(BaseModel):
@@ -169,4 +188,33 @@ async def get_task_status(task_id: str):
         status_info = celery_client.get_status(task_id)
         return TaskStatusResponse(**status_info)
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/webhook/celery-callback", response_model=WebhookResponse)
+async def celery_task_callback(request: CeleryCallbackRequest):
+    """Webhook to receive task results from Celery worker."""
+    try:
+        # Import task_service here if needed to avoid circular imports, 
+        # but we already imported it at the top.
+        success = await task_service.save_task_result(
+            task_id=request.task_id,
+            task_name=request.task_name,
+            status=request.status,
+            symbol=request.symbol,
+            interval=request.interval,
+            result=request.result,
+            error=request.error
+        )
+        
+        if not success:
+            logger.warning(f"Failed to persist task result for {request.task_id} to database")
+            
+        return WebhookResponse(
+            received=True,
+            task_id=request.task_id,
+            status=request.status
+        )
+    except Exception as e:
+        logger.error(f"Error processing celery callback for {request.task_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

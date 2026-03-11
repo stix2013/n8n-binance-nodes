@@ -30,6 +30,7 @@ This project is tightly integrated with the `crypto-analysis` project (located i
 - **Client-Worker Architecture**: `n8n-binance-nodes` acts as the Celery Client, while `crypto-analysis` acts as the Celery Worker.
 - **Shared Broker**: Both services must point to the same Redis instance (defined in `CELERY_BROKER_URL`).
 - **Task Names**: The API triggers tasks named `train_model`, `fetch_market_data`, etc., which are defined and executed by the `crypto-analysis` worker.
+- **Result Callbacks**: The worker sends a `POST /api/tasks/webhook/celery-callback` to the API upon task completion or failure.
 - **Model Storage**: Trained models are saved in the `models/` directory, which is often shared between the two projects via volumes.
 
 - **Trading Tools:**
@@ -80,9 +81,10 @@ n8n-binance-nodes/
 │   │   │   ├── coin_detector.py    # Crypto coin detection
 │   │   │   ├── database.py         # Database operations
 │   │   │   ├── failover_manager.py # API failover handling
-│   │   │   ├── news_service.py    # News processing
-│   │   │   ├── rss_fetcher.py     # RSS feed fetching
-│   │   │   └── sentiment_analyzer.py # Sentiment analysis
+│   │   │   ├── news_service.py     # News processing
+│   │   │   ├── rss_fetcher.py      # RSS feed fetching
+│   │   │   ├── sentiment_analyzer.py # Sentiment analysis
+│   │   │   └── task_service.py     # Celery task result management
 │   │   ├── scheduler/              # Background job schedulers
 │   │   │   └── news_scheduler.py   # News fetching scheduler
 │   │   └── utils/                  # Utility functions
@@ -303,6 +305,7 @@ FastAPI service available at `http://localhost:8000`
   - `POST /api/tasks/run-prediction` - Run a prediction task asynchronously.
   - `POST /api/tasks/run-backtest` - Trigger a backtesting task.
   - `POST /api/tasks/train-and-backtest` - Orchestrate a train-and-backtest pipeline.
+  - `POST /api/tasks/webhook/celery-callback` - Receive task result callback from worker.
   - `GET /api/tasks/{task_id}` - Check the status and result of any triggered task.
 - `POST /api/crypto/predict` - Generate real-time trading signals (LONG, SHORT, WAIT) using a trained model.
 

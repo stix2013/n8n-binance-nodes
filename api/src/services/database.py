@@ -42,6 +42,7 @@ class Database:
         migration_files = [
             "001_news_tables.sql",
             "002_trading_tables.sql",
+            "003_celery_task_results.sql",
         ]
 
         for migration_file in migration_files:
