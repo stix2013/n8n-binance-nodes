@@ -1,0 +1,275 @@
+{
+  "name": "Analysts",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -96
+      ],
+      "id": "abe6e9e6-800a-4d32-a2b4-6e9fda628e79",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    symbol:'BTCUSDT',\n    interval:'15m',\n    bars:5000,\n    warmup_bars: 500,\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -192
+      ],
+      "id": "ad2d0e43-ac95-40a6-8de2-83f60f85537a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/tasks/train-and-backtest",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "={{ $json.interval }}"
+            },
+            {
+              "name": "=bars",
+              "value": "={{ $json.bars }}"
+            },
+            {
+              "name": "warmup_bars",
+              "value": "={{ $json.warmup_bars }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        432,
+        -120
+      ],
+      "id": "941de011-1424-4466-9052-0689273b01aa",
+      "name": "HTTP Request",
+      "onError": "continueErrorOutput",
+      "notes": "error"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        -288
+      ],
+      "id": "18bf0b43-dc46-401c-aabe-aff3fcbdb25d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        -192
+      ],
+      "id": "b7ab1d9a-799e-4b5c-96d3-05a13ef0bceb",
+      "name": "Wait",
+      "webhookId": "cec553e9-e1ca-4b93-91ab-940ea8f8b5e5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/tasks/run-prediction",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model_path",
+              "value": "={{ $json.model_path }}"
+            },
+            {
+              "name": "symbol",
+              "value": "={{ $json.symbol }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1328,
+        -192
+      ],
+      "id": "01712c99-1d76-40fa-bf26-25a75a5eb0fd",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst symbol = $input.last().json.symbol;\nconst interval = $input.last().json.interval;\nconst symbol_lower = symbol;\nconst model_path = `/app/models/model_${symbol_lower.toLowerCase()}_${interval}.joblib`;\n\nreturn [{\n  model_path,\n  symbol,\n  interval,\n  bars: 240,\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -192
+      ],
+      "id": "4b088388-801b-4dc7-a640-3737b8afb527",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        656,
+        -192
+      ],
+      "id": "6e60bc02-9be4-4f97-b2a7-89ca923d35a0",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "url": "=http://api:8000/api/tasks/{{ $json.task_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1552,
+        -192
+      ],
+      "id": "a058b9cd-57be-4990-8556-7c7f6211b9c1",
+      "name": "HTTP Request2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fd919fa0-92e0-43b4-bb90-43030edfaa9c",
+  "meta": {
+    "instanceId": "71e365f928f0d1287bd505a9840e4a88e5524f86349cf1da79a479c099e7916c"
+  },
+  "id": "0PStlyZ2oFo8uPmr",
+  "tags": []
+}

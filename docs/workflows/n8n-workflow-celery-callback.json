@@ -1,0 +1,517 @@
+{
+  "name": "Celery Task Callback",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "celery-callback",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f38a6ca5-b841-4bbf-8291-f4234e2e936d",
+      "name": "Webhook - Celery Callback",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -112
+      ],
+      "webhookId": "celery-task-callback",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c4f4c40-3206-4c59-818b-0222b0e159ec",
+      "name": "Switch by Task Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        496,
+        -112
+      ],
+      "rules": {
+        "conditions": [
+          {
+            "value1": "={{ $json.task_name }}",
+            "operation": "equal",
+            "value2": "train_model"
+          },
+          {
+            "value1": "={{ $json.task_name }}",
+            "operation": "equal",
+            "value2": "run_prediction"
+          },
+          {
+            "value1": "={{ $json.task_name }}",
+            "operation": "equal",
+            "value2": "run_backtest"
+          },
+          {
+            "value1": "={{ $json.task_name }}",
+            "operation": "equal",
+            "value2": "fetch_market_data"
+          }
+        ],
+        "fallbackOutput": "default"
+      },
+      "fallbackOutput": "default"
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "34b82618-dfdc-4047-bc61-d4184f324c23",
+      "name": "Insert Task Result",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1168,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { received: true, task_id: $json.task_id, status: $json.status } }}",
+        "options": {}
+      },
+      "id": "b508c393-8bed-426d-bd55-99aaa0ecef0e",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare data for train_model task\nreturn [{\n  json: {\n    task_id: $input.first().json.task_id,\n    task_name: $input.first().json.task_name,\n    status: $input.first().json.status,\n    symbol: $input.first().json.symbol,\n    interval: $input.first().json.interval,\n    result: JSON.stringify($input.first().json.result || {}),\n    error: $input.first().json.error\n  }\n}];"
+      },
+      "id": "dae5fc2e-89d9-4d86-812e-4f78cbc95016",
+      "name": "Transform - train_model",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -208
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare data for run_prediction task\nreturn [{\n  json: {\n    task_id: $input.first().json.task_id,\n    task_name: $input.first().json.task_name,\n    status: $input.first().json.status,\n    symbol: $input.first().json.symbol,\n    interval: $input.first().json.interval,\n    result: JSON.stringify($input.first().json.result || {}),\n    error: $input.first().json.error\n  }\n}];"
+      },
+      "id": "99bab909-3111-4e4e-a830-9e690234c153",
+      "name": "Transform - run_prediction",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        176
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare data for run_backtest task\nreturn [{\n  json: {\n    task_id: $input.first().json.task_id,\n    task_name: $input.first().json.task_name,\n    status: $input.first().json.status,\n    symbol: $input.first().json.symbol,\n    interval: $input.first().json.interval,\n    result: JSON.stringify($input.first().json.result || {}),\n    error: $input.first().json.error\n  }\n}];"
+      },
+      "id": "877d3890-e383-4482-b363-57a2666d97e2",
+      "name": "Transform - run_backtest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        368
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare data for fetch_market_data task\nreturn [{\n  json: {\n    task_id: $input.first().json.task_id,\n    task_name: $input.first().json.task_name,\n    status: $input.first().json.status,\n    symbol: $input.first().json.symbol,\n    interval: $input.first().json.interval,\n    result: JSON.stringify($input.first().json.result || {}),\n    error: $input.first().json.error\n  }\n}];"
+      },
+      "id": "e1c9ec3b-e674-40d6-82ee-ff85ec26991b",
+      "name": "Transform - fetch_market_data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        560
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "c5572951-1547-49ff-a68a-c2a2a0bf4077",
+      "name": "Insert - train_model",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        944,
+        -208
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "1c225412-a0e2-43cf-9292-32f62f5d4d28",
+      "name": "Insert - run_prediction",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        944,
+        176
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "9555db9f-e1fe-44ab-99c6-f711a7baa0f1",
+      "name": "Insert - run_backtest",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        944,
+        368
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "execute",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "1dfafe5e-ee5f-4a17-ba63-fa82e2ad2375",
+      "name": "Insert - fetch_market_data",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        944,
+        560
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Chain to model-training-done workflow\nconst webhookUrl = 'http://localhost:5678/webhook/model-training-done';\n\nconst response = await $http.post(webhookUrl, {\n  task_id: $input.first().json.task_id,\n  symbol: $input.first().json.symbol,\n  status: $input.first().json.status,\n  result: $input.first().json.result\n});\n\nreturn [{ json: { chained: true, response: response } }];"
+      },
+      "id": "2ee619df-177b-4ebc-8e25-cbd6d8999582",
+      "name": "Chain - train_model",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        -208
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Chain to prediction-analysis workflow\nconst webhookUrl = 'http://localhost:5678/webhook/prediction-analysis';\n\nconst response = await $http.post(webhookUrl, {\n  task_id: $input.first().json.task_id,\n  symbol: $input.first().json.symbol,\n  signal: $input.first().json.result?.signal,\n  confidence: $input.first().json.result?.confidence,\n  status: $input.first().json.status\n});\n\nreturn [{ json: { chained: true, response: response } }];"
+      },
+      "id": "897d484e-1df7-44e5-82af-3a9be280bf47",
+      "name": "Chain - run_prediction",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        176
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Chain to backtest-report workflow\nconst webhookUrl = 'http://localhost:5678/webhook/backtest-report';\n\nconst response = await $http.post(webhookUrl, {\n  task_id: $input.first().json.task_id,\n  symbol: $input.first().json.symbol,\n  pnl: $input.first().json.result?.total_pnl,\n  status: $input.first().json.status\n});\n\nreturn [{ json: { chained: true, response: response } }];"
+      },
+      "id": "1707e831-236a-46f7-9a3b-6fe1aa684dcb",
+      "name": "Chain - run_backtest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        368
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Chain to market-data-processed workflow\nconst webhookUrl = 'http://localhost:5678/webhook/market-data-processed';\n\nconst response = await $http.post(webhookUrl, {\n  task_id: $input.first().json.task_id,\n  symbol: $input.first().json.symbol,\n  bars: $input.first().json.result?.bars,\n  status: $input.first().json.status\n});\n\nreturn [{ json: { chained: true, response: response } }];"
+      },
+      "id": "7a6cf831-8ad2-42dd-a140-e8619293c8d0",
+      "name": "Chain - fetch_market_data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        560
+      ],
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Celery Callback": {
+      "main": [
+        [
+          {
+            "node": "Switch by Task Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch by Task Type": {
+      "main": [
+        [
+          {
+            "node": "Transform - train_model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert Task Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform - train_model": {
+      "main": [
+        [
+          {
+            "node": "Insert - train_model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform - run_prediction": {
+      "main": [
+        [
+          {
+            "node": "Insert - run_prediction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform - run_backtest": {
+      "main": [
+        [
+          {
+            "node": "Insert - run_backtest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform - fetch_market_data": {
+      "main": [
+        [
+          {
+            "node": "Insert - fetch_market_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Task Result": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert - train_model": {
+      "main": [
+        [
+          {
+            "node": "Chain - train_model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert - run_prediction": {
+      "main": [
+        [
+          {
+            "node": "Chain - run_prediction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert - run_backtest": {
+      "main": [
+        [
+          {
+            "node": "Chain - run_backtest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert - fetch_market_data": {
+      "main": [
+        [
+          {
+            "node": "Chain - fetch_market_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chain - train_model": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chain - run_prediction": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chain - run_backtest": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chain - fetch_market_data": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7f37b4cb-2578-41fe-9e01-7966902f2694",
+  "meta": {
+    "instanceId": "71e365f928f0d1287bd505a9840e4a88e5524f86349cf1da79a479c099e7916c"
+  },
+  "id": "pv7OoLOcRhlMooyn",
+  "tags": []
+}

@@ -1,0 +1,225 @@
+{
+  "name": "Predict",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        240
+      ],
+      "id": "b5fa6ec1-3349-4589-b124-935d80afcee2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "g2aaza7JyDSAabhA",
+          "mode": "list",
+          "cachedResultName": "trader_crypto_params",
+          "cachedResultUrl": "/projects/cnX5hE5JuMQaKTQq/datatables/g2aaza7JyDSAabhA"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        144
+      ],
+      "id": "68274c11-c645-4926-9a77-1455de153703",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        48
+      ],
+      "id": "35761809-2d46-4cdd-a224-4658b3ebde9f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "celery_task_results",
+          "mode": "name"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "status",
+              "value": "SUCCESS"
+            },
+            {
+              "column": "task_name",
+              "value": "run_prediction"
+            },
+            {
+              "column": "symbol",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "column": "interval",
+              "value": "={{ $json.interval }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        144
+      ],
+      "id": "42102bf5-a507-4d5e-b316-09d23acef7b5",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "E4UKIK8f8xssvBnk",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const signal = $input.first().json.result.signals[0];\n\nreturn [{\n  symbol: $input.first().json.symbol,\n  interval: $input.first().json.interval,\n  signal_type: signal.signal_type,\n  signal,\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        144
+      ],
+      "id": "6af318f8-5c51-4637-b71b-ce5b769dac6d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "5572228344",
+        "text": "=The signal for the {{ $json.symbol }} symbol with the {{ $json.interval }} interval is {{ $json.signal_type }} ({{ $json.signal.regime }}, {{ $json.signal.confidence.round(2) }})",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        144
+      ],
+      "id": "6c4de1f1-11d1-4135-9972-e1dcd7e66ca6",
+      "name": "Send a text message",
+      "webhookId": "7c1f8e76-6f4c-461b-9a21-d62d253525ff",
+      "credentials": {
+        "telegramApi": {
+          "id": "4OTRkAKDbO92IV26",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5f2a10a9-568a-4f53-9427-11bb397dfd75",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "71e365f928f0d1287bd505a9840e4a88e5524f86349cf1da79a479c099e7916c"
+  },
+  "id": "AtGSDbhjdLEiEYqu",
+  "tags": []
+}
