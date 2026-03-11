@@ -78,13 +78,15 @@ n8n-binance-nodes/
 │   │   │   ├── indicators.py       # Technical indicators endpoints
 │   │   │   └── news.py             # News sentiment endpoints
 │   │   ├── services/               # Business logic services
+│   │   │   ├── celery_client.py    # Celery client configuration
 │   │   │   ├── coin_detector.py    # Crypto coin detection
 │   │   │   ├── database.py         # Database operations
 │   │   │   ├── failover_manager.py # API failover handling
 │   │   │   ├── news_service.py     # News processing
 │   │   │   ├── rss_fetcher.py      # RSS feed fetching
 │   │   │   ├── sentiment_analyzer.py # Sentiment analysis
-│   │   │   └── task_service.py     # Celery task result management
+│   │   │   ├── task_service.py     # Celery task result management
+│   │   │   └── trading_service.py  # Trading logic and order handling
 │   │   ├── scheduler/              # Background job schedulers
 │   │   │   └── news_scheduler.py   # News fetching scheduler
 │   │   └── utils/                  # Utility functions
