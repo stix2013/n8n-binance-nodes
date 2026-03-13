@@ -6,8 +6,8 @@
         "rule": {
           "interval": [
             {
-              "field": "minutes",
-              "minutesInterval": 15
+              "field": "cronExpression",
+              "expression": "10 */15 * * * *"
             }
           ]
         }
@@ -16,41 +16,316 @@
       "typeVersion": 1.3,
       "position": [
         -448,
-        240
+        80
       ],
       "id": "b5fa6ec1-3349-4589-b124-935d80afcee2",
       "name": "Schedule Trigger"
     },
     {
       "parameters": {
-        "operation": "get",
+        "chatId": "5572228344",
+        "text": "=The signal for the {{ $json.symbol }} {{ $json.interval }} is {{ $json.signal_type }} ({{ $json.regime }}, {{ $json.confidence.round(2) }}, {{ $json.prediction.round(4) }})",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        176
+      ],
+      "id": "6c4de1f1-11d1-4135-9972-e1dcd7e66ca6",
+      "name": "Send a text message",
+      "webhookId": "7c1f8e76-6f4c-461b-9a21-d62d253525ff",
+      "credentials": {
+        "telegramApi": {
+          "id": "4OTRkAKDbO92IV26",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        272
+      ],
+      "id": "7e64991b-de0d-48ca-a5a7-a446d6f024ca",
+      "name": "Wait",
+      "webhookId": "280b607c-bfbd-4058-bbe5-2b813fb8c33f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const symbol = $input.first().json.symbol;\nconst interval = $input.first().json.interval;\nconst result = $input.first().json.result;\nconst signals_count = result.signals_count;\nlet confidence = 0;\nlet prediction = 0;\nlet signal_type = \"WAIT\";\nlet regime = \"\";\n\nif (signals_count === 0) {\n  return [\n    {\n      symbol,\n      interval,\n      signal_type,\n      signals_count,\n      regime,\n      confidence,\n      prediction,\n    }\n  ]\n}\n\nconst [signal] = result.signals.slice(-1);\n\nregime = signal.regime;\nconfidence = signal.confidence;\nprediction = signal.prediction;\nsignal_type = signal.signal_type;\n\nreturn [{\n  symbol,\n  interval,\n  signal_type,\n  signals_count,\n  regime,\n  confidence,\n  prediction,\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        272
+      ],
+      "id": "b7753fb8-74da-4781-b971-8bf12f6fc55a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
         "dataTableId": {
           "__rl": true,
-          "value": "g2aaza7JyDSAabhA",
+          "value": "6RVOhl7qyQmwfvVO",
           "mode": "list",
-          "cachedResultName": "trader_crypto_params",
-          "cachedResultUrl": "/projects/cnX5hE5JuMQaKTQq/datatables/g2aaza7JyDSAabhA"
+          "cachedResultName": "prediction_last",
+          "cachedResultUrl": "/projects/cnX5hE5JuMQaKTQq/datatables/6RVOhl7qyQmwfvVO"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "symbol",
+              "keyValue": "={{ $json.symbol }}"
+            },
+            {
+              "keyName": "interval",
+              "keyValue": "={{ $json.interval }}"
+            },
+            {
+              "keyName": "signal_type",
+              "keyValue": "={{ $json.signal_type }}"
+            }
+          ]
         }
       },
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -224,
-        144
+        896,
+        176
       ],
-      "id": "68274c11-c645-4926-9a77-1455de153703",
-      "name": "Get row(s)"
+      "id": "d786278a-07eb-460e-bc60-cbd7306ccec6",
+      "name": "Check if not Exist"
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "6RVOhl7qyQmwfvVO",
+          "mode": "list",
+          "cachedResultName": "prediction_last",
+          "cachedResultUrl": "/projects/cnX5hE5JuMQaKTQq/datatables/6RVOhl7qyQmwfvVO"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "symbol",
+              "keyValue": "={{ $json.symbol }}"
+            },
+            {
+              "keyName": "interval",
+              "keyValue": "={{ $json.interval }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "confidence": "={{ $json.confidence }}",
+            "prediction": "={{ $json.prediction }}",
+            "symbol": "={{ $json.symbol }}",
+            "interval": "={{ $json.interval }}",
+            "signal_type": "={{ $json.signal_type }}",
+            "signal_count": "={{ $json.signals_count }}",
+            "regime": "={{ $json.regime }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "symbol",
+              "displayName": "symbol",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interval",
+              "displayName": "interval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "signal_type",
+              "displayName": "signal_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "signal_count",
+              "displayName": "signal_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "regime",
+              "displayName": "regime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prediction",
+              "displayName": "prediction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
       "position": [
-        -448,
-        48
+        1120,
+        176
       ],
-      "id": "35761809-2d46-4cdd-a224-4658b3ebde9f",
-      "name": "When clicking ‘Execute workflow’"
+      "id": "1b045d1d-343e-42f3-a3ef-bcae177f7a22",
+      "name": "Upsert prediction"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "aTyciDw5Qe2BGxGM",
+          "mode": "list",
+          "cachedResultName": "prediction_history",
+          "cachedResultUrl": "/projects/cnX5hE5JuMQaKTQq/datatables/aTyciDw5Qe2BGxGM"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "valid": false,
+            "confidence": "={{ $json.confidence }}",
+            "symbol": "={{ $json.symbol }}",
+            "interval": "={{ $json.interval }}",
+            "signal_type": "={{ $json.signal_type }}",
+            "prediction": "={{ $json.confidence }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "symbol",
+              "displayName": "symbol",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interval",
+              "displayName": "interval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "signal_type",
+              "displayName": "signal_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prediction",
+              "displayName": "prediction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "valid",
+              "displayName": "valid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        368
+      ],
+      "id": "05e72dff-ec41-4952-b28e-fc0bf4a6f346",
+      "name": "Log prediction"
     },
     {
       "parameters": {
@@ -100,11 +375,11 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        0,
-        144
+        448,
+        272
       ],
       "id": "42102bf5-a507-4d5e-b316-09d23acef7b5",
-      "name": "Select rows from a table",
+      "name": "Get saved predictions",
       "credentials": {
         "postgres": {
           "id": "E4UKIK8f8xssvBnk",
@@ -114,41 +389,84 @@
     },
     {
       "parameters": {
-        "jsCode": "const signal = $input.first().json.result.signals[0];\n\nreturn [{\n  symbol: $input.first().json.symbol,\n  interval: $input.first().json.interval,\n  signal_type: signal.signal_type,\n  signal,\n}]"
+        "method": "POST",
+        "url": "http://api:8000/api/tasks/run-prediction",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model_path",
+              "value": "=/api/models/model_{{ $json.symbol.toLowerCase() }}_{{ $json.interval }}.joblib"
+            },
+            {
+              "name": "symbol",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "={{ $json.interval }}"
+            },
+            {
+              "name": "bars",
+              "value": "={{ $json.warmup_bars }}"
+            }
+          ]
+        },
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
       "position": [
         224,
-        144
+        80
       ],
-      "id": "6af318f8-5c51-4637-b71b-ce5b769dac6d",
-      "name": "Code in JavaScript"
+      "id": "e10e783b-8240-40ea-b056-ac620aefdf61",
+      "name": "Run prediction"
     },
     {
       "parameters": {
-        "chatId": "5572228344",
-        "text": "=The signal for the {{ $json.symbol }} symbol with the {{ $json.interval }} interval is {{ $json.signal_type }} ({{ $json.signal.regime }}, {{ $json.signal.confidence.round(2) }})",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "g2aaza7JyDSAabhA",
+          "mode": "list",
+          "cachedResultName": "trader_crypto_params",
+          "cachedResultUrl": "/projects/cnX5hE5JuMQaKTQq/datatables/g2aaza7JyDSAabhA"
         }
       },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
       "position": [
-        448,
-        144
+        0,
+        176
       ],
-      "id": "6c4de1f1-11d1-4135-9972-e1dcd7e66ca6",
-      "name": "Send a text message",
-      "webhookId": "7c1f8e76-6f4c-461b-9a21-d62d253525ff",
-      "credentials": {
-        "telegramApi": {
-          "id": "4OTRkAKDbO92IV26",
-          "name": "Telegram account"
-        }
-      }
+      "id": "68274c11-c645-4926-9a77-1455de153703",
+      "name": "Get symbol & interval"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        272
+      ],
+      "id": "35761809-2d46-4cdd-a224-4658b3ebde9f",
+      "name": "Execute"
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        80
+      ],
+      "id": "1c447f7a-f869-47e6-82df-9fc5ebfa940a",
+      "name": "Wait1",
+      "webhookId": "5566741e-9fbe-4829-9efc-adb63054d3b0"
     }
   ],
   "pinData": {},
@@ -157,51 +475,110 @@
       "main": [
         [
           {
-            "node": "Get row(s)",
+            "node": "Wait1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get row(s)": {
+    "Wait": {
       "main": [
         [
           {
-            "node": "Select rows from a table",
+            "node": "Get saved predictions",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "When clicking ‘Execute workflow’": {
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript1": {
       "main": [
         [
           {
-            "node": "Get row(s)",
+            "node": "Check if not Exist",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log prediction",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Select rows from a table": {
+    "Check if not Exist": {
       "main": [
         [
           {
-            "node": "Code in JavaScript",
+            "node": "Upsert prediction",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Code in JavaScript": {
+    "Upsert prediction": {
       "main": [
         [
           {
             "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get saved predictions": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get symbol & interval": {
+      "main": [
+        [
+          {
+            "node": "Run prediction",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute": {
+      "main": [
+        [
+          {
+            "node": "Get symbol & interval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Get symbol & interval",
             "type": "main",
             "index": 0
           }
@@ -213,9 +590,14 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "timeSavedMode": "dynamic",
+    "errorWorkflow": "VRu19HZsBu53y6wR",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 900,
+    "redactionPolicy": "non-manual"
   },
-  "versionId": "5f2a10a9-568a-4f53-9427-11bb397dfd75",
+  "versionId": "ce42ebef-73e8-4686-84bf-2de8b227079e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "71e365f928f0d1287bd505a9840e4a88e5524f86349cf1da79a479c099e7916c"
