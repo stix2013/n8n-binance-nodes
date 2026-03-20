@@ -21,6 +21,7 @@ services:
       host.local: 192.168.0.14
     networks:
       - n8n_network
+      - db_network
     ports:
       - "${N8N_HOST_PORT}:${N8N_PORT}"
     environment:
@@ -38,7 +39,7 @@ services:
       # - N8N_RUNNERS_HOST=${N8N_RUNNERS_HOST}
       # - N8N_RUNNERS_PORT=${N8N_RUNNERS_PORT}
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
-      # 
+      #
       - TZ=Asia/Jakarta
       - N8N_COMMUNITY_PACKAGES_ENABLED=true
       - WEBHOOK_URL=${WEBHOOK_URL}
@@ -50,7 +51,7 @@ services:
       - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
       # Database
       - DB_TYPE=${N8N_DB_TYPE:-postgresdb}
-      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_HOST=${POSTGRES_HOST:-vector-db}
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_NON_ROOT_USER}
@@ -74,8 +75,8 @@ services:
     depends_on:
       api:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
+      # vector-db:
+      #   condition: service_healthy
 
   # n8n Tasks Runners
   task-runners:
@@ -89,6 +90,7 @@ services:
     restart: always
     networks:
       - n8n_network
+      - db_network
     environment:
       - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
@@ -106,7 +108,13 @@ services:
       host.docker.internal: 192.168.0.14
       host.local: 192.168.0.14
     healthcheck:
-      test: ["CMD", "sh", "-c", "wget -q -O- http://localhost:5680/healthz || exit 1"]
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "wget -q -O- http://localhost:5680/healthz || exit 1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -114,14 +122,15 @@ services:
 
   # Postgres
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     ports:
       - 5433:5432
     networks:
       - n8n_network
+      - db_network
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./scripts/init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-n8n}
@@ -130,11 +139,16 @@ services:
       - POSTGRES_NON_ROOT_USER=${POSTGRES_NON_ROOT_USER:-n8n}
       - POSTGRES_NON_ROOT_PASSWORD=${POSTGRES_NON_ROOT_PASSWORD:-postgres}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
+
   # API Python
   api:
     image: api-python${API_PYTHON_VERSION:-3.14}:${API_VERSION:-1.7.2}
@@ -146,7 +160,7 @@ services:
     restart: unless-stopped
     networks:
       - n8n_network
-      - shared_network
+      - db_network
     ports:
       - "8000:8000"
     extra_hosts:
@@ -158,6 +172,11 @@ services:
     volumes:
       - ./api:/app
       - ./.env:/app/.env:ro
+    # depends_on:
+    #   redis_broker:
+    #     condition: service_healthy
+    #   vector_store:
+    #     condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -171,11 +190,12 @@ volumes:
     external: true
     name: n8n_storage
   postgres_data:
+    external: true
     name: postgres_data
-# Networks 
+# Networks
 networks:
   n8n_network:
     driver: bridge
     name: n8n_network
-  shared_network:
+  db_network:
     external: true
