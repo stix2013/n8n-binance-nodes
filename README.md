@@ -13,8 +13,8 @@ A Docker-based n8n workflow automation environment with custom community nodes f
   - n8n with external task runners (version 2.11.2, configurable via `N8N_VERSION`)
   - PostgreSQL 16 database
   - Redis 7 for Celery task broker and results
-  - FastAPI service for custom endpoints (Python 3.14, version configurable via `API_VERSION`)
-  - Python 3.14 task runner environment
+  - FastAPI service for custom endpoints (Python 3.12, version configurable via `API_VERSION`)
+  - Python 3.12 task runner environment
 
 - **Model Training & Prediction:**
   - Background model training using **Celery workers** hosted in the `crypto-analysis` project
@@ -105,7 +105,7 @@ n8n-binance-nodes/
 ├── dockers/                        # Docker build files
 │   ├── task-runner-python/         # External task runner implementation
 │   ├── Dockerfile                  # Task runner image (n8nio/runners)
-│   ├── Dockerfile.python           # FastAPI Python 3.14 image
+│   ├── Dockerfile.python           # FastAPI Python 3.12 image
 │   ├── Dockerfile.postgres         # PostgreSQL customization
 │   └── n8n-task-runners.json       # Task runner config
 │
@@ -328,7 +328,7 @@ FastAPI service available at `http://localhost:8000`
 - `POST /api/crypto/predict` - Generate real-time trading signals (LONG, SHORT, WAIT) using a trained model.
 
 **Configuration:**
-- Python 3.14 with pip
+- Python 3.12 with pip
 - Reads environment variables from `.env` file
 - Supports multiple time intervals (1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M)
 - Date range filtering with YYYYMMDD format
