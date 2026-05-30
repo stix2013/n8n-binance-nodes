@@ -1,16 +1,20 @@
-import os
 import logging
+import os
+
 from celery import Celery
 
 logger = logging.getLogger(__name__)
 
+
 class CeleryClient:
     """Client for interacting with Celery workers."""
-    
+
     def __init__(self, broker_url: str = None):
-        self.broker_url = broker_url or os.getenv("CELERY_BROKER_URL", "redis://redis_broker:6379/0")
+        self.broker_url = broker_url or os.getenv(
+            "CELERY_BROKER_URL", "redis://redis_broker:6379/0"
+        )
         self.app = Celery("crypto_analysis", broker=self.broker_url)
-        
+
         # Configure the client to match the worker's expected configuration
         self.app.conf.update(
             task_serializer="json",
@@ -45,6 +49,7 @@ class CeleryClient:
         except Exception as e:
             logger.error(f"Failed to get status for task {task_id}: {e}")
             raise
+
 
 # Global instance
 celery_client = CeleryClient()

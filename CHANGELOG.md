@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-03-21
+
+### Changed
+- **Python Version**: Downgraded API Docker image from Python 3.14 to Python 3.12.
+- **API Version**: Upgraded API to `1.8.0`.
+
+### Updated
+- `README.md`: Updated Python version references (3.14 → 3.12).
+- `AGENTS.md`: Updated Python requirement (>=3.14 → >=3.12).
+
 ## [1.8.1] - 2026-03-11
 
 ### Added
